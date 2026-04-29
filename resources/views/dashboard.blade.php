@@ -56,7 +56,7 @@
                         <h6 class="card-title mb-0">Tareas</h6>
                     </div>
                     <p class="card-text text-muted small">Asigná tareas y revisá las entregas.</p>
-                    <a href="#" class="btn btn-sm btn-outline-warning">Ir al módulo</a>
+                    <a href="{{ route('tareas.index') }}" class="btn btn-sm btn-outline-warning">Ir al módulo</a>
                 </div>
             </div>
         </div>
@@ -71,7 +71,7 @@
                         <h6 class="card-title mb-0">Horarios</h6>
                     </div>
                     <p class="card-text text-muted small">Planificá y consultá tu horario semanal.</p>
-                    <a href="#" class="btn btn-sm btn-outline-info">Ir al módulo</a>
+                    <a href="{{ route('horarios.index') }}" class="btn btn-sm btn-outline-info">Ir al módulo</a>
                 </div>
             </div>
         </div>
@@ -86,7 +86,7 @@
                         <h6 class="card-title mb-0">Declaración jurada</h6>
                     </div>
                     <p class="card-text text-muted small">Completá y enviá tu declaración jurada de horarios.</p>
-                    <a href="#" class="btn btn-sm btn-outline-secondary">Ir al módulo</a>
+                    <a href="{{ route('declaracion.index') }}" class="btn btn-sm btn-outline-secondary">Ir al módulo</a>
                 </div>
             </div>
         </div>

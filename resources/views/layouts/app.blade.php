@@ -40,18 +40,20 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('tareas.*') ? 'active' : '' }}" href="#">
+                                <a class="nav-link {{ request()->routeIs('tareas.*') ? 'active' : '' }}" 
+                                    href="{{ route('tareas.index') }}">
                                     <i class="bi bi-clipboard-check me-1"></i>Tareas
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('horarios.*') ? 'active' : '' }}" href="#">
+                                <a class="nav-link {{ request()->routeIs('horarios.*') ? 'active' : '' }}" 
+                                    href="{{ route('horarios.index') }}">
                                     <i class="bi bi-calendar3 me-1"></i>Horarios
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link {{ request()->routeIs('declaracion.*') ? 'active' : '' }}"
-                                    href="#">
+                                    href="{{ route('declaracion.index') }}">
                                     <i class="bi bi-file-earmark-text me-1"></i>Declaración jurada
                                 </a>
                             </li>
