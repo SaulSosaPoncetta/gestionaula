@@ -10,20 +10,14 @@ use Illuminate\Http\Request;
 class AsistenciaController extends Controller
 {
     public function index()
-    {
-        $user = auth()->user();
+{
+    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
+                   ->with('materias')
+                   ->orderBy('nombre')
+                   ->get();
 
-        if ($user->hasRole('director')) {
-            $cursos = Curso::with('materias')->orderBy('nombre')->get();
-        } else {
-            $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', $user->id))
-                           ->with('materias')
-                           ->orderBy('nombre')
-                           ->get();
-        }
-
-        return view('asistencia.index', compact('cursos'));
-    }
+    return view('asistencia.index', compact('cursos'));
+}
 
     public function registrar(Request $request)
     {
@@ -75,38 +69,33 @@ class AsistenciaController extends Controller
                          ->with('success', 'Asistencia guardada correctamente.');
     }
 
-    public function historial(Request $request)
-    {
-        $user = auth()->user();
+   public function historial(Request $request)
+{
+    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
+                   ->orderBy('nombre')
+                   ->get();
 
-        if ($user->hasRole('director')) {
-            $cursos = Curso::orderBy('nombre')->get();
-        } else {
-            $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', $user->id))
-                           ->orderBy('nombre')
-                           ->get();
+    $asistencias = collect();
+    $filtros = [];
+
+    if ($request->filled('curso_id')) {
+        $filtros['curso_id'] = $request->curso_id;
+        $query = Asistencia::with(['alumno', 'materia', 'docente'])
+            ->where('curso_id', $request->curso_id);
+
+        if ($request->filled('materia_id')) {
+            $query->where('materia_id', $request->materia_id);
+            $filtros['materia_id'] = $request->materia_id;
+        }
+        if ($request->filled('fecha')) {
+            $query->where('fecha', $request->fecha);
+            $filtros['fecha'] = $request->fecha;
         }
 
-        $asistencias = collect();
-        $filtros = [];
-
-        if ($request->filled('curso_id')) {
-            $filtros['curso_id'] = $request->curso_id;
-            $query = Asistencia::with(['alumno', 'materia', 'docente'])
-                ->where('curso_id', $request->curso_id);
-
-            if ($request->filled('materia_id')) {
-                $query->where('materia_id', $request->materia_id);
-                $filtros['materia_id'] = $request->materia_id;
-            }
-            if ($request->filled('fecha')) {
-                $query->where('fecha', $request->fecha);
-                $filtros['fecha'] = $request->fecha;
-            }
-
-            $asistencias = $query->orderBy('fecha', 'desc')->paginate(30);
-        }
-
-        return view('asistencia.historial', compact('cursos', 'asistencias', 'filtros'));
+        $asistencias = $query->orderBy('fecha', 'desc')->paginate(30);
     }
+
+    return view('asistencia.historial', compact('cursos', 'asistencias', 'filtros'));
+}
+
 }

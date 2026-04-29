@@ -28,35 +28,7 @@
     </div>
 </div>
 
-{{-- Resolución del director --}}
-@if(auth()->user()->hasRole('director') && $declaracion->estado === 'presentada')
-<div class="card border-0 shadow-sm mb-4 border-start border-4 border-warning">
-    <div class="card-body">
-        <h6 class="fw-bold mb-3"><i class="bi bi-check2-square me-2"></i>Resolver declaración</h6>
-        <form method="POST" action="{{ route('declaracion.resolver', $declaracion) }}">
-            @csrf
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Resolución</label>
-                    <select name="estado" class="form-select" required>
-                        <option value="aprobada">Aprobar</option>
-                        <option value="rechazada">Rechazar</option>
-                    </select>
-                </div>
-                <div class="col-md-8">
-                    <label class="form-label fw-semibold">Observación <span class="text-muted fw-normal">(opcional)</span></label>
-                    <input type="text" name="observacion" class="form-control" placeholder="Motivo o comentario...">
-                </div>
-            </div>
-            <div class="mt-3">
-                <button type="submit" class="btn btn-warning">
-                    <i class="bi bi-check-circle me-1"></i>Confirmar resolución
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-@endif
+
 
 {{-- Observación si fue rechazada --}}
 @if($declaracion->estado === 'rechazada' && $declaracion->observacion)

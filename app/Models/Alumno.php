@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Alumno extends Model
 {
     protected $fillable = ['nombre', 'apellido', 'dni', 'fechanacimiento', 'curso_id'];
+    protected $casts = ['fechanacimiento' => 'date',];
 
     public function curso()
     {

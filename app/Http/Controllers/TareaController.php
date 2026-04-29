@@ -10,34 +10,22 @@ use Illuminate\Http\Request;
 class TareaController extends Controller
 {
     public function index()
-    {
-        $user = auth()->user();
+{
+    $tareas = Tarea::with(['curso', 'materia', 'docente'])
+        ->where('user_id', auth()->id())
+        ->orderBy('fechavencimiento', 'desc')
+        ->paginate(15);
 
-        if ($user->hasRole('director')) {
-            $tareas = Tarea::with(['curso', 'materia', 'docente'])
-                ->orderBy('fechavencimiento', 'desc')->paginate(15);
-        } else {
-            $tareas = Tarea::with(['curso', 'materia', 'docente'])
-                ->where('user_id', $user->id)
-                ->orderBy('fechavencimiento', 'desc')->paginate(15);
-        }
+    return view('tareas.index', compact('tareas'));
+}
 
-        return view('tareas.index', compact('tareas'));
-    }
+public function create()
+{
+    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
+                   ->with('materias')->orderBy('nombre')->get();
 
-    public function create()
-    {
-        $user = auth()->user();
-
-        if ($user->hasRole('director')) {
-            $cursos = Curso::with('materias')->orderBy('nombre')->get();
-        } else {
-            $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', $user->id))
-                           ->with('materias')->orderBy('nombre')->get();
-        }
-
-        return view('tareas.create', compact('cursos'));
-    }
+    return view('tareas.create', compact('cursos'));
+}
 
     public function store(Request $request)
     {

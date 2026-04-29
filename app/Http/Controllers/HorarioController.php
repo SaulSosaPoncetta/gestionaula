@@ -11,42 +11,29 @@ class HorarioController extends Controller
     const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
     public function index()
-    {
-        $user = auth()->user();
-        $dias = self::DIAS;
+{
+    $dias = self::DIAS;
 
-        if ($user->hasRole('director')) {
-            $horarios = Horario::with(['docente', 'curso', 'materia'])
-                ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado')")
-                ->orderBy('horainicio')
-                ->get()
-                ->groupBy('dia');
-        } else {
-            $horarios = Horario::with(['curso', 'materia'])
-                ->where('user_id', $user->id)
-                ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado')")
-                ->orderBy('horainicio')
-                ->get()
-                ->groupBy('dia');
-        }
+    $horarios = Horario::with(['curso', 'materia'])
+        ->where('user_id', auth()->id())
+        ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado')")
+        ->orderBy('horainicio')
+        ->get()
+        ->groupBy('dia');
 
-        return view('horarios.index', compact('horarios', 'dias'));
-    }
+    return view('horarios.index', compact('horarios', 'dias'));
+}
+
 
     public function create()
-    {
-        $user = auth()->user();
-        $dias = self::DIAS;
+{
+    $dias = self::DIAS;
 
-        if ($user->hasRole('director')) {
-            $cursos = Curso::with('materias')->orderBy('nombre')->get();
-        } else {
-            $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', $user->id))
-                           ->with('materias')->orderBy('nombre')->get();
-        }
+    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
+                   ->with('materias')->orderBy('nombre')->get();
 
-        return view('horarios.create', compact('cursos', 'dias'));
-    }
+    return view('horarios.create', compact('cursos', 'dias'));
+}
 
     public function store(Request $request)
     {

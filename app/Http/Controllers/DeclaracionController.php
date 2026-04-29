@@ -12,19 +12,13 @@ class DeclaracionController extends Controller
     const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
     public function index()
-    {
-        $user = auth()->user();
+{
+    $declaraciones = Declaracion::where('user_id', auth()->id())
+        ->orderBy('created_at', 'desc')
+        ->paginate(15);
 
-        if ($user->hasRole('director')) {
-            $declaraciones = Declaracion::with('docente')
-                ->orderBy('created_at', 'desc')->paginate(15);
-        } else {
-            $declaraciones = Declaracion::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')->paginate(15);
-        }
-
-        return view('declaracion.index', compact('declaraciones'));
-    }
+    return view('declaracion.index', compact('declaraciones'));
+}
 
     public function create()
     {
@@ -101,21 +95,5 @@ class DeclaracionController extends Controller
                          ->with('success', 'Declaración presentada correctamente.');
     }
 
-    public function resolver(Request $request, Declaracion $declaracion)
-    {
-        $request->validate([
-            'estado'      => 'required|in:aprobada,rechazada',
-            'observacion' => 'nullable|string',
-        ]);
-
-        $declaracion->update([
-            'estado'           => $request->estado,
-            'observacion'      => $request->observacion,
-            'fecharesolucion'  => now(),
-            'resueltopor'      => auth()->id(),
-        ]);
-
-        return redirect()->route('declaracion.show', $declaracion)
-                         ->with('success', 'Declaración ' . $request->estado . ' correctamente.');
-    }
+    
 }

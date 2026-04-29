@@ -13,23 +13,17 @@ class CalificacionController extends Controller
     const TIPOS = ['Trabajo práctico', 'Examen', 'Oral', 'Proyecto', 'Concepto'];
 
     public function index()
-    {
-        $user = auth()->user();
+{
+    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
+                   ->with('materias')
+                   ->orderBy('nombre')
+                   ->get();
 
-        if ($user->hasRole('director')) {
-            $cursos = Curso::with('materias')->orderBy('nombre')->get();
-        } else {
-            $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', $user->id))
-                           ->with('materias')
-                           ->orderBy('nombre')
-                           ->get();
-        }
+    $periodos = self::PERIODOS;
+    $tipos = self::TIPOS;
 
-        $periodos = self::PERIODOS;
-        $tipos = self::TIPOS;
-
-        return view('calificaciones.index', compact('cursos', 'periodos', 'tipos'));
-    }
+    return view('calificaciones.index', compact('cursos', 'periodos', 'tipos'));
+}
 
     public function cargar(Request $request)
     {
@@ -92,41 +86,35 @@ class CalificacionController extends Controller
                          ->with('success', 'Calificaciones guardadas correctamente.');
     }
 
-    public function historial(Request $request)
-    {
-        $user = auth()->user();
+   public function historial(Request $request)
+{
+    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
+                   ->orderBy('nombre')
+                   ->get();
 
-        if ($user->hasRole('director')) {
-            $cursos = Curso::orderBy('nombre')->get();
-        } else {
-            $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', $user->id))
-                           ->orderBy('nombre')
-                           ->get();
-        }
+    $calificaciones = collect();
+    $filtros = [];
+    $periodos = self::PERIODOS;
 
-        $calificaciones = collect();
-        $filtros = [];
-        $periodos = self::PERIODOS;
+    if ($request->filled('curso_id')) {
+        $filtros = $request->only(['curso_id', 'materia_id', 'periodo', 'alumno_id']);
 
-        if ($request->filled('curso_id')) {
-            $filtros = $request->only(['curso_id', 'materia_id', 'periodo', 'alumno_id']);
+        $query = Calificacion::with(['alumno', 'materia', 'docente'])
+            ->where('curso_id', $request->curso_id);
 
-            $query = Calificacion::with(['alumno', 'materia', 'docente'])
-                ->where('curso_id', $request->curso_id);
+        if ($request->filled('materia_id')) $query->where('materia_id', $request->materia_id);
+        if ($request->filled('periodo'))    $query->where('periodo', $request->periodo);
+        if ($request->filled('alumno_id'))  $query->where('alumno_id', $request->alumno_id);
 
-            if ($request->filled('materia_id')) $query->where('materia_id', $request->materia_id);
-            if ($request->filled('periodo'))    $query->where('periodo', $request->periodo);
-            if ($request->filled('alumno_id'))  $query->where('alumno_id', $request->alumno_id);
-
-            $calificaciones = $query->orderBy('periodo')->orderBy('tipo')->paginate(30);
-        }
-
-        $alumnos = collect();
-        if ($request->filled('curso_id')) {
-            $alumnos = \App\Models\Alumno::where('curso_id', $request->curso_id)
-                ->orderBy('apellido')->get();
-        }
-
-        return view('calificaciones.historial', compact('cursos', 'calificaciones', 'filtros', 'periodos', 'alumnos'));
+        $calificaciones = $query->orderBy('periodo')->orderBy('tipo')->paginate(30);
     }
+
+    $alumnos = collect();
+    if ($request->filled('curso_id')) {
+        $alumnos = \App\Models\Alumno::where('curso_id', $request->curso_id)
+            ->orderBy('apellido')->get();
+    }
+
+    return view('calificaciones.historial', compact('cursos', 'calificaciones', 'filtros', 'periodos', 'alumnos'));
+}
 }
