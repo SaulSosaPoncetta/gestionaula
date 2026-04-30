@@ -11,16 +11,14 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
 
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $fillable = ['name', 'email', 'password', 'establecimiento_id'];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $hidden = ['password', 'remember_token'];
+
+    public function establecimiento()
+    {
+        return $this->belongsTo(Establecimiento::class);
+    }
 
     protected function casts(): array
     {

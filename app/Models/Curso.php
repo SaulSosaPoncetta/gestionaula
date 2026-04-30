@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Curso extends Model
 {
-    protected $fillable = ['nombre', 'division', 'turno', 'nivel'];
+    protected $fillable = ['nombre', 'division', 'turno', 'nivel', 'establecimiento_id'];
 
     public function alumnos()
     {
@@ -16,6 +16,11 @@ class Curso extends Model
     public function materias()
     {
         return $this->hasMany(Materia::class);
+    }
+
+    public function establecimiento()
+    {
+        return $this->belongsTo(Establecimiento::class);
     }
 
     public function docentes()

@@ -25,6 +25,7 @@
                     <th>División</th>
                     <th>Turno</th>
                     <th>Nivel</th>
+                    <th>Establecimiento</th>
                     <th class="text-center">Alumnos</th>
                     <th class="text-center">Materias</th>
                     <th></th>
@@ -37,6 +38,7 @@
                     <td>{{ $curso->division ?? '—' }}</td>
                     <td>{{ $curso->turno ?? '—' }}</td>
                     <td>{{ $curso->nivel ?? '—' }}</td>
+                    <td>{{ $curso->establecimiento?->nombre ?? '—' }}</td>
                     <td class="text-center"><span class="badge bg-primary">{{ $curso->alumnos_count }}</span></td>
                     <td class="text-center"><span class="badge bg-info">{{ $curso->materias_count }}</span></td>
                     <td class="text-end pe-3">

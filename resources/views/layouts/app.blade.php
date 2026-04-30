@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <title>{{ config('app.name', 'Gestión Aula') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
+
 <body class="bg-light">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
@@ -23,62 +25,98 @@
                     @auth
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('asistencia.*') ? 'active' : '' }}"
-                               href="{{ route('asistencia.index') }}">
+                                href="{{ route('asistencia.index') }}">
                                 <i class="bi bi-person-check me-1"></i>Asistencia
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}"
-                               href="{{ route('calificaciones.index') }}">
+                                href="{{ route('calificaciones.index') }}">
                                 <i class="bi bi-journal-text me-1"></i>Calificaciones
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('tareas.*') ? 'active' : '' }}"
-                               href="{{ route('tareas.index') }}">
+                                href="{{ route('tareas.index') }}">
                                 <i class="bi bi-clipboard-check me-1"></i>Tareas
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('horarios.*') ? 'active' : '' }}"
-                               href="{{ route('horarios.index') }}">
+                                href="{{ route('horarios.index') }}">
                                 <i class="bi bi-calendar3 me-1"></i>Horarios
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('declaracion.*') ? 'active' : '' }}"
-                               href="{{ route('declaracion.index') }}">
+                                href="{{ route('declaracion.index') }}">
                                 <i class="bi bi-file-earmark-text me-1"></i>Declaración jurada
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('comunicacion.*') ? 'active' : '' }}"
-                               href="{{ route('comunicacion.index') }}">
+                                href="{{ route('comunicacion.index') }}">
                                 <i class="bi bi-chat-dots me-1"></i>Comunicación
                             </a>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ request()->routeIs('cursos.*') || request()->routeIs('materias.*') || request()->routeIs('alumnos.*') ? 'active' : '' }}"
-                               href="#" data-bs-toggle="dropdown">
+                                href="#" data-bs-toggle="dropdown">
                                 <i class="bi bi-gear me-1"></i>Administración
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('cursos.*') ? 'active' : '' }}"
-                                       href="{{ route('cursos.index') }}">
+                                        href="{{ route('cursos.index') }}">
                                         <i class="bi bi-building me-2"></i>Cursos
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('materias.*') ? 'active' : '' }}"
-                                       href="{{ route('materias.index') }}">
+                                        href="{{ route('materias.index') }}">
                                         <i class="bi bi-book me-2"></i>Materias
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('alumnos.*') ? 'active' : '' }}"
-                                       href="{{ route('alumnos.index') }}">
+                                        href="{{ route('alumnos.index') }}">
                                         <i class="bi bi-people me-2"></i>Alumnos
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('niveles.*') ? 'active' : '' }}"
+                                        href="{{ route('niveles.index') }}">
+                                        <i class="bi bi-diagram-3 me-2"></i>Niveles educativos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('establecimientos.*') ? 'active' : '' }}"
+                                        href="{{ route('establecimientos.index') }}">
+                                        <i class="bi bi-building me-2"></i>Establecimientos
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('ciclos.*') ? 'active' : '' }}"
+                                        href="{{ route('ciclos.index') }}">
+                                        <i class="bi bi-arrow-repeat me-2"></i>Ciclos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('areasformacion.*') ? 'active' : '' }}"
+                                        href="{{ route('areasformacion.index') }}">
+                                        <i class="bi bi-collection me-2"></i>Áreas de formación
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('especialidades.*') ? 'active' : '' }}"
+                                        href="{{ route('especialidades.index') }}">
+                                        <i class="bi bi-star me-2"></i>Especialidades
                                     </a>
                                 </li>
                             </ul>
@@ -98,7 +136,9 @@
                                         <i class="bi bi-envelope me-1"></i>{{ auth()->user()->email }}
                                     </span>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
@@ -116,14 +156,14 @@
     </nav>
 
     <main class="container py-4">
-        @if(session('success'))
+        @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
 
-        @if(session('error'))
+        @if (session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -141,4 +181,5 @@
 
     @stack('scripts')
 </body>
+
 </html>
