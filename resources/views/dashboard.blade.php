@@ -8,7 +8,17 @@
     </div>
 </div>
 
-<div class="row g-3">
+{{-- Card fecha y hora --}}
+<div class="card border-0 shadow-sm mb-4 bg-primary text-white">
+    <div class="card-body text-center py-4">
+        <div class="display-3 fw-bold" id="reloj">--:--:--</div>
+        <div class="fs-4 fw-semibold mt-1" id="diaSemana">—</div>
+        <div class="fs-5" id="fechaCompleta">—</div>
+    </div>
+</div>
+
+{{-- Accesos rápidos --}}
+<div class="row g-3 mb-4">
     <div class="col-sm-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
@@ -23,7 +33,6 @@
             </div>
         </div>
     </div>
-
     <div class="col-sm-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
@@ -38,7 +47,6 @@
             </div>
         </div>
     </div>
-
     <div class="col-sm-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
@@ -53,7 +61,6 @@
             </div>
         </div>
     </div>
-
     <div class="col-sm-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
@@ -68,7 +75,6 @@
             </div>
         </div>
     </div>
-
     <div class="col-sm-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
@@ -83,7 +89,6 @@
             </div>
         </div>
     </div>
-
     <div class="col-sm-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
@@ -99,4 +104,140 @@
         </div>
     </div>
 </div>
+
+{{-- Card clase actual --}}
+<div id="claseActualContainer"></div>
+
 @endsection
+
+@push('scripts')
+<script>
+const horariosDocente = @json($horarios);
+
+const diasSemana = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+const diasLabel  = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+const meses      = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function horaAMinutos(str) {
+    const [h, m] = str.split(':').map(Number);
+    return h * 60 + m;
+}
+
+function clasesActuales(diaActual, minutosActuales) {
+    return horariosDocente.filter(h =>
+        h.dia === diaActual &&
+        horaAMinutos(h.horainicio) <= minutosActuales &&
+        horaAMinutos(h.horafin)    >  minutosActuales
+    );
+}
+
+function renderClaseActual(clases) {
+    const container = document.getElementById('claseActualContainer');
+
+    if (clases.length === 0) {
+        container.innerHTML = `
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center text-muted py-4">
+                    <i class="bi bi-clock fs-3 mb-2 d-block"></i>
+                    No hay clase en este momento según tu horario.
+                </div>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+    clases.forEach(clase => {
+        html += `
+        <div class="card border-0 shadow-sm mb-3 border-start border-success border-4">
+            <div class="card-body">
+
+                {{-- Título: materia y curso --}}
+                <div class="text-center mb-3">
+                    <div class="fs-3 fw-bold text-success">
+                        <i class="bi bi-book me-2"></i>${clase.materia ?? 'Sin materia'}
+                    </div>
+                    <div class="fs-5 text-muted fw-semibold">${clase.curso ?? '—'}</div>
+                </div>
+
+                <hr>
+
+                {{-- Datos del horario --}}
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <table class="table table-sm mb-0">
+                            <tr>
+                                <td class="text-muted" style="width:40%">Horario</td>
+                                <td class="fw-semibold">${clase.horainicio} — ${clase.horafin}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Lista de alumnos --}}
+                <div class="fw-semibold mb-2">
+                    <i class="bi bi-people me-1"></i>Estudiantes
+                </div>`;
+
+        if (clase.alumnos.length > 0) {
+            html += `
+                <table class="table table-hover table-sm mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Apellido y nombre</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            clase.alumnos.forEach((a, idx) => {
+                html += `
+                        <tr>
+                            <td class="text-muted">${idx + 1}</td>
+                            <td class="fw-semibold">${a.nombre}</td>
+                            <td class="text-end">
+                                <a href="/alumnos/${a.id}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>Ver ficha
+                                </a>
+                            </td>
+                        </tr>`;
+            });
+
+            html += `
+                    </tbody>
+                </table>`;
+        } else {
+            html += `<div class="text-muted small">No hay alumnos registrados en este curso.</div>`;
+        }
+
+        html += `
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function actualizarReloj() {
+    const ahora  = new Date();
+    const h      = pad(ahora.getHours());
+    const m      = pad(ahora.getMinutes());
+    const s      = pad(ahora.getSeconds());
+    const diaNum = ahora.getDay();
+    const dia    = diasSemana[diaNum];
+
+    document.getElementById('reloj').textContent     = `${h}:${m}:${s}`;
+    document.getElementById('diaSemana').textContent = diasLabel[diaNum];
+    document.getElementById('fechaCompleta').textContent =
+        `${ahora.getDate()} de ${meses[ahora.getMonth()]} de ${ahora.getFullYear()}`;
+
+    const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
+    renderClaseActual(clasesActuales(dia, minutosActuales));
+}
+
+actualizarReloj();
+setInterval(actualizarReloj, 1000);
+</script>
+@endpush
