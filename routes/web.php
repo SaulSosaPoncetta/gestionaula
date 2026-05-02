@@ -15,6 +15,9 @@ use App\Http\Controllers\EstablecimientoController;
 use App\Http\Controllers\AreaFormacionController;
 use App\Http\Controllers\CicloController;
 use App\Http\Controllers\EspecialidadController;
+use App\Http\Controllers\ContenidoController;
+use App\Http\Controllers\PlanificacionController;
+use App\Http\Controllers\MaterialTeoricoController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -119,6 +122,28 @@ Route::post('/especialidades', [EspecialidadController::class, 'store'])->name('
 Route::get('/especialidades/{especialidad}/editar', [EspecialidadController::class, 'edit'])->name('especialidades.edit');
 Route::put('/especialidades/{especialidad}', [EspecialidadController::class, 'update'])->name('especialidades.update');
 Route::delete('/especialidades/{especialidad}', [EspecialidadController::class, 'destroy'])->name('especialidades.destroy');
-    });
+
+Route::get('/contenidos', [ContenidoController::class, 'index'])->name('contenidos.index');
+Route::get('/contenidos/crear', [ContenidoController::class, 'create'])->name('contenidos.create');
+Route::post('/contenidos', [ContenidoController::class, 'store'])->name('contenidos.store');
+Route::get('/contenidos/{contenido}/editar', [ContenidoController::class, 'edit'])->name('contenidos.edit');
+Route::put('/contenidos/{contenido}', [ContenidoController::class, 'update'])->name('contenidos.update');
+Route::delete('/contenidos/{contenido}', [ContenidoController::class, 'destroy'])->name('contenidos.destroy');
+
+Route::get('/planificaciones', [PlanificacionController::class, 'index'])->name('planificaciones.index');
+Route::get('/planificaciones/crear', [PlanificacionController::class, 'create'])->name('planificaciones.create');
+Route::post('/planificaciones', [PlanificacionController::class, 'store'])->name('planificaciones.store');
+Route::get('/planificaciones/{planificacion}', [PlanificacionController::class, 'show'])->name('planificaciones.show');
+Route::get('/planificaciones/{planificacion}/editar', [PlanificacionController::class, 'edit'])->name('planificaciones.edit');
+Route::put('/planificaciones/{planificacion}', [PlanificacionController::class, 'update'])->name('planificaciones.update');
+Route::delete('/planificaciones/{planificacion}', [PlanificacionController::class, 'destroy'])->name('planificaciones.destroy');
+Route::post('/planificaciones/{planificacion}/unidades', [PlanificacionController::class, 'storeUnidad'])->name('planificaciones.unidades.store');
+Route::delete('/planificaciones/{planificacion}/unidades/{unidad}', [PlanificacionController::class, 'destroyUnidad'])->name('planificaciones.unidades.destroy');
+
+Route::get('/materialteoricoarchivos', [MaterialTeoricoController::class, 'index'])->name('materialteoricoarchivos.index');
+Route::get('/materialteoricoarchivos/crear', [MaterialTeoricoController::class, 'create'])->name('materialteoricoarchivos.create');
+Route::post('/materialteoricoarchivos', [MaterialTeoricoController::class, 'store'])->name('materialteoricoarchivos.store');
+Route::delete('/materialteoricoarchivos/{materialteoricoarchivo}', [MaterialTeoricoController::class, 'destroy'])->name('materialteoricoarchivos.destroy');
+});
 
 require __DIR__.'/auth.php';

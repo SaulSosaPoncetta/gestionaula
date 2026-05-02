@@ -23,48 +23,81 @@
             <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     @auth
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('asistencia.*') ? 'active' : '' }}"
-                                href="{{ route('asistencia.index') }}">
-                                <i class="bi bi-person-check me-1"></i>Asistencia
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}"
-                                href="{{ route('calificaciones.index') }}">
-                                <i class="bi bi-journal-text me-1"></i>Calificaciones
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('tareas.*') ? 'active' : '' }}"
-                                href="{{ route('tareas.index') }}">
-                                <i class="bi bi-clipboard-check me-1"></i>Tareas
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('horarios.*') ? 'active' : '' }}"
-                                href="{{ route('horarios.index') }}">
-                                <i class="bi bi-calendar3 me-1"></i>Horarios
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('declaracion.*') ? 'active' : '' }}"
-                                href="{{ route('declaracion.index') }}">
-                                <i class="bi bi-file-earmark-text me-1"></i>Declaración jurada
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('comunicacion.*') ? 'active' : '' }}"
-                                href="{{ route('comunicacion.index') }}">
-                                <i class="bi bi-chat-dots me-1"></i>Comunicación
-                            </a>
-                        </li>
+                        {{-- Actividad áulica --}}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ request()->routeIs('cursos.*') || request()->routeIs('materias.*') || request()->routeIs('alumnos.*') ? 'active' : '' }}"
+                            <a class="nav-link dropdown-toggle {{
+                                request()->routeIs('asistencia.*') ||
+                                request()->routeIs('calificaciones.*') ? 'active' : '' }}"
+                                href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-calendar2-check me-1"></i>Actividad áulica
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('asistencia.*') ? 'active' : '' }}"
+                                        href="{{ route('asistencia.index') }}">
+                                        <i class="bi bi-person-check me-2"></i>Asistencia
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}"
+                                        href="{{ route('calificaciones.index') }}">
+                                        <i class="bi bi-journal-text me-2"></i>Calificaciones
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        {{-- Contenidos --}}
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('contenidos.*') ? 'active' : '' }}"
+                                href="{{ route('contenidos.index') }}">
+                                <i class="bi bi-journal-richtext me-1"></i>Contenidos
+                            </a>
+                        </li>
+
+                        {{-- Material Pedagógico --}}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {{
+                                request()->routeIs('tareas.*') ||
+                                request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
+                                href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-folder2-open me-1"></i>Material pedagógico
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('tareas.*') ? 'active' : '' }}"
+                                        href="{{ route('tareas.index') }}">
+                                        <i class="bi bi-clipboard-check me-2"></i>Prácticos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
+                                        href="{{ route('materialteoricoarchivos.index') }}">
+                                        <i class="bi bi-file-earmark-pdf me-2"></i>Material teórico
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        {{-- Administración --}}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {{
+                                request()->routeIs('cursos.*') ||
+                                request()->routeIs('materias.*') ||
+                                request()->routeIs('alumnos.*') ||
+                                request()->routeIs('niveles.*') ||
+                                request()->routeIs('establecimientos.*') ||
+                                request()->routeIs('ciclos.*') ||
+                                request()->routeIs('areasformacion.*') ||
+                                request()->routeIs('especialidades.*') ||
+                                request()->routeIs('horarios.*') ||
+                                request()->routeIs('declaracion.*') ||
+                                request()->routeIs('planificaciones.*') ? 'active' : '' }}"
                                 href="#" data-bs-toggle="dropdown">
                                 <i class="bi bi-gear me-1"></i>Administración
                             </a>
                             <ul class="dropdown-menu">
+                                <li><h6 class="dropdown-header">Académico</h6></li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('cursos.*') ? 'active' : '' }}"
                                         href="{{ route('cursos.index') }}">
@@ -84,8 +117,27 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item {{ request()->routeIs('planificaciones.*') ? 'active' : '' }}"
+                                        href="{{ route('planificaciones.index') }}">
+                                        <i class="bi bi-journal-bookmark me-2"></i>Planificación
+                                    </a>
                                 </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Horarios</h6></li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('horarios.*') ? 'active' : '' }}"
+                                        href="{{ route('horarios.index') }}">
+                                        <i class="bi bi-calendar3 me-2"></i>Horarios
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('declaracion.*') ? 'active' : '' }}"
+                                        href="{{ route('declaracion.index') }}">
+                                        <i class="bi bi-file-earmark-text me-2"></i>Declaración jurada
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Institucional</h6></li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('niveles.*') ? 'active' : '' }}"
                                         href="{{ route('niveles.index') }}">
@@ -98,9 +150,8 @@
                                         <i class="bi bi-building me-2"></i>Establecimientos
                                     </a>
                                 </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Clasificación</h6></li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('ciclos.*') ? 'active' : '' }}"
                                         href="{{ route('ciclos.index') }}">
@@ -121,6 +172,14 @@
                                 </li>
                             </ul>
                         </li>
+
+                        {{-- Comunicación --}}
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('comunicacion.*') ? 'active' : '' }}"
+                                href="{{ route('comunicacion.index') }}">
+                                <i class="bi bi-chat-dots me-1"></i>Comunicación
+                            </a>
+                        </li>
                     @endauth
                 </ul>
 
@@ -136,9 +195,7 @@
                                         <i class="bi bi-envelope me-1"></i>{{ auth()->user()->email }}
                                     </span>
                                 </li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
@@ -162,7 +219,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
-
         @if (session('error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-circle me-2"></i>{{ session('error') }}
