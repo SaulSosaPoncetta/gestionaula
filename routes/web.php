@@ -25,6 +25,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware(['auth', 'role:docente'])->group(function () {
+    
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
     Route::post('/asistencia/registrar', [AsistenciaController::class, 'registrar'])->name('asistencia.registrar');
     Route::post('/asistencia/guardar', [AsistenciaController::class, 'guardar'])->name('asistencia.guardar');
@@ -34,6 +35,7 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::post('/calificaciones/cargar', [CalificacionController::class, 'cargar'])->name('calificaciones.cargar');
     Route::post('/calificaciones/guardar', [CalificacionController::class, 'guardar'])->name('calificaciones.guardar');
     Route::get('/calificaciones/historial', [CalificacionController::class, 'historial'])->name('calificaciones.historial');
+    Route::get('/asistencia/alumno', [AsistenciaController::class, 'alumno'])->name('asistencia.alumno');
 
     Route::get('/tareas', [TareaController::class, 'index'])->name('tareas.index');
     Route::get('/tareas/crear', [TareaController::class, 'create'])->name('tareas.create');
@@ -67,12 +69,14 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::put('/materias/{materia}', [MateriaController::class, 'update'])->name('materias.update');
     Route::delete('/materias/{materia}', [MateriaController::class, 'destroy'])->name('materias.destroy');
 
+
     Route::get('/alumnos', [AlumnoController::class, 'index'])->name('alumnos.index');
     Route::get('/alumnos/crear', [AlumnoController::class, 'create'])->name('alumnos.create');
     Route::post('/alumnos', [AlumnoController::class, 'store'])->name('alumnos.store');
     Route::get('/alumnos/{alumno}/editar', [AlumnoController::class, 'edit'])->name('alumnos.edit');
     Route::put('/alumnos/{alumno}', [AlumnoController::class, 'update'])->name('alumnos.update');
     Route::delete('/alumnos/{alumno}', [AlumnoController::class, 'destroy'])->name('alumnos.destroy');
+    Route::get('/alumnos/{alumno}', [AlumnoController::class, 'show'])->name('alumnos.show');
 
     Route::get('/comunicacion', [MensajeController::class, 'index'])->name('comunicacion.index');
     Route::get('/comunicacion/crear', [MensajeController::class, 'create'])->name('comunicacion.create');

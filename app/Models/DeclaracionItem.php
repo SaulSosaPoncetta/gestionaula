@@ -9,13 +9,18 @@ class DeclaracionItem extends Model
     protected $table = 'declaracionitems';
 
     protected $fillable = [
-        'declaracion_id', 'curso_id', 'materia_id',
-        'dia', 'horainicio', 'horafin', 'actividad'
+        'declaracion_id', 'establecimiento_id', 'curso_id', 'materia_id',
+        'dia', 'horainicio', 'horafin'
     ];
 
     public function declaracion()
     {
         return $this->belongsTo(Declaracion::class);
+    }
+
+    public function establecimiento()
+    {
+        return $this->belongsTo(Establecimiento::class);
     }
 
     public function curso()

@@ -21,10 +21,11 @@
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Nombre</th>
+                    <th class="ps-4">Año</th>
                     <th>División</th>
                     <th>Turno</th>
                     <th>Nivel</th>
+                    <th>Especialidad</th>
                     <th>Establecimiento</th>
                     <th class="text-center">Alumnos</th>
                     <th class="text-center">Materias</th>
@@ -34,13 +35,18 @@
             <tbody>
                 @foreach($cursos as $curso)
                 <tr>
-                    <td class="ps-4 fw-semibold">{{ $curso->nombre }}</td>
+                    <td class="ps-4 fw-semibold">{{ $curso->anio ?? $curso->nombre }}</td>
                     <td>{{ $curso->division ?? '—' }}</td>
                     <td>{{ $curso->turno ?? '—' }}</td>
-                    <td>{{ $curso->nivel ?? '—' }}</td>
+                    <td>{{ $curso->nivel?->nombre ?? '—' }}</td>
+                    <td>{{ $curso->especialidad?->nombre ?? '—' }}</td>
                     <td>{{ $curso->establecimiento?->nombre ?? '—' }}</td>
-                    <td class="text-center"><span class="badge bg-primary">{{ $curso->alumnos_count }}</span></td>
-                    <td class="text-center"><span class="badge bg-info">{{ $curso->materias_count }}</span></td>
+                    <td class="text-center">
+                        <span class="badge bg-primary">{{ $curso->alumnos_count }}</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-info">{{ $curso->materias_count }}</span>
+                    </td>
                     <td class="text-end pe-3">
                         <a href="{{ route('cursos.edit', $curso) }}" class="btn btn-sm btn-outline-secondary me-1">
                             <i class="bi bi-pencil"></i>

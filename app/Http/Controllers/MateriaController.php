@@ -26,9 +26,9 @@ class MateriaController extends Controller
             $query->where('establecimiento_id', $request->establecimiento_id);
         }
 
-        $materias        = $query->paginate(20);
-        $ciclos          = Ciclo::orderBy('tipo')->get();
-        $areas           = AreaFormacion::orderBy('nombre')->get();
+        $materias         = $query->paginate(20);
+        $ciclos           = Ciclo::orderBy('tipo')->get();
+        $areas            = AreaFormacion::orderBy('nombre')->get();
         $establecimientos = Establecimiento::orderBy('nombre')->get();
 
         return view('materias.index', compact('materias', 'ciclos', 'areas', 'establecimientos'));
@@ -57,17 +57,16 @@ class MateriaController extends Controller
             'especialidad_id'     => 'nullable|exists:especialidades,id',
             'establecimiento_id'  => 'nullable|exists:establecimientos,id',
             'anio'                => 'nullable|string|max:20',
-            'tipomateria'         => 'nullable|in:' . implode(',', Materia::TIPOS),
+            'tipomateria'         => 'nullable|in:aula,taller',
             'tipohora'            => 'nullable|in:' . implode(',', Materia::TIPOSHORA),
             'cargahorariasemanal' => 'nullable|integer|min:1',
             'cargahorariaanual'   => 'nullable|integer|min:1',
-            'cantidadhoras'       => 'nullable|integer|min:1',
         ]);
 
         Materia::create($request->only(
             'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
             'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
-            'cargahorariasemanal', 'cargahorariaanual', 'cantidadhoras'
+            'cargahorariasemanal', 'cargahorariaanual'
         ));
 
         return redirect()->route('materias.index')
@@ -97,17 +96,16 @@ class MateriaController extends Controller
             'especialidad_id'     => 'nullable|exists:especialidades,id',
             'establecimiento_id'  => 'nullable|exists:establecimientos,id',
             'anio'                => 'nullable|string|max:20',
-            'tipomateria'         => 'nullable|in:' . implode(',', Materia::TIPOS),
+            'tipomateria'         => 'nullable|in:aula,taller',
             'tipohora'            => 'nullable|in:' . implode(',', Materia::TIPOSHORA),
             'cargahorariasemanal' => 'nullable|integer|min:1',
             'cargahorariaanual'   => 'nullable|integer|min:1',
-            'cantidadhoras'       => 'nullable|integer|min:1',
         ]);
 
         $materia->update($request->only(
             'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
             'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
-            'cargahorariasemanal', 'cargahorariaanual', 'cantidadhoras'
+            'cargahorariasemanal', 'cargahorariaanual'
         ));
 
         return redirect()->route('materias.index')

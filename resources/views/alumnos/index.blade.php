@@ -53,7 +53,9 @@
                     <th class="ps-4">Apellido y nombre</th>
                     <th>DNI</th>
                     <th>Fecha de nacimiento</th>
-                    <th>Curso</th>
+                    <th>Año</th>
+                    <th>División</th>
+                    <th>Turno</th>
                     <th></th>
                 </tr>
             </thead>
@@ -62,8 +64,10 @@
                 <tr>
                     <td class="ps-4 fw-semibold">{{ $alumno->nombre_completo }}</td>
                     <td>{{ $alumno->dni ?? '—' }}</td>
-                    <td>{{ $alumno->fechanacimiento ? \Carbon\Carbon::parse($alumno->fechanacimiento)->format('d/m/Y') : '—' }}</td>
-                    <td>{{ $alumno->curso->nombre_completo }}</td>
+                    <td>{{ $alumno->fechanacimiento ? $alumno->fechanacimiento->format('d/m/Y') : '—' }}</td>
+                    <td>{{ $alumno->curso?->anio ?? '—' }}</td>
+                    <td>{{ $alumno->curso?->division ?? '—' }}</td>
+                    <td>{{ $alumno->curso?->turno ?? '—' }}</td>
                     <td class="text-end pe-3">
                         <a href="{{ route('alumnos.edit', $alumno) }}" class="btn btn-sm btn-outline-secondary me-1">
                             <i class="bi bi-pencil"></i>

@@ -16,6 +16,17 @@
     <div class="card-body">
         <form method="POST" action="{{ route('materias.update', $materia) }}">
             @csrf @method('PUT')
+
+            @if($errors->any())
+                <div class="alert alert-danger mb-3">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <h6 class="fw-bold text-muted mb-3">Datos generales</h6>
             <div class="row g-3">
                 <div class="col-md-6">
@@ -82,39 +93,31 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Tipo de materia</label>
+                    <label class="form-label fw-semibold">Tipo de espacio</label>
                     <select name="tipomateria" class="form-select">
                         <option value="">—</option>
-                        @foreach($tipos as $tipo)
-                            <option value="{{ $tipo }}" {{ old('tipomateria', $materia->tipomateria) == $tipo ? 'selected' : '' }}>
-                                {{ \App\Models\Materia::TIPOLABELS[$tipo] }}
-                            </option>
-                        @endforeach
+                        <option value="aula"   {{ old('tipomateria', $materia->tipomateria) == 'aula'   ? 'selected' : '' }}>Aula</option>
+                        <option value="taller" {{ old('tipomateria', $materia->tipomateria) == 'taller' ? 'selected' : '' }}>Taller</option>
                     </select>
                 </div>
             </div>
 
             <h6 class="fw-bold text-muted mb-3 mt-4">Carga horaria</h6>
             <div class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label fw-semibold">Tipo de hora</label>
                     <select name="tipohora" class="form-select">
                         <option value="">—</option>
                         <option value="catedra" {{ old('tipohora', $materia->tipohora) == 'catedra' ? 'selected' : '' }}>Hora cátedra</option>
-                        <option value="modulo" {{ old('tipohora', $materia->tipohora) == 'modulo' ? 'selected' : '' }}>Módulo</option>
+                        <option value="modulo"  {{ old('tipohora', $materia->tipohora) == 'modulo'  ? 'selected' : '' }}>Módulo</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Cantidad de horas</label>
-                    <input type="number" name="cantidadhoras" class="form-control"
-                           value="{{ old('cantidadhoras', $materia->cantidadhoras) }}" min="1">
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label fw-semibold">Carga horaria semanal</label>
                     <input type="number" name="cargahorariasemanal" class="form-control"
                            value="{{ old('cargahorariasemanal', $materia->cargahorariasemanal) }}" min="1">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label fw-semibold">Carga horaria anual</label>
                     <input type="number" name="cargahorariaanual" class="form-control"
                            value="{{ old('cargahorariaanual', $materia->cargahorariaanual) }}" min="1">
@@ -122,7 +125,9 @@
             </div>
 
             <div class="mt-4 d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Actualizar</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>Actualizar
+                </button>
                 <a href="{{ route('materias.index') }}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
         </form>

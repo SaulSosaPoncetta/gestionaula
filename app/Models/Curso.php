@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Curso extends Model
 {
-    protected $fillable = ['nombre', 'division', 'turno', 'nivel', 'establecimiento_id'];
+    protected $fillable = [
+        'nombre', 'anio', 'division', 'turno',
+        'nivel_id', 'especialidad_id', 'establecimiento_id'
+    ];
 
     public function alumnos()
     {
@@ -15,12 +18,7 @@ class Curso extends Model
 
     public function materias()
     {
-        return $this->hasMany(Materia::class);
-    }
-
-    public function establecimiento()
-    {
-        return $this->belongsTo(Establecimiento::class);
+        return $this->belongsToMany(Materia::class, 'curso_materia');
     }
 
     public function docentes()
@@ -30,8 +28,31 @@ class Curso extends Model
                     ->withTimestamps();
     }
 
+    public function establecimiento()
+    {
+        return $this->belongsTo(Establecimiento::class);
+    }
+
+    public function nivel()
+    {
+        return $this->belongsTo(Nivel::class);
+    }
+
+    public function especialidad()
+    {
+        return $this->belongsTo(Especialidad::class);
+    }
+
+    /**
+     * Nombre completo: ej "3ro B Mañana"
+     */
     public function getNombreCompletoAttribute(): string
     {
-        return trim("{$this->nombre} {$this->division} {$this->turno}");
+        $partes = array_filter([
+            $this->anio ?? $this->nombre,
+            $this->division,
+            $this->turno,
+        ]);
+        return implode(' ', $partes);
     }
 }

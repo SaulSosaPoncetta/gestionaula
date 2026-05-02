@@ -23,21 +23,23 @@
         @if(isset($horarios[$dia]) && $horarios[$dia]->isNotEmpty())
         <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-primary text-white fw-semibold text-capitalize">
+                <div class="card-header bg-primary text-white fw-semibold">
                     <i class="bi bi-calendar-day me-1"></i>{{ ucfirst($dia) }}
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush">
                         @foreach($horarios[$dia] as $horario)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <li class="list-group-item d-flex justify-content-between align-items-start gap-2">
                             <div>
-                                <div class="fw-semibold">{{ $horario->curso->nombre_completo }}</div>
+                                <div class="fw-semibold">{{ $horario->curso?->nombre_completo ?? '—' }}</div>
                                 <div class="text-muted small">
                                     {{ $horario->materia?->nombre ?? 'Sin materia' }}
-                                    @if(auth()->user()->hasRole('director'))
-                                        &mdash; {{ $horario->docente->name }}
-                                    @endif
                                 </div>
+                                @if($horario->establecimiento)
+                                    <div class="text-muted small">
+                                        <i class="bi bi-building me-1"></i>{{ $horario->establecimiento->nombre }}
+                                    </div>
+                                @endif
                                 <div class="text-muted small">
                                     <i class="bi bi-clock me-1"></i>
                                     {{ \Carbon\Carbon::parse($horario->horainicio)->format('H:i') }}
@@ -46,8 +48,7 @@
                                 </div>
                             </div>
                             <form method="POST" action="{{ route('horarios.destroy', $horario) }}">
-                                @csrf
-                                @method('DELETE')
+                                @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger"
                                         onclick="return confirm('¿Eliminar este horario?')">
                                     <i class="bi bi-trash"></i>

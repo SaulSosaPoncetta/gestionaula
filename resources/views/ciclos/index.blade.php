@@ -13,6 +13,32 @@
     </div>
 </div>
 
+{{-- Totales --}}
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="fs-2 fw-bold text-info">{{ $totalBasico }}</div>
+                <div>
+                    <div class="fw-semibold">Materias en Ciclo Básico</div>
+                    <small class="text-muted">Total de materias asignadas a ciclos básicos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="fs-2 fw-bold text-warning">{{ $totalSuperior }}</div>
+                <div>
+                    <div class="fw-semibold">Materias en Ciclo Superior</div>
+                    <small class="text-muted">Total de materias asignadas a ciclos superiores</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @if($ciclos->isEmpty())
     <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No hay ciclos registrados.</div>
 @else
@@ -38,7 +64,9 @@
                         </span>
                     </td>
                     <td class="text-muted">{{ $ciclo->descripcion ?? '—' }}</td>
-                    <td class="text-center"><span class="badge bg-primary">{{ $ciclo->materias_count }}</span></td>
+                    <td class="text-center">
+                        <span class="badge bg-primary">{{ $ciclo->materias_count }}</span>
+                    </td>
                     <td class="text-end pe-3">
                         <a href="{{ route('ciclos.edit', $ciclo) }}" class="btn btn-sm btn-outline-secondary me-1">
                             <i class="bi bi-pencil"></i>

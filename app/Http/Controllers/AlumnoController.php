@@ -80,4 +80,23 @@ class AlumnoController extends Controller
         return redirect()->route('alumnos.index')
                          ->with('success', 'Alumno eliminado correctamente.');
     }
+    public function show(Alumno $alumno)
+{
+    $alumno->load(['curso.especialidad', 'curso.nivel', 'curso.establecimiento']);
+
+    $asistencias = \App\Models\Asistencia::with('materia')
+        ->where('alumno_id', $alumno->id)
+        ->orderBy('fecha', 'desc')
+        ->get();
+
+    $resumen = [
+        'presente'    => $asistencias->where('estado', 'presente')->count(),
+        'ausente'     => $asistencias->where('estado', 'ausente')->count(),
+        'tarde'       => $asistencias->where('estado', 'tarde')->count(),
+        'justificado' => $asistencias->where('estado', 'justificado')->count(),
+        'total'       => $asistencias->count(),
+    ];
+
+    return view('alumnos.show', compact('alumno', 'asistencias', 'resumen'));
+}
 }

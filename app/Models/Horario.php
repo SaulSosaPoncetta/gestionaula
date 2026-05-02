@@ -7,13 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Horario extends Model
 {
     protected $fillable = [
-        'user_id', 'curso_id', 'materia_id',
+        'user_id', 'establecimiento_id', 'curso_id', 'materia_id',
         'dia', 'horainicio', 'horafin'
     ];
 
     public function docente()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function establecimiento()
+    {
+        return $this->belongsTo(Establecimiento::class);
     }
 
     public function curso()

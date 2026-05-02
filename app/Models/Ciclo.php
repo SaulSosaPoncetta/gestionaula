@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
 class Ciclo extends Model
@@ -15,11 +13,12 @@ class Ciclo extends Model
         return $this->hasMany(Materia::class);
     }
 
-    public function getTipoLabelAttribute(): string
+    public function getTipolabelAttribute(): string
     {
         return match($this->tipo) {
             'basico'   => 'Ciclo Básico',
             'superior' => 'Ciclo Superior',
+            default    => ucfirst($this->tipo),
         };
     }
 }

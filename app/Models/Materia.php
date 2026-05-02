@@ -9,15 +9,15 @@ class Materia extends Model
     protected $fillable = [
         'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
         'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
-        'cargahorariasemanal', 'cargahorariaanual', 'cantidadhoras'
+        'cargahorariasemanal', 'cargahorariaanual'
     ];
 
-    const TIPOS = ['general', 'tecnicoespecifica', 'cientificotecnologica'];
+    const TIPOS     = ['aula', 'taller'];
     const TIPOSHORA = ['catedra', 'modulo'];
+
     const TIPOLABELS = [
-        'general'               => 'General',
-        'tecnicoespecifica'     => 'Técnico Específica',
-        'cientificotecnologica' => 'Científico Tecnológica',
+        'aula'   => 'Aula',
+        'taller' => 'Taller',
     ];
 
     public function ciclo()
@@ -33,6 +33,11 @@ class Materia extends Model
     public function especialidad()
     {
         return $this->belongsTo(Especialidad::class);
+    }
+
+    public function cursos()
+    {
+        return $this->belongsToMany(Curso::class, 'curso_materia');
     }
 
     public function establecimiento()

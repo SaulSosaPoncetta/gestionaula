@@ -1,17 +1,16 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
 class Declaracion extends Model
 {
     protected $fillable = [
-        'user_id', 'ciclo', 'estado', 'observacion',
+        'user_id', 'ciclo', 'fechadeclaracion', 'estado', 'observacion',
         'fechapresentacion', 'fecharesolucion', 'resueltopor'
     ];
 
     protected $casts = [
+        'fechadeclaracion'  => 'date',
         'fechapresentacion' => 'datetime',
         'fecharesolucion'   => 'datetime',
     ];
@@ -31,13 +30,14 @@ class Declaracion extends Model
         return $this->hasMany(DeclaracionItem::class);
     }
 
-    public function getEstadoBadgeAttribute(): string
+    public function getEstadobadgeAttribute(): string
     {
         return match($this->estado) {
             'borrador'   => 'secondary',
             'presentada' => 'primary',
             'aprobada'   => 'success',
             'rechazada'  => 'danger',
+            default      => 'secondary',
         };
     }
 }

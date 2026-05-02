@@ -16,6 +16,17 @@
     <div class="card-body">
         <form method="POST" action="{{ route('alumnos.store') }}">
             @csrf
+
+            @if($errors->any())
+                <div class="alert alert-danger mb-3">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Apellido <span class="text-danger">*</span></label>
@@ -54,7 +65,9 @@
                 </div>
             </div>
             <div class="mt-4 d-flex gap-2">
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Guardar</button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>Guardar
+                </button>
                 <a href="{{ route('alumnos.index') }}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
         </form>

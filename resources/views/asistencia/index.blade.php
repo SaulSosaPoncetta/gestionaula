@@ -6,7 +6,10 @@
         <h4 class="fw-bold"><i class="bi bi-person-check me-2"></i>Asistencia</h4>
         <p class="text-muted">Seleccioná el curso, materia y fecha para registrar la asistencia.</p>
     </div>
-    <div class="col-auto">
+    <div class="col-auto d-flex gap-2">
+        <a href="{{ route('asistencia.alumno') }}" class="btn btn-outline-primary">
+            <i class="bi bi-person-lines-fill me-1"></i>Buscar por alumno
+        </a>
         <a href="{{ route('asistencia.historial') }}" class="btn btn-outline-secondary">
             <i class="bi bi-clock-history me-1"></i>Ver historial
         </a>
@@ -46,6 +49,7 @@
         </form>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -61,4 +65,3 @@ document.getElementById('curso_id').addEventListener('change', function () {
 });
 </script>
 @endpush
-@endsection

@@ -22,7 +22,7 @@
         <i class="bi bi-exclamation-triangle me-2"></i>Este curso no tiene alumnos registrados.
     </div>
 @else
-<form method="POST" action="{{ route('asistencia.guardar') }}">
+<form method="POST" action="{{ route('asistencia.guardar') }}" enctype="multipart/form-data">
     @csrf
     <input type="hidden" name="curso_id" value="{{ $curso->id }}">
     <input type="hidden" name="materia_id" value="{{ $materia?->id }}">
@@ -30,39 +30,75 @@
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
-            <table class="table table-hover mb-0 align-middle">
+            <table class="table table-hover mb-0 align-middle" id="tablaasistencia">
                 <thead class="table-light">
                     <tr>
-                        <th class="ps-4">Alumno</th>
-                        <th class="text-center">Presente</th>
-                        <th class="text-center">Ausente</th>
-                        <th class="text-center">Tarde</th>
-                        <th class="text-center">Justificado</th>
-                        <th>Observación</th>
+                        <th class="ps-4" style="min-width:180px">Alumno</th>
+                        <th class="text-center"><span class="badge bg-success">Presente</span></th>
+                        <th class="text-center"><span class="badge bg-danger">Ausente</span></th>
+                        <th class="text-center"><span class="badge bg-warning text-dark">Tarde</span></th>
+                        <th style="min-width:160px">Hora llegada</th>
+                        <th style="min-width:200px">Justificación (foto)</th>
+                        <th style="min-width:160px">Observación</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($curso->alumnos->sortBy('apellido') as $alumno)
-                    @php $estadoActual = $asistencias[$alumno->id]->estado ?? 'presente'; @endphp
-                    <tr>
+                    @php
+                        $reg = $asistencias[$alumno->id] ?? null;
+                        $estadoActual = $reg?->estado ?? 'presente';
+                    @endphp
+                    <tr class="fila-alumno" data-alumno="{{ $alumno->id }}">
                         <td class="ps-4 fw-semibold">{{ $alumno->nombre_completo }}</td>
-                        @foreach(['presente', 'ausente', 'tarde', 'justificado'] as $estado)
+
                         <td class="text-center">
-                            <div class="form-check d-flex justify-content-center">
-                                <input class="form-check-input"
-                                       type="radio"
-                                       name="asistencias[{{ $alumno->id }}][estado]"
-                                       value="{{ $estado }}"
-                                       {{ $estadoActual === $estado ? 'checked' : '' }}
-                                       required>
+                            <input class="form-check-input radio-estado fs-5" type="radio"
+                                   name="asistencias[{{ $alumno->id }}][estado]"
+                                   value="presente"
+                                   {{ $estadoActual === 'presente' ? 'checked' : '' }} required>
+                        </td>
+
+                        <td class="text-center">
+                            <input class="form-check-input radio-estado fs-5" type="radio"
+                                   name="asistencias[{{ $alumno->id }}][estado]"
+                                   value="ausente"
+                                   {{ $estadoActual === 'ausente' ? 'checked' : '' }}>
+                        </td>
+
+                        <td class="text-center">
+                            <input class="form-check-input radio-estado fs-5" type="radio"
+                                   name="asistencias[{{ $alumno->id }}][estado]"
+                                   value="tarde"
+                                   {{ $estadoActual === 'tarde' ? 'checked' : '' }}>
+                        </td>
+
+                        <td>
+                            <input type="time"
+                                   class="form-control form-control-sm campo-hora"
+                                   name="asistencias[{{ $alumno->id }}][horallegada]"
+                                   value="{{ $reg?->horallegada ?? '' }}"
+                                   {{ $estadoActual !== 'tarde' ? 'style=display:none' : '' }}>
+                        </td>
+
+                        <td>
+                            <div class="campo-foto" {{ $estadoActual !== 'ausente' ? 'style=display:none' : '' }}>
+                                <input type="file"
+                                       class="form-control form-control-sm"
+                                       name="fotos[{{ $alumno->id }}]"
+                                       accept="image/*,application/pdf">
+                                @if($reg?->fotojustificacion)
+                                    <small class="text-success d-block mt-1">
+                                        <i class="bi bi-check-circle me-1"></i>Ya tiene foto
+                                    </small>
+                                @endif
                             </div>
                         </td>
-                        @endforeach
+
                         <td>
                             <input type="text"
                                    class="form-control form-control-sm"
                                    name="asistencias[{{ $alumno->id }}][observacion]"
-                                   value="{{ $asistencias[$alumno->id]->observacion ?? '' }}"
+                                   value="{{ $reg?->observacion ?? '' }}"
                                    placeholder="Opcional">
                         </td>
                     </tr>
@@ -81,3 +117,49 @@
 </form>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.fila-alumno').forEach(function (fila) {
+        const radios    = fila.querySelectorAll('.radio-estado');
+        const campoHora = fila.querySelector('.campo-hora');
+        const campoFoto = fila.querySelector('.campo-foto');
+
+        function actualizarCampos(estado) {
+            if (estado === 'tarde') {
+                campoHora.style.display = '';
+                if (!campoHora.value) {
+                    const ahora = new Date();
+                    const hh = String(ahora.getHours()).padStart(2, '0');
+                    const mm = String(ahora.getMinutes()).padStart(2, '0');
+                    campoHora.value = `${hh}:${mm}`;
+                }
+            } else {
+                campoHora.style.display = 'none';
+                campoHora.value = '';
+            }
+
+            if (campoFoto) {
+                if (estado === 'ausente') {
+                    campoFoto.style.display = '';
+                } else {
+                    campoFoto.style.display = 'none';
+                    const fileInput = campoFoto.querySelector('input[type=file]');
+                    if (fileInput) fileInput.value = '';
+                }
+            }
+        }
+
+        const checkedRadio = fila.querySelector('.radio-estado:checked');
+        if (checkedRadio) actualizarCampos(checkedRadio.value);
+
+        radios.forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                actualizarCampos(this.value);
+            });
+        });
+    });
+});
+</script>
+@endpush
