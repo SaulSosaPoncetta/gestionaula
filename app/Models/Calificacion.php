@@ -6,13 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Calificacion extends Model
 {
-    protected $fillable = [
-        'alumno_id', 'curso_id', 'materia_id',
-        'user_id', 'periodo', 'tipo', 'nota', 'observacion'
-    ];
+    protected $table = 'calificaciones';
 
-    protected $casts = [
-        'nota' => 'decimal:2',
+    protected $fillable = [
+        'alumno_id', 'curso_id', 'materia_id', 'user_id',
+        'periodo_id', 'tipoevaluacion_id', 'nota', 'observacion'
     ];
 
     public function alumno()
@@ -33,5 +31,15 @@ class Calificacion extends Model
     public function docente()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function periodo()
+    {
+        return $this->belongsTo(Periodo::class);
+    }
+
+    public function tipoevaluacion()
+    {
+        return $this->belongsTo(TipoEvaluacion::class);
     }
 }

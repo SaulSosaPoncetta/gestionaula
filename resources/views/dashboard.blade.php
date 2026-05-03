@@ -18,7 +18,7 @@
 </div>
 
 {{-- Accesos rápidos --}}
-<div class="row g-3 mb-4">
+<div class="row g-3 mb-4" id="accesoRapido">
     <div class="col-sm-6 col-lg-4">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
@@ -29,7 +29,10 @@
                     <h6 class="card-title mb-0">Asistencia</h6>
                 </div>
                 <p class="card-text text-muted small">Registrá la asistencia diaria de tus alumnos.</p>
-                <a href="{{ route('asistencia.index') }}" class="btn btn-sm btn-outline-primary">Ir al módulo</a>
+                <button id="btnAsistencia" class="btn btn-sm btn-outline-primary"
+                        onclick="accesoRapidoModulo('asistencia')">
+                    Ir al módulo
+                </button>
             </div>
         </div>
     </div>
@@ -43,7 +46,10 @@
                     <h6 class="card-title mb-0">Calificaciones</h6>
                 </div>
                 <p class="card-text text-muted small">Cargá y consultá las notas de tus alumnos.</p>
-                <a href="{{ route('calificaciones.index') }}" class="btn btn-sm btn-outline-success">Ir al módulo</a>
+                <button id="btnCalificaciones" class="btn btn-sm btn-outline-success"
+                        onclick="accesoRapidoModulo('calificaciones')">
+                    Ir al módulo
+                </button>
             </div>
         </div>
     </div>
@@ -54,10 +60,13 @@
                     <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
                         <i class="bi bi-clipboard-check fs-4 text-warning"></i>
                     </div>
-                    <h6 class="card-title mb-0">Tareas</h6>
+                    <h6 class="card-title mb-0">Prácticos</h6>
                 </div>
-                <p class="card-text text-muted small">Asigná tareas y revisá las entregas.</p>
-                <a href="{{ route('tareas.index') }}" class="btn btn-sm btn-outline-warning">Ir al módulo</a>
+                <p class="card-text text-muted small">Asigná prácticos y revisá las entregas.</p>
+                <button id="btnPracticos" class="btn btn-sm btn-outline-warning"
+                        onclick="accesoRapidoModulo('practicos')">
+                    Ir al módulo
+                </button>
             </div>
         </div>
     </div>
@@ -108,6 +117,19 @@
 {{-- Card clase actual --}}
 <div id="claseActualContainer"></div>
 
+{{-- Modal acceso rápido por módulo --}}
+<div class="modal fade" id="modalAcceso" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitulo">Acceso rápido</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="modalCuerpo"></div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -133,6 +155,81 @@ function clasesActuales(diaActual, minutosActuales) {
     );
 }
 
+function abrirModal(modulo, cursoId, materiaId, cursoNombre, materiaNombre, alumnos) {
+    const titulo = document.getElementById('modalTitulo');
+    const cuerpo = document.getElementById('modalCuerpo');
+    const fecha  = new Date();
+    const hoy    = `${fecha.getFullYear()}-${pad(fecha.getMonth()+1)}-${pad(fecha.getDate())}`;
+
+    titulo.innerHTML = `<i class="bi bi-lightning me-2"></i>Acceso rápido — ${materiaNombre ?? 'Sin materia'} · ${cursoNombre}`;
+
+    let html = '';
+
+    if (modulo === 'asistencia') {
+        html += `
+        <p class="text-muted small mb-3">Seleccioná cómo querés registrar la asistencia:</p>
+        <div class="d-grid gap-2">
+            <a href="/asistencia/registrar?curso_id=${cursoId}&materia_id=${materiaId}&fecha=${hoy}"
+               class="btn btn-primary">
+                <i class="bi bi-people me-2"></i>Registrar asistencia del curso completo
+            </a>
+        </div>
+        <hr>
+        <p class="text-muted small mb-2">O ver asistencia de un alumno en particular:</p>
+        <div class="d-grid gap-2">`;
+        alumnos.forEach(a => {
+            html += `<a href="/asistencia/alumno?alumno_id=${a.id}&buscar=${encodeURIComponent(a.nombre)}"
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-person me-1"></i>${a.nombre}
+                     </a>`;
+        });
+        html += `</div>`;
+    }
+
+    else if (modulo === 'calificaciones') {
+        html += `
+        <p class="text-muted small mb-3">Seleccioná cómo querés ver las calificaciones:</p>
+        <div class="d-grid gap-2">
+            <a href="/calificaciones/historial?curso_id=${cursoId}&materia_id=${materiaId}"
+               class="btn btn-success">
+                <i class="bi bi-journal-text me-2"></i>Ver calificaciones del curso completo
+            </a>
+            <a href="/calificaciones?curso_id=${cursoId}&materia_id=${materiaId}"
+               class="btn btn-outline-success">
+                <i class="bi bi-plus-circle me-2"></i>Cargar nuevas calificaciones
+            </a>
+        </div>
+        <hr>
+        <p class="text-muted small mb-2">O ver calificaciones de un alumno en particular:</p>
+        <div class="d-grid gap-2">`;
+        alumnos.forEach(a => {
+            html += `<a href="/calificaciones/historial?curso_id=${cursoId}&materia_id=${materiaId}&alumno_id=${a.id}"
+                       class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-person me-1"></i>${a.nombre}
+                     </a>`;
+        });
+        html += `</div>`;
+    }
+
+    else if (modulo === 'practicos') {
+        html += `
+        <p class="text-muted small mb-3">Seleccioná cómo querés ver los prácticos:</p>
+        <div class="d-grid gap-2">
+            <a href="/tareas?curso_id=${cursoId}"
+               class="btn btn-warning text-dark">
+                <i class="bi bi-clipboard-check me-2"></i>Ver todos los prácticos del curso
+            </a>
+            <a href="/tareas/crear?curso_id=${cursoId}"
+               class="btn btn-outline-warning text-dark">
+                <i class="bi bi-plus-circle me-2"></i>Crear nuevo práctico
+            </a>
+        </div>`;
+    }
+
+    cuerpo.innerHTML = html;
+    new bootstrap.Modal(document.getElementById('modalAcceso')).show();
+}
+
 function renderClaseActual(clases) {
     const container = document.getElementById('claseActualContainer');
 
@@ -149,31 +246,38 @@ function renderClaseActual(clases) {
 
     let html = '';
     clases.forEach(clase => {
+        const alumnosJson = JSON.stringify(clase.alumnos).replace(/"/g, '&quot;');
+        const cursoNombre = (clase.curso ?? '').replace(/"/g, '&quot;');
+        const materiaNombre = (clase.materia ?? '').replace(/"/g, '&quot;');
+
         html += `
         <div class="card border-0 shadow-sm mb-3 border-start border-success border-4">
             <div class="card-body">
-
-                {{-- Título: materia y curso --}}
                 <div class="text-center mb-3">
                     <div class="fs-3 fw-bold text-success">
                         <i class="bi bi-book me-2"></i>${clase.materia ?? 'Sin materia'}
                     </div>
                     <div class="fs-5 text-muted fw-semibold">${clase.curso ?? '—'}</div>
+                    <div class="text-muted small">${clase.horainicio} — ${clase.horafin}</div>
+                </div>
+
+                {{-- Botones de acceso rápido --}}
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <button class="btn btn-primary btn-sm"
+                        onclick="abrirModal('asistencia', ${clase.curso_id}, ${clase.materia_id ?? 'null'}, '${cursoNombre}', '${materiaNombre}', ${alumnosJson})">
+                        <i class="bi bi-person-check me-1"></i>Asistencia
+                    </button>
+                    <button class="btn btn-success btn-sm"
+                        onclick="abrirModal('calificaciones', ${clase.curso_id}, ${clase.materia_id ?? 'null'}, '${cursoNombre}', '${materiaNombre}', ${alumnosJson})">
+                        <i class="bi bi-journal-text me-1"></i>Calificaciones
+                    </button>
+                    <button class="btn btn-warning btn-sm text-dark"
+                        onclick="abrirModal('practicos', ${clase.curso_id}, ${clase.materia_id ?? 'null'}, '${cursoNombre}', '${materiaNombre}', ${alumnosJson})">
+                        <i class="bi bi-clipboard-check me-1"></i>Prácticos
+                    </button>
                 </div>
 
                 <hr>
-
-                {{-- Datos del horario --}}
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <table class="table table-sm mb-0">
-                            <tr>
-                                <td class="text-muted" style="width:40%">Horario</td>
-                                <td class="fw-semibold">${clase.horainicio} — ${clase.horafin}</td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
 
                 {{-- Lista de alumnos --}}
                 <div class="fw-semibold mb-2">
@@ -191,30 +295,24 @@ function renderClaseActual(clases) {
                         </tr>
                     </thead>
                     <tbody>`;
-
             clase.alumnos.forEach((a, idx) => {
                 html += `
-                        <tr>
-                            <td class="text-muted">${idx + 1}</td>
-                            <td class="fw-semibold">${a.nombre}</td>
-                            <td class="text-end">
-                                <a href="/alumnos/${a.id}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye me-1"></i>Ver ficha
-                                </a>
-                            </td>
-                        </tr>`;
+                    <tr>
+                        <td class="text-muted">${idx + 1}</td>
+                        <td class="fw-semibold">${a.nombre}</td>
+                        <td class="text-end">
+                            <a href="/alumnos/${a.id}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i>Ver ficha
+                            </a>
+                        </td>
+                    </tr>`;
             });
-
-            html += `
-                    </tbody>
-                </table>`;
+            html += `</tbody></table>`;
         } else {
             html += `<div class="text-muted small">No hay alumnos registrados en este curso.</div>`;
         }
 
-        html += `
-            </div>
-        </div>`;
+        html += `</div></div>`;
     });
 
     container.innerHTML = html;
@@ -233,8 +331,34 @@ function actualizarReloj() {
     document.getElementById('fechaCompleta').textContent =
         `${ahora.getDate()} de ${meses[ahora.getMonth()]} de ${ahora.getFullYear()}`;
 
-    const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
-    renderClaseActual(clasesActuales(dia, minutosActuales));
+const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
+    const clases = clasesActuales(dia, minutosActuales);
+    claseActivaActual = clases.length > 0 ? clases[0] : null;
+    renderClaseActual(clases);
+}
+// Guarda la clase activa globalmente para usarla desde los cards
+let claseActivaActual = null;
+
+function accesoRapidoModulo(modulo) {
+    if (claseActivaActual) {
+        // Hay clase activa: abrir modal con contexto
+        abrirModal(
+            modulo,
+            claseActivaActual.curso_id,
+            claseActivaActual.materia_id,
+            claseActivaActual.curso ?? '',
+            claseActivaActual.materia ?? '',
+            claseActivaActual.alumnos
+        );
+    } else {
+        // No hay clase activa: ir directo al módulo
+        const rutas = {
+            'asistencia':     '/asistencia',
+            'calificaciones': '/calificaciones',
+            'practicos':      '/tareas',
+        };
+        window.location.href = rutas[modulo] ?? '/dashboard';
+    }
 }
 
 actualizarReloj();

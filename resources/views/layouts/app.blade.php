@@ -25,9 +25,7 @@
                     @auth
                         {{-- Actividad áulica --}}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{
-                                request()->routeIs('asistencia.*') ||
-                                request()->routeIs('calificaciones.*') ? 'active' : '' }}"
+                            <a class="nav-link dropdown-toggle {{ request()->routeIs('asistencia.*') || request()->routeIs('calificaciones.*') ? 'active' : '' }}"
                                 href="#" data-bs-toggle="dropdown">
                                 <i class="bi bi-calendar2-check me-1"></i>Actividad áulica
                             </a>
@@ -57,9 +55,7 @@
 
                         {{-- Material Pedagógico --}}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{
-                                request()->routeIs('tareas.*') ||
-                                request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
+                            <a class="nav-link dropdown-toggle {{ request()->routeIs('tareas.*') || request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
                                 href="#" data-bs-toggle="dropdown">
                                 <i class="bi bi-folder2-open me-1"></i>Material pedagógico
                             </a>
@@ -81,23 +77,26 @@
 
                         {{-- Administración --}}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{
-                                request()->routeIs('cursos.*') ||
-                                request()->routeIs('materias.*') ||
-                                request()->routeIs('alumnos.*') ||
-                                request()->routeIs('niveles.*') ||
-                                request()->routeIs('establecimientos.*') ||
-                                request()->routeIs('ciclos.*') ||
-                                request()->routeIs('areasformacion.*') ||
-                                request()->routeIs('especialidades.*') ||
-                                request()->routeIs('horarios.*') ||
-                                request()->routeIs('declaracion.*') ||
-                                request()->routeIs('planificaciones.*') ? 'active' : '' }}"
+                            <a class="nav-link dropdown-toggle {{ request()->routeIs('cursos.*') ||
+                            request()->routeIs('materias.*') ||
+                            request()->routeIs('alumnos.*') ||
+                            request()->routeIs('niveles.*') ||
+                            request()->routeIs('establecimientos.*') ||
+                            request()->routeIs('ciclos.*') ||
+                            request()->routeIs('areasformacion.*') ||
+                            request()->routeIs('especialidades.*') ||
+                            request()->routeIs('horarios.*') ||
+                            request()->routeIs('declaracion.*') ||
+                            request()->routeIs('planificaciones.*')
+                                ? 'active'
+                                : '' }}"
                                 href="#" data-bs-toggle="dropdown">
                                 <i class="bi bi-gear me-1"></i>Administración
                             </a>
                             <ul class="dropdown-menu">
-                                <li><h6 class="dropdown-header">Académico</h6></li>
+                                <li>
+                                    <h6 class="dropdown-header">Académico</h6>
+                                </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('cursos.*') ? 'active' : '' }}"
                                         href="{{ route('cursos.index') }}">
@@ -122,8 +121,12 @@
                                         <i class="bi bi-journal-bookmark me-2"></i>Planificación
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Horarios</h6></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <h6 class="dropdown-header">Horarios</h6>
+                                </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('horarios.*') ? 'active' : '' }}"
                                         href="{{ route('horarios.index') }}">
@@ -136,8 +139,12 @@
                                         <i class="bi bi-file-earmark-text me-2"></i>Declaración jurada
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Institucional</h6></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <h6 class="dropdown-header">Institucional</h6>
+                                </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('niveles.*') ? 'active' : '' }}"
                                         href="{{ route('niveles.index') }}">
@@ -150,8 +157,29 @@
                                         <i class="bi bi-building me-2"></i>Establecimientos
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Clasificación</h6></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                              
+                                <li><h6 class="dropdown-header">Evaluación</h6></li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
+                                        href="{{ route('periodos.index') }}">
+                                        <i class="bi bi-calendar3 me-2"></i>Períodos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('tiposevaluacion.*') ? 'active' : '' }}"
+                                        href="{{ route('tiposevaluacion.index') }}">
+                                        <i class="bi bi-card-checklist me-2"></i>Tipos de evaluación
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <h6 class="dropdown-header">Clasificación</h6>
+                                </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('ciclos.*') ? 'active' : '' }}"
                                         href="{{ route('ciclos.index') }}">
@@ -170,8 +198,11 @@
                                         <i class="bi bi-star me-2"></i>Especialidades
                                     </a>
                                 </li>
+
                             </ul>
+
                         </li>
+
 
                         {{-- Comunicación --}}
                         <li class="nav-item">
@@ -195,7 +226,9 @@
                                         <i class="bi bi-envelope me-1"></i>{{ auth()->user()->email }}
                                     </span>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
                                 <li>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf

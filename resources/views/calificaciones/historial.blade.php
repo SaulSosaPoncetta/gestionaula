@@ -21,32 +21,53 @@
                     <select name="curso_id" class="form-select">
                         <option value="">Todos</option>
                         @foreach($cursos as $curso)
-                            <option value="{{ $curso->id }}" {{ ($filtros['curso_id'] ?? '') == $curso->id ? 'selected' : '' }}>
+                            <option value="{{ $curso->id }}"
+                                {{ ($filtros['curso_id'] ?? '') == $curso->id ? 'selected' : '' }}>
                                 {{ $curso->nombre_completo }}
                             </option>
                         @endforeach
                     </select>
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Período</label>
-                    <select name="periodo" class="form-select">
+                    <select name="periodo_id" class="form-select">
                         <option value="">Todos</option>
                         @foreach($periodos as $p)
-                            <option value="{{ $p }}" {{ ($filtros['periodo'] ?? '') == $p ? 'selected' : '' }}>{{ $p }}</option>
+                            <option value="{{ $p->id }}"
+                                {{ ($filtros['periodo_id'] ?? '') == $p->id ? 'selected' : '' }}>
+                                {{ $p->denominacion }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Tipo de evaluación</label>
+                    <select name="tipoevaluacion_id" class="form-select">
+                        <option value="">Todos</option>
+                        @foreach($tipos as $t)
+                            <option value="{{ $t->id }}"
+                                {{ ($filtros['tipoevaluacion_id'] ?? '') == $t->id ? 'selected' : '' }}>
+                                {{ $t->denominacion }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Alumno</label>
                     <select name="alumno_id" class="form-select">
                         <option value="">Todos</option>
                         @foreach($alumnos as $alumno)
-                            <option value="{{ $alumno->id }}" {{ ($filtros['alumno_id'] ?? '') == $alumno->id ? 'selected' : '' }}>
+                            <option value="{{ $alumno->id }}"
+                                {{ ($filtros['alumno_id'] ?? '') == $alumno->id ? 'selected' : '' }}>
                                 {{ $alumno->nombre_completo }}
                             </option>
                         @endforeach
                     </select>
                 </div>
+
                 <div class="col-md-3 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="bi bi-search me-1"></i>Filtrar
@@ -76,18 +97,20 @@
                 @foreach($calificaciones as $cal)
                 @php
                     $color = match(true) {
-                        $cal->nota >= 7  => 'success',
-                        $cal->nota >= 4  => 'warning',
-                        default          => 'danger',
+                        $cal->nota >= 7 => 'success',
+                        $cal->nota >= 4 => 'warning',
+                        default         => 'danger',
                     };
                 @endphp
                 <tr>
                     <td class="ps-4 fw-semibold">{{ $cal->alumno->nombre_completo }}</td>
                     <td>{{ $cal->materia?->nombre ?? '—' }}</td>
-                    <td>{{ $cal->periodo }}</td>
-                    <td>{{ $cal->tipo }}</td>
+                    <td>{{ $cal->periodo?->denominacion ?? '—' }}</td>
+                    <td>{{ $cal->tipoevaluacion?->denominacion ?? '—' }}</td>
                     <td class="text-center">
-                        <span class="badge bg-{{ $color }} fs-6">{{ number_format($cal->nota, 2) }}</span>
+                        <span class="badge bg-{{ $color }} fs-6">
+                            {{ number_format($cal->nota, 2) }}
+                        </span>
                     </td>
                     <td>{{ $cal->observacion ?? '—' }}</td>
                     <td>{{ $cal->docente->name }}</td>

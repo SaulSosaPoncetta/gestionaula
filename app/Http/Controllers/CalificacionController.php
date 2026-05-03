@@ -5,62 +5,59 @@ namespace App\Http\Controllers;
 use App\Models\Calificacion;
 use App\Models\Curso;
 use App\Models\Materia;
+use App\Models\Periodo;
+use App\Models\TipoEvaluacion;
+use App\Models\Alumno;
 use Illuminate\Http\Request;
 
 class CalificacionController extends Controller
 {
-    const PERIODOS = ['1er trimestre', '2do trimestre', '3er trimestre'];
-    const TIPOS = ['Trabajo práctico', 'Examen', 'Oral', 'Proyecto', 'Concepto'];
-
     public function index()
-{
-    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
-                   ->with('materias')
-                   ->orderBy('nombre')
-                   ->get();
+    {
+        $cursos   = Curso::orderBy('anio')->orderBy('division')->get();
+        $periodos = Periodo::orderBy('orden')->get();
+        $tipos    = TipoEvaluacion::orderBy('denominacion')->get();
 
-    $periodos = self::PERIODOS;
-    $tipos = self::TIPOS;
-
-    return view('calificaciones.index', compact('cursos', 'periodos', 'tipos'));
-}
+        return view('calificaciones.index', compact('cursos', 'periodos', 'tipos'));
+    }
 
     public function cargar(Request $request)
     {
         $request->validate([
-            'curso_id'   => 'required|exists:cursos,id',
-            'materia_id' => 'nullable|exists:materias,id',
-            'periodo'    => 'required|string',
-            'tipo'       => 'required|string',
+            'curso_id'          => 'required|exists:cursos,id',
+            'materia_id'        => 'required|exists:materias,id',
+            'periodo_id'        => 'required|exists:periodos,id',
+            'tipoevaluacion_id' => 'required|exists:tiposevaluacion,id',
+            'fecha'             => 'required|date',
         ]);
 
-        $curso = Curso::with('alumnos')->findOrFail($request->curso_id);
-        $materia = $request->materia_id ? Materia::find($request->materia_id) : null;
+        $curso   = Curso::with('alumnos')->findOrFail($request->curso_id);
+        $materia = Materia::findOrFail($request->materia_id);
+        $periodo = Periodo::findOrFail($request->periodo_id);
+        $tipo    = TipoEvaluacion::findOrFail($request->tipoevaluacion_id);
+        $fecha   = $request->fecha;
 
         $calificaciones = Calificacion::where('curso_id', $request->curso_id)
-            ->where('periodo', $request->periodo)
-            ->where('tipo', $request->tipo)
-            ->when($request->materia_id, fn($q) => $q->where('materia_id', $request->materia_id))
+            ->where('materia_id', $request->materia_id)
+            ->where('periodo_id', $request->periodo_id)
+            ->where('tipoevaluacion_id', $request->tipoevaluacion_id)
             ->get()
             ->keyBy('alumno_id');
 
-        $periodos = self::PERIODOS;
-        $tipos = self::TIPOS;
-
         return view('calificaciones.cargar', compact(
-            'curso', 'materia', 'calificaciones',
-            'periodos', 'tipos'
-        ) + $request->only('periodo', 'tipo'));
+            'curso', 'materia', 'periodo', 'tipo', 'fecha', 'calificaciones'
+        ));
     }
 
     public function guardar(Request $request)
     {
         $request->validate([
-            'curso_id'       => 'required|exists:cursos,id',
-            'materia_id'     => 'nullable|exists:materias,id',
-            'periodo'        => 'required|string',
-            'tipo'           => 'required|string',
-            'calificaciones' => 'required|array',
+            'curso_id'          => 'required|exists:cursos,id',
+            'materia_id'        => 'required|exists:materias,id',
+            'periodo_id'        => 'required|exists:periodos,id',
+            'tipoevaluacion_id' => 'required|exists:tiposevaluacion,id',
+            'fecha'             => 'required|date',
+            'calificaciones'    => 'required|array',
         ]);
 
         foreach ($request->calificaciones as $alumnoId => $datos) {
@@ -68,11 +65,11 @@ class CalificacionController extends Controller
 
             Calificacion::updateOrCreate(
                 [
-                    'alumno_id'  => $alumnoId,
-                    'curso_id'   => $request->curso_id,
-                    'materia_id' => $request->materia_id,
-                    'periodo'    => $request->periodo,
-                    'tipo'       => $request->tipo,
+                    'alumno_id'          => $alumnoId,
+                    'curso_id'           => $request->curso_id,
+                    'materia_id'         => $request->materia_id,
+                    'periodo_id'         => $request->periodo_id,
+                    'tipoevaluacion_id'  => $request->tipoevaluacion_id,
                 ],
                 [
                     'user_id'     => auth()->id(),
@@ -86,35 +83,37 @@ class CalificacionController extends Controller
                          ->with('success', 'Calificaciones guardadas correctamente.');
     }
 
-   public function historial(Request $request)
-{
-    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
-                   ->orderBy('nombre')
-                   ->get();
+    public function historial(Request $request)
+    {
+        $cursos   = Curso::orderBy('anio')->orderBy('division')->get();
+        $periodos = Periodo::orderBy('orden')->get();
+        $tipos    = TipoEvaluacion::orderBy('denominacion')->get();
 
-    $calificaciones = collect();
-    $filtros = [];
-    $periodos = self::PERIODOS;
+        $calificaciones = collect();
+        $filtros        = [];
 
-    if ($request->filled('curso_id')) {
-        $filtros = $request->only(['curso_id', 'materia_id', 'periodo', 'alumno_id']);
+        if ($request->filled('curso_id')) {
+            $filtros = $request->only(['curso_id', 'materia_id', 'periodo_id', 'tipoevaluacion_id', 'alumno_id']);
 
-        $query = Calificacion::with(['alumno', 'materia', 'docente'])
-            ->where('curso_id', $request->curso_id);
+            $query = Calificacion::with(['alumno', 'materia', 'periodo', 'tipoevaluacion'])
+                ->where('curso_id', $request->curso_id);
 
-        if ($request->filled('materia_id')) $query->where('materia_id', $request->materia_id);
-        if ($request->filled('periodo'))    $query->where('periodo', $request->periodo);
-        if ($request->filled('alumno_id'))  $query->where('alumno_id', $request->alumno_id);
+            if ($request->filled('materia_id'))        $query->where('materia_id', $request->materia_id);
+            if ($request->filled('periodo_id'))        $query->where('periodo_id', $request->periodo_id);
+            if ($request->filled('tipoevaluacion_id')) $query->where('tipoevaluacion_id', $request->tipoevaluacion_id);
+            if ($request->filled('alumno_id'))         $query->where('alumno_id', $request->alumno_id);
 
-        $calificaciones = $query->orderBy('periodo')->orderBy('tipo')->paginate(30);
+            $calificaciones = $query->orderBy('created_at', 'desc')->paginate(30);
+        }
+
+        $alumnos = collect();
+        if ($request->filled('curso_id')) {
+            $alumnos = Alumno::where('curso_id', $request->curso_id)
+                ->orderBy('apellido')->get();
+        }
+
+        return view('calificaciones.historial', compact(
+            'cursos', 'calificaciones', 'filtros', 'periodos', 'tipos', 'alumnos'
+        ));
     }
-
-    $alumnos = collect();
-    if ($request->filled('curso_id')) {
-        $alumnos = \App\Models\Alumno::where('curso_id', $request->curso_id)
-            ->orderBy('apellido')->get();
-    }
-
-    return view('calificaciones.historial', compact('cursos', 'calificaciones', 'filtros', 'periodos', 'alumnos'));
-}
 }

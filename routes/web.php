@@ -18,6 +18,8 @@ use App\Http\Controllers\EspecialidadController;
 use App\Http\Controllers\ContenidoController;
 use App\Http\Controllers\PlanificacionController;
 use App\Http\Controllers\MaterialTeoricoController;
+use App\Http\Controllers\PeriodoController;
+use App\Http\Controllers\TipoEvaluacionController;
 
 Route::get('/', function () {
     return redirect()->route('dashboard');
@@ -35,7 +37,7 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::get('/asistencia/historial', [AsistenciaController::class, 'historial'])->name('asistencia.historial');
 
     Route::get('/calificaciones', [CalificacionController::class, 'index'])->name('calificaciones.index');
-    Route::post('/calificaciones/cargar', [CalificacionController::class, 'cargar'])->name('calificaciones.cargar');
+    Route::get('/calificaciones/cargar', [CalificacionController::class, 'cargar'])->name('calificaciones.cargar');
     Route::post('/calificaciones/guardar', [CalificacionController::class, 'guardar'])->name('calificaciones.guardar');
     Route::get('/calificaciones/historial', [CalificacionController::class, 'historial'])->name('calificaciones.historial');
     Route::get('/asistencia/alumno', [AsistenciaController::class, 'alumno'])->name('asistencia.alumno');
@@ -144,6 +146,23 @@ Route::get('/materialteoricoarchivos', [MaterialTeoricoController::class, 'index
 Route::get('/materialteoricoarchivos/crear', [MaterialTeoricoController::class, 'create'])->name('materialteoricoarchivos.create');
 Route::post('/materialteoricoarchivos', [MaterialTeoricoController::class, 'store'])->name('materialteoricoarchivos.store');
 Route::delete('/materialteoricoarchivos/{materialteoricoarchivo}', [MaterialTeoricoController::class, 'destroy'])->name('materialteoricoarchivos.destroy');
+
+// Períodos
+Route::get('/periodos', [PeriodoController::class, 'index'])->name('periodos.index');
+Route::get('/periodos/crear', [PeriodoController::class, 'create'])->name('periodos.create');
+Route::post('/periodos', [PeriodoController::class, 'store'])->name('periodos.store');
+Route::get('/periodos/{periodo}/editar', [PeriodoController::class, 'edit'])->name('periodos.edit');
+Route::put('/periodos/{periodo}', [PeriodoController::class, 'update'])->name('periodos.update');
+Route::delete('/periodos/{periodo}', [PeriodoController::class, 'destroy'])->name('periodos.destroy');
+
+// Tipos de evaluación
+Route::get('/tiposevaluacion', [TipoEvaluacionController::class, 'index'])->name('tiposevaluacion.index');
+Route::get('/tiposevaluacion/crear', [TipoEvaluacionController::class, 'create'])->name('tiposevaluacion.create');
+Route::post('/tiposevaluacion', [TipoEvaluacionController::class, 'store'])->name('tiposevaluacion.store');
+Route::get('/tiposevaluacion/{tiposevaluacion}/editar', [TipoEvaluacionController::class, 'edit'])->name('tiposevaluacion.edit');
+Route::put('/tiposevaluacion/{tiposevaluacion}', [TipoEvaluacionController::class, 'update'])->name('tiposevaluacion.update');
+Route::delete('/tiposevaluacion/{tiposevaluacion}', [TipoEvaluacionController::class, 'destroy'])->name('tiposevaluacion.destroy');
+
 });
 
 require __DIR__.'/auth.php';

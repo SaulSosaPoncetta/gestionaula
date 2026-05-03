@@ -6,8 +6,10 @@
         <h4 class="fw-bold"><i class="bi bi-journal-text me-2"></i>Cargar notas</h4>
         <p class="text-muted">
             <strong>{{ $curso->nombre_completo }}</strong>
-            @if($materia) — {{ $materia->nombre }} @endif
-            &mdash; {{ $periodo }} &mdash; {{ $tipo }}
+            &mdash; {{ $materia->nombre }}
+            &mdash; {{ $periodo->denominacion }}
+            &mdash; {{ $tipo->denominacion }}
+            &mdash; {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }}
         </p>
     </div>
     <div class="col-auto">
@@ -24,10 +26,11 @@
 @else
 <form method="POST" action="{{ route('calificaciones.guardar') }}">
     @csrf
-    <input type="hidden" name="curso_id" value="{{ $curso->id }}">
-    <input type="hidden" name="materia_id" value="{{ $materia?->id }}">
-    <input type="hidden" name="periodo" value="{{ $periodo }}">
-    <input type="hidden" name="tipo" value="{{ $tipo }}">
+    <input type="hidden" name="curso_id"          value="{{ $curso->id }}">
+    <input type="hidden" name="materia_id"         value="{{ $materia->id }}">
+    <input type="hidden" name="periodo_id"         value="{{ $periodo->id }}">
+    <input type="hidden" name="tipoevaluacion_id"  value="{{ $tipo->id }}">
+    <input type="hidden" name="fecha"              value="{{ $fecha }}">
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -35,7 +38,7 @@
                 <thead class="table-light">
                     <tr>
                         <th class="ps-4">Alumno</th>
-                        <th style="width:160px">Nota (0-10)</th>
+                        <th style="width:160px">Nota (0 a 10)</th>
                         <th>Observación</th>
                     </tr>
                 </thead>
