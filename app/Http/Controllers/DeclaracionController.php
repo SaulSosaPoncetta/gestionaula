@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class DeclaracionController extends Controller
 {
-    const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
 
     public function index()
     {
@@ -33,7 +33,7 @@ class DeclaracionController extends Controller
         // Cargar horarios del docente como base
         $horarios = Horario::with(['curso', 'materia', 'establecimiento'])
             ->where('user_id', $user->id)
-            ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado')")
+            ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado','domingo')")
             ->orderBy('horainicio')
             ->get();
 

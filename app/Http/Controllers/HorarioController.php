@@ -10,21 +10,21 @@ use Illuminate\Http\Request;
 
 class HorarioController extends Controller
 {
-    const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+    const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
 
     public function index()
-    {
-        $dias = self::DIAS;
+{
+    $dias = self::DIAS;
 
-        $horarios = Horario::with(['curso', 'materia', 'establecimiento'])
-            ->where('user_id', auth()->id())
-            ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado')")
-            ->orderBy('horainicio')
-            ->get()
-            ->groupBy('dia');
+    $horarios = Horario::with(['curso', 'materia', 'establecimiento'])
+        ->where('user_id', auth()->id())
+        ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado','domingo')")
+        ->orderBy('horainicio')
+        ->get()
+        ->groupBy('dia');
 
-        return view('horarios.index', compact('horarios', 'dias'));
-    }
+    return view('horarios.index', compact('horarios', 'dias'));
+}
 
     public function create()
     {

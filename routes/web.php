@@ -32,9 +32,12 @@ Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'inde
 Route::middleware(['auth', 'role:docente'])->group(function () {
     
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
-    Route::post('/asistencia/registrar', [AsistenciaController::class, 'registrar'])->name('asistencia.registrar');
-    Route::post('/asistencia/guardar', [AsistenciaController::class, 'guardar'])->name('asistencia.guardar');
-    Route::get('/asistencia/historial', [AsistenciaController::class, 'historial'])->name('asistencia.historial');
+Route::get('/asistencia/accion', [AsistenciaController::class, 'accion'])->name('asistencia.accion');
+Route::get('/asistencia/registrar', [AsistenciaController::class, 'registrar'])->name('asistencia.registrar');
+Route::post('/asistencia/guardar', [AsistenciaController::class, 'guardar'])->name('asistencia.guardar');
+Route::get('/asistencia/listado', [AsistenciaController::class, 'listado'])->name('asistencia.listado');
+Route::get('/asistencia/historial', [AsistenciaController::class, 'historial'])->name('asistencia.historial');
+Route::get('/asistencia/alumno', [AsistenciaController::class, 'alumno'])->name('asistencia.alumno');
 
     Route::get('/calificaciones', [CalificacionController::class, 'index'])->name('calificaciones.index');
     Route::get('/calificaciones/cargar', [CalificacionController::class, 'cargar'])->name('calificaciones.cargar');

@@ -11,34 +11,61 @@ use Illuminate\Support\Facades\Storage;
 
 class AsistenciaController extends Controller
 {
+    /**
+     * Paso 1: Seleccionar materia y curso
+     */
     public function index()
     {
-        // Muestra todos los cursos del docente para seleccionar
-        $cursos = Curso::orderBy('anio')->orderBy('division')->get();
+        $materias = Materia::orderBy('nombre')->get();
+        $cursos   = collect();
 
-        return view('asistencia.index', compact('cursos'));
+        if (request()->filled('materia_id')) {
+            $cursos = Curso::whereHas('materias', fn($q) =>
+                $q->where('materias.id', request('materia_id'))
+            )->orderBy('anio')->orderBy('division')->get();
+
+            if ($cursos->isEmpty()) {
+                $cursos = Curso::orderBy('anio')->orderBy('division')->get();
+            }
+        }
+
+        return view('asistencia.index', compact('materias', 'cursos'));
     }
 
     /**
-     * Carga el formulario de registro dado curso + materia + fecha.
-     * Los alumnos mostrados son los del curso seleccionado.
+     * Paso 2: Elegir accion (registrar, ver listado, editar alumno)
+     */
+    public function accion(Request $request)
+    {
+        $request->validate([
+            'curso_id'   => 'required|exists:cursos,id',
+            'materia_id' => 'required|exists:materias,id',
+        ]);
+
+        $curso   = Curso::with('alumnos')->findOrFail($request->curso_id);
+        $materia = Materia::findOrFail($request->materia_id);
+
+        return view('asistencia.accion', compact('curso', 'materia'));
+    }
+
+    /**
+     * Paso 3a: Formulario de registro de nueva asistencia
      */
     public function registrar(Request $request)
     {
         $request->validate([
             'curso_id'   => 'required|exists:cursos,id',
-            'materia_id' => 'nullable|exists:materias,id',
+            'materia_id' => 'required|exists:materias,id',
             'fecha'      => 'required|date',
         ]);
 
         $curso   = Curso::with('alumnos')->findOrFail($request->curso_id);
-        $materia = $request->materia_id ? Materia::find($request->materia_id) : null;
+        $materia = Materia::find($request->materia_id);
         $fecha   = $request->fecha;
 
-        // Asistencias ya registradas para este curso/materia/fecha
         $asistencias = Asistencia::where('curso_id', $request->curso_id)
             ->where('fecha', $fecha)
-            ->when($request->materia_id, fn($q) => $q->where('materia_id', $request->materia_id))
+            ->where('materia_id', $request->materia_id)
             ->get()
             ->keyBy('alumno_id');
 
@@ -46,14 +73,13 @@ class AsistenciaController extends Controller
     }
 
     /**
-     * Guarda los registros de asistencia.
-     * Maneja foto de justificación y hora de llegada.
+     * Guardar asistencia
      */
     public function guardar(Request $request)
     {
         $request->validate([
             'curso_id'    => 'required|exists:cursos,id',
-            'materia_id'  => 'nullable|exists:materias,id',
+            'materia_id'  => 'required|exists:materias,id',
             'fecha'       => 'required|date',
             'asistencias' => 'required|array',
         ]);
@@ -63,16 +89,13 @@ class AsistenciaController extends Controller
             $horallegada = null;
             $fotoruta    = null;
 
-            // Si llegó tarde, tomar hora del campo (que el JS llenó con hora del SO)
             if ($estado === 'tarde' && !empty($datos['horallegada'])) {
                 $horallegada = $datos['horallegada'];
             }
 
-            // Si está ausente y viene foto de justificación
             if ($estado === 'ausente' && $request->hasFile("fotos.{$alumnoId}")) {
                 $file     = $request->file("fotos.{$alumnoId}");
                 $fotoruta = $file->store("justificaciones/{$request->fecha}", 'public');
-                // Si hay foto, se marca como justificado
                 $estado   = 'justificado';
             }
 
@@ -98,22 +121,61 @@ class AsistenciaController extends Controller
     }
 
     /**
-     * Historial con filtros por curso, materia, fecha.
+     * Paso 3b: Ver listado de asistencias del curso/materia
+     */
+    public function listado(Request $request)
+    {
+        $request->validate([
+            'curso_id'   => 'required|exists:cursos,id',
+            'materia_id' => 'required|exists:materias,id',
+        ]);
+
+        $curso   = Curso::with('alumnos')->findOrFail($request->curso_id);
+        $materia = Materia::findOrFail($request->materia_id);
+
+        // Traer todos los registros de asistencia para este curso y materia
+        $registros = Asistencia::with('alumno')
+            ->where('curso_id', $request->curso_id)
+            ->where('materia_id', $request->materia_id)
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        // Agrupar por alumno para mostrar resumen
+        $resumenAlumnos = $curso->alumnos->sortBy('apellido')->map(function($alumno) use ($registros) {
+            $regs = $registros->where('alumno_id', $alumno->id);
+            return [
+                'alumno'      => $alumno,
+                'presente'    => $regs->where('estado', 'presente')->count(),
+                'ausente'     => $regs->where('estado', 'ausente')->count(),
+                'tarde'       => $regs->where('estado', 'tarde')->count(),
+                'justificado' => $regs->where('estado', 'justificado')->count(),
+                'total'       => $regs->count(),
+            ];
+        });
+
+        return view('asistencia.listado', compact('curso', 'materia', 'resumenAlumnos'));
+    }
+
+    /**
+     * Historial general con filtros
      */
     public function historial(Request $request)
     {
-        $cursos     = Curso::orderBy('anio')->orderBy('division')->get();
+        $materias    = Materia::orderBy('nombre')->get();
+        $cursos      = Curso::orderBy('anio')->orderBy('division')->get();
         $asistencias = collect();
         $filtros     = [];
 
-        if ($request->filled('curso_id')) {
-            $filtros['curso_id'] = $request->curso_id;
-            $query = Asistencia::with(['alumno', 'materia', 'docente'])
-                ->where('curso_id', $request->curso_id);
+        if ($request->filled('curso_id') || $request->filled('materia_id')) {
+            $query = Asistencia::with(['alumno', 'materia', 'curso']);
 
             if ($request->filled('materia_id')) {
                 $query->where('materia_id', $request->materia_id);
                 $filtros['materia_id'] = $request->materia_id;
+            }
+            if ($request->filled('curso_id')) {
+                $query->where('curso_id', $request->curso_id);
+                $filtros['curso_id'] = $request->curso_id;
             }
             if ($request->filled('fecha')) {
                 $query->where('fecha', $request->fecha);
@@ -123,20 +185,19 @@ class AsistenciaController extends Controller
             $asistencias = $query->orderBy('fecha', 'desc')->paginate(30);
         }
 
-        return view('asistencia.historial', compact('cursos', 'asistencias', 'filtros'));
+        return view('asistencia.historial', compact('materias', 'cursos', 'asistencias', 'filtros'));
     }
 
     /**
-     * Buscador: ver estado de inasistencias de un alumno.
+     * Buscador por alumno
      */
     public function alumno(Request $request)
     {
-        $alumnos  = collect();
-        $alumno   = null;
-        $resumen  = [];
-        $detalle  = collect();
+        $alumnos = collect();
+        $alumno  = null;
+        $resumen = [];
+        $detalle = collect();
 
-        // Búsqueda por nombre, apellido o DNI
         if ($request->filled('buscar')) {
             $alumnos = Alumno::with('curso')
                 ->where(function ($q) use ($request) {
@@ -148,7 +209,6 @@ class AsistenciaController extends Controller
                 ->get();
         }
 
-        // Si se seleccionó un alumno específico
         if ($request->filled('alumno_id')) {
             $alumno = Alumno::with('curso')->findOrFail($request->alumno_id);
 
@@ -157,7 +217,6 @@ class AsistenciaController extends Controller
                 ->orderBy('fecha', 'desc')
                 ->get();
 
-            // Resumen de estados
             $resumen = [
                 'presente'    => $registros->where('estado', 'presente')->count(),
                 'ausente'     => $registros->where('estado', 'ausente')->count(),

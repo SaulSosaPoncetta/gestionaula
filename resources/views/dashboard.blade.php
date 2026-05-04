@@ -238,7 +238,7 @@ function renderClaseActual(clases) {
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center text-muted py-4">
                     <i class="bi bi-clock fs-3 mb-2 d-block"></i>
-                    No hay clase en este momento según tu horario.
+                    No hay clase en este momento segun tu horario.
                 </div>
             </div>`;
         return;
@@ -246,9 +246,11 @@ function renderClaseActual(clases) {
 
     let html = '';
     clases.forEach(clase => {
-        const alumnosJson = JSON.stringify(clase.alumnos).replace(/"/g, '&quot;');
-        const cursoNombre = (clase.curso ?? '').replace(/"/g, '&quot;');
+        const alumnosJson  = JSON.stringify(clase.alumnos).replace(/"/g, '&quot;');
+        const cursoNombre  = (clase.curso ?? '').replace(/"/g, '&quot;');
         const materiaNombre = (clase.materia ?? '').replace(/"/g, '&quot;');
+        const fecha = new Date();
+        const hoy   = `${fecha.getFullYear()}-${pad(fecha.getMonth()+1)}-${pad(fecha.getDate())}`;
 
         html += `
         <div class="card border-0 shadow-sm mb-3 border-start border-success border-4">
@@ -257,57 +259,66 @@ function renderClaseActual(clases) {
                     <div class="fs-3 fw-bold text-success">
                         <i class="bi bi-book me-2"></i>${clase.materia ?? 'Sin materia'}
                     </div>
-                    <div class="fs-5 text-muted fw-semibold">${clase.curso ?? '—'}</div>
-                    <div class="text-muted small">${clase.horainicio} — ${clase.horafin}</div>
-                </div>
-
-                {{-- Botones de acceso rápido --}}
-                <div class="d-flex justify-content-center gap-2 mb-3">
-                    <button class="btn btn-primary btn-sm"
-                        onclick="abrirModal('asistencia', ${clase.curso_id}, ${clase.materia_id ?? 'null'}, '${cursoNombre}', '${materiaNombre}', ${alumnosJson})">
-                        <i class="bi bi-person-check me-1"></i>Asistencia
-                    </button>
-                    <button class="btn btn-success btn-sm"
-                        onclick="abrirModal('calificaciones', ${clase.curso_id}, ${clase.materia_id ?? 'null'}, '${cursoNombre}', '${materiaNombre}', ${alumnosJson})">
-                        <i class="bi bi-journal-text me-1"></i>Calificaciones
-                    </button>
-                    <button class="btn btn-warning btn-sm text-dark"
-                        onclick="abrirModal('practicos', ${clase.curso_id}, ${clase.materia_id ?? 'null'}, '${cursoNombre}', '${materiaNombre}', ${alumnosJson})">
-                        <i class="bi bi-clipboard-check me-1"></i>Prácticos
-                    </button>
+                    <div class="fs-5 text-muted fw-semibold">${clase.curso ?? '-'}</div>
+                    <div class="text-muted small">${clase.horainicio} - ${clase.horafin}</div>
                 </div>
 
                 <hr>
 
-                {{-- Lista de alumnos --}}
                 <div class="fw-semibold mb-2">
                     <i class="bi bi-people me-1"></i>Estudiantes
                 </div>`;
 
         if (clase.alumnos.length > 0) {
             html += `
-                <table class="table table-hover table-sm mb-0">
+                <table class="table table-hover table-sm mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
-                            <th>#</th>
+                            <th style="width:40px">#</th>
                             <th>Apellido y nombre</th>
-                            <th></th>
+                            <th class="text-center" style="width:120px">Asistencia</th>
+                            <th class="text-center" style="width:130px">Calificaciones</th>
+                            <th class="text-center" style="width:110px">Practicos</th>
+                            <th class="text-center" style="width:100px">Ficha</th>
                         </tr>
                     </thead>
                     <tbody>`;
+
             clase.alumnos.forEach((a, idx) => {
                 html += `
-                    <tr>
-                        <td class="text-muted">${idx + 1}</td>
-                        <td class="fw-semibold">${a.nombre}</td>
-                        <td class="text-end">
-                            <a href="/alumnos/${a.id}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye me-1"></i>Ver ficha
-                            </a>
-                        </td>
-                    </tr>`;
+                        <tr>
+                            <td class="text-muted">${idx + 1}</td>
+                            <td class="fw-semibold">${a.nombre}</td>
+                            <td class="text-center">
+                                <a href="/asistencia/alumno?alumno_id=${a.id}&buscar=${encodeURIComponent(a.nombre)}"
+                                   class="btn btn-xs btn-outline-primary" style="font-size:0.75rem;padding:2px 8px;">
+                                    <i class="bi bi-person-check"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/calificaciones/historial?curso_id=${clase.curso_id}&materia_id=${clase.materia_id}&alumno_id=${a.id}"
+                                   class="btn btn-xs btn-outline-success" style="font-size:0.75rem;padding:2px 8px;">
+                                    <i class="bi bi-journal-text"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/tareas?curso_id=${clase.curso_id}"
+                                   class="btn btn-xs btn-outline-warning" style="font-size:0.75rem;padding:2px 8px;">
+                                    <i class="bi bi-clipboard-check"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="/alumnos/${a.id}"
+                                   class="btn btn-xs btn-outline-dark" style="font-size:0.75rem;padding:2px 8px;">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            </td>
+                        </tr>`;
             });
-            html += `</tbody></table>`;
+
+            html += `
+                    </tbody>
+                </table>`;
         } else {
             html += `<div class="text-muted small">No hay alumnos registrados en este curso.</div>`;
         }
