@@ -150,6 +150,7 @@
                     <th>Hora llegada</th>
                     <th>Justificación</th>
                     <th>Observación</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -175,6 +176,12 @@
                         @endif
                     </td>
                     <td class="text-muted small">{{ $reg->observacion ?? '—' }}</td>
+                    <td class="text-end pe-3">
+                        <a href="{{ route('asistencia.editar', $reg) }}"
+                           class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-pencil me-1"></i>Editar
+                        </a>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>

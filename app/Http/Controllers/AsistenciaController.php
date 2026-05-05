@@ -189,6 +189,56 @@ class AsistenciaController extends Controller
     }
 
     /**
+ * Editar un registro de asistencia individual
+ */
+public function editarRegistro(Asistencia $asistencia)
+{
+    $asistencia->load(['alumno', 'materia', 'curso']);
+    return view('asistencia.editar', compact('asistencia'));
+}
+
+/**
+ * Actualizar un registro de asistencia individual
+ */
+public function actualizarRegistro(Request $request, Asistencia $asistencia)
+{
+    $request->validate([
+        'estado'      => 'required|in:presente,ausente,tarde,justificado',
+        'horallegada' => 'nullable|date_format:H:i',
+        'observacion' => 'nullable|string',
+    ]);
+
+    $horallegada = null;
+    $fotoruta    = $asistencia->fotojustificacion;
+
+    if ($request->estado === 'tarde' && $request->filled('horallegada')) {
+        $horallegada = $request->horallegada;
+    }
+
+    if ($request->estado === 'ausente' && $request->hasFile('fotojustificacion')) {
+        if ($asistencia->fotojustificacion) {
+            Storage::disk('public')->delete($asistencia->fotojustificacion);
+        }
+        $fotoruta = $request->file('fotojustificacion')
+            ->store('justificaciones/' . $asistencia->fecha->format('Y-m-d'), 'public');
+        // Si tiene foto pasa a justificado
+        $request->merge(['estado' => 'justificado']);
+    }
+
+    $asistencia->update([
+        'estado'            => $request->estado,
+        'horallegada'       => $horallegada,
+        'fotojustificacion' => $fotoruta,
+        'observacion'       => $request->observacion,
+    ]);
+
+    return redirect()->route('asistencia.alumno', [
+        'alumno_id' => $asistencia->alumno_id,
+        'buscar'    => $asistencia->alumno->apellido,
+    ])->with('success', 'Asistencia actualizada correctamente.');
+}
+
+    /**
      * Buscador por alumno
      */
     public function alumno(Request $request)

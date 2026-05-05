@@ -28,7 +28,7 @@
             @endif
 
             <div class="row g-3">
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <label class="form-label fw-semibold">Materia <span class="text-danger">*</span></label>
                     <select name="materia_id" class="form-select @error('materia_id') is-invalid @enderror" required>
                         <option value="">— Seleccioná una materia —</option>
@@ -40,16 +40,8 @@
                     </select>
                     @error('materia_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Fecha <span class="text-danger">*</span></label>
-                    <input type="date" name="fecha" class="form-control @error('fecha') is-invalid @enderror"
-                           value="{{ old('fecha', date('Y-m-d')) }}" required>
-                    @error('fecha')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
             </div>
 
-            {{-- Tema --}}
             <div class="row g-3 mt-1">
                 <div class="col-12">
                     <label class="form-label fw-semibold">Tema <span class="text-danger">*</span></label>
@@ -61,7 +53,6 @@
                 </div>
             </div>
 
-            {{-- Subtemas --}}
             <div class="row g-3 mt-1">
                 <div class="col-12">
                     <label class="form-label fw-semibold">
@@ -79,7 +70,6 @@
                 </div>
             </div>
 
-            {{-- Observación --}}
             <div class="row g-3 mt-1">
                 <div class="col-12">
                     <label class="form-label fw-semibold">Observación <span class="text-muted fw-normal">(opcional)</span></label>

@@ -20,24 +20,30 @@ use App\Http\Controllers\PlanificacionController;
 use App\Http\Controllers\MaterialTeoricoController;
 use App\Http\Controllers\PeriodoController;
 use App\Http\Controllers\TipoEvaluacionController;
+use App\Http\Controllers\TipoActividadController;
+use App\Http\Controllers\ActividadController;
+use App\Http\Controllers\LibroTemaController;
+use App\Http\Controllers\AsignarActividadController;
 
-Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+    Route::get('/', function () {
+        return redirect()->route('dashboard');
+    });
 
-Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'role:docente'])->group(function () {
+    Route::middleware(['auth', 'role:docente'])->group(function () {
     
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
-Route::get('/asistencia/accion', [AsistenciaController::class, 'accion'])->name('asistencia.accion');
-Route::get('/asistencia/registrar', [AsistenciaController::class, 'registrar'])->name('asistencia.registrar');
-Route::post('/asistencia/guardar', [AsistenciaController::class, 'guardar'])->name('asistencia.guardar');
-Route::get('/asistencia/listado', [AsistenciaController::class, 'listado'])->name('asistencia.listado');
-Route::get('/asistencia/historial', [AsistenciaController::class, 'historial'])->name('asistencia.historial');
-Route::get('/asistencia/alumno', [AsistenciaController::class, 'alumno'])->name('asistencia.alumno');
+    Route::get('/asistencia/accion', [AsistenciaController::class, 'accion'])->name('asistencia.accion');
+    Route::get('/asistencia/registrar', [AsistenciaController::class, 'registrar'])->name('asistencia.registrar');
+    Route::post('/asistencia/guardar', [AsistenciaController::class, 'guardar'])->name('asistencia.guardar');
+    Route::get('/asistencia/listado', [AsistenciaController::class, 'listado'])->name('asistencia.listado');
+    Route::get('/asistencia/historial', [AsistenciaController::class, 'historial'])->name('asistencia.historial');
+    Route::get('/asistencia/alumno', [AsistenciaController::class, 'alumno'])->name('asistencia.alumno');
+    Route::get('/asistencia/{asistencia}/editar', [AsistenciaController::class, 'editarRegistro'])->name('asistencia.editar');
+    Route::put('/asistencia/{asistencia}', [AsistenciaController::class, 'actualizarRegistro'])->name('asistencia.actualizar');
 
     Route::get('/calificaciones', [CalificacionController::class, 'index'])->name('calificaciones.index');
     Route::get('/calificaciones/cargar', [CalificacionController::class, 'cargar'])->name('calificaciones.cargar');
@@ -166,6 +172,27 @@ Route::get('/tiposevaluacion/{tiposevaluacion}/editar', [TipoEvaluacionControlle
 Route::put('/tiposevaluacion/{tiposevaluacion}', [TipoEvaluacionController::class, 'update'])->name('tiposevaluacion.update');
 Route::delete('/tiposevaluacion/{tiposevaluacion}', [TipoEvaluacionController::class, 'destroy'])->name('tiposevaluacion.destroy');
 
+Route::get('/tiposactividad', [TipoActividadController::class, 'index'])->name('tiposactividad.index');
+Route::get('/tiposactividad/crear', [TipoActividadController::class, 'create'])->name('tiposactividad.create');
+Route::post('/tiposactividad', [TipoActividadController::class, 'store'])->name('tiposactividad.store');
+Route::get('/tiposactividad/{tiposactividad}/editar', [TipoActividadController::class, 'edit'])->name('tiposactividad.edit');
+Route::put('/tiposactividad/{tiposactividad}', [TipoActividadController::class, 'update'])->name('tiposactividad.update');
+Route::delete('/tiposactividad/{tiposactividad}', [TipoActividadController::class, 'destroy'])->name('tiposactividad.destroy');
+
+Route::get('/actividades', [ActividadController::class, 'index'])->name('actividades.index');
+Route::get('/actividades/seleccionar', [ActividadController::class, 'seleccionar'])->name('actividades.seleccionar');
+Route::get('/actividades/crear', [ActividadController::class, 'create'])->name('actividades.create');
+Route::post('/actividades', [ActividadController::class, 'store'])->name('actividades.store');
+Route::get('/actividades/{actividad}', [ActividadController::class, 'show'])->name('actividades.show');
+Route::delete('/actividades/{actividad}', [ActividadController::class, 'destroy'])->name('actividades.destroy');
+
+Route::get('/librotemas', [LibroTemaController::class, 'index'])->name('librotemas.index');
+Route::get('/librotemas/crear', [LibroTemaController::class, 'create'])->name('librotemas.create');
+Route::post('/librotemas', [LibroTemaController::class, 'store'])->name('librotemas.store');
+Route::delete('/librotemas/{librotema}', [LibroTemaController::class, 'destroy'])->name('librotemas.destroy');
+
+Route::get('/asignaractividad', [AsignarActividadController::class, 'seleccionar'])->name('asignaractividad.seleccionar');
+Route::get('/asignaractividad/ver', [AsignarActividadController::class, 'ver'])->name('asignaractividad.ver');
 });
 
 require __DIR__.'/auth.php';

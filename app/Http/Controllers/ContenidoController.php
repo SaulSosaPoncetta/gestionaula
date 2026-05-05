@@ -33,40 +33,38 @@ class ContenidoController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'materia_id'  => 'required|exists:materias,id',
-            'tema'        => 'required|string|max:500',
-            'fecha'       => 'required|date',
-            'observacion' => 'nullable|string',
-            'subtemas'    => 'nullable|array|max:3',
-            'subtemas.*'  => 'nullable|string|max:500',
-        ]);
+{
+    $request->validate([
+        'materia_id'  => 'required|exists:materias,id',
+        'tema'        => 'required|string|max:500',
+        'observacion' => 'nullable|string',
+        'subtemas'    => 'nullable|array|max:3',
+        'subtemas.*'  => 'nullable|string|max:500',
+    ]);
 
-        $contenido = Contenido::create([
-            'user_id'    => auth()->id(),
-            'materia_id' => $request->materia_id,
-            'tema'       => $request->tema,
-            'fecha'      => $request->fecha,
-            'observacion'=> $request->observacion,
-        ]);
+    $contenido = Contenido::create([
+        'user_id'     => auth()->id(),
+        'materia_id'  => $request->materia_id,
+        'tema'        => $request->tema,
+        'fecha'       => now()->toDateString(),
+        'observacion' => $request->observacion,
+    ]);
 
-        // Guardar subtemas no vacíos
-        if ($request->subtemas) {
-            foreach ($request->subtemas as $orden => $subtema) {
-                if (!empty(trim($subtema))) {
-                    ContenidoSubtema::create([
-                        'contenido_id' => $contenido->id,
-                        'subtema'      => $subtema,
-                        'orden'        => $orden + 1,
-                    ]);
-                }
+    if ($request->subtemas) {
+        foreach ($request->subtemas as $orden => $subtema) {
+            if (!empty(trim($subtema))) {
+                ContenidoSubtema::create([
+                    'contenido_id' => $contenido->id,
+                    'subtema'      => $subtema,
+                    'orden'        => $orden + 1,
+                ]);
             }
         }
-
-        return redirect()->route('contenidos.index')
-                         ->with('success', 'Contenido registrado correctamente.');
     }
+
+    return redirect()->route('contenidos.index')
+                     ->with('success', 'Contenido registrado correctamente.');
+}
 
     public function edit(Contenido $contenido)
     {

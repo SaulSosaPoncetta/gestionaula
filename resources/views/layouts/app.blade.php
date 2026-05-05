@@ -33,25 +33,32 @@
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('asistencia.*') ? 'active' : '' }}"
                                         href="{{ route('asistencia.index') }}">
-                                        <i class="bi bi-person-check me-2"></i>Asistencia
+                                        <i class="bi bi-person-check me-2"></i>Tomar Asistencia
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('asignaractividad.*') ? 'active' : '' }}"
+                                        href="{{ route('asignaractividad.seleccionar') }}">
+                                        <i class="bi bi-clipboard2-arrow me-2"></i>Asignar actividad
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}"
                                         href="{{ route('calificaciones.index') }}">
-                                        <i class="bi bi-journal-text me-2"></i>Calificaciones
+                                        <i class="bi bi-journal-text me-2"></i>Calificar
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('librotemas.*') ? 'active' : '' }}"
+                                        href="{{ route('librotemas.index') }}">
+                                        <i class="bi bi-journal-bookmark-fill me-2"></i>Libro de temas
                                     </a>
                                 </li>
                             </ul>
                         </li>
 
                         {{-- Contenidos --}}
-                        <li class="nav-item">
-                            <a class="nav-link {{ request()->routeIs('contenidos.*') ? 'active' : '' }}"
-                                href="{{ route('contenidos.index') }}">
-                                <i class="bi bi-journal-richtext me-1"></i>Contenidos
-                            </a>
-                        </li>
+
 
                         {{-- Material Pedagógico --}}
                         <li class="nav-item dropdown">
@@ -61,11 +68,24 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('tareas.*') ? 'active' : '' }}"
-                                        href="{{ route('tareas.index') }}">
-                                        <i class="bi bi-clipboard-check me-2"></i>Prácticos
+                                    <a class="dropdown-item {{ request()->routeIs('contenidos.*') ? 'active' : '' }}"
+                                        href="{{ route('contenidos.index') }}">
+                                        <i class="bi bi-journal-richtext me-1"></i>Contenidos
                                     </a>
                                 </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('actividades.*') ? 'active' : '' }}"
+                                        href="{{ route('actividades.index') }}">
+                                        <i class="bi bi-clipboard2-check me-2"></i>Actividades
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('tiposactividad.*') ? 'active' : '' }}"
+                                        href="{{ route('tiposactividad.index') }}">
+                                        <i class="bi bi-activity me-2"></i>Tipos de actividad
+                                    </a>
+                                </li>
+
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
                                         href="{{ route('materialteoricoarchivos.index') }}">
@@ -160,8 +180,10 @@
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-                              
-                                <li><h6 class="dropdown-header">Evaluación</h6></li>
+
+                                <li>
+                                    <h6 class="dropdown-header">Evaluación</h6>
+                                </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
                                         href="{{ route('periodos.index') }}">
