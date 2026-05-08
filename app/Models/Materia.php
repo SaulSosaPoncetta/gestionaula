@@ -1,24 +1,18 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
 class Materia extends Model
 {
     protected $fillable = [
-        'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
+        'user_id', 'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
         'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
         'cargahorariasemanal', 'cargahorariaanual'
     ];
 
     const TIPOS     = ['aula', 'taller'];
     const TIPOSHORA = ['catedra', 'modulo'];
-
-    const TIPOLABELS = [
-        'aula'   => 'Aula',
-        'taller' => 'Taller',
-    ];
+    const TIPOLABELS = ['aula' => 'Aula', 'taller' => 'Taller'];
 
     public function ciclo()
     {

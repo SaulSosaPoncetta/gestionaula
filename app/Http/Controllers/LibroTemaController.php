@@ -13,82 +13,8 @@ use Illuminate\Http\Request;
 
 class LibroTemaController extends Controller
 {
-    public function index()
+    private function detectarHorarioActivo()
     {
-        // Detectar materia activa según horario actual
-        $materiaActiva = null;
-        $cursoActivo   = null;
-
-        $ahora         = now();
-        $diaActual     = strtolower($ahora->locale('es')->isoFormat('dddd'));
-        // Normalizar día
-        $diaActual = str_replace(
-            ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'],
-            ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'],
-            $diaActual
-        );
-        $horaActual = $ahora->format('H:i:s');
-
-        $horarioActivo = Horario::with(['materia', 'curso'])
-            ->where('user_id', auth()->id())
-            ->where('dia', $diaActual)
-            ->where('horainicio', '<=', $horaActual)
-            ->where('horafin', '>=', $horaActual)
-            ->first();
-
-        if ($horarioActivo) {
-            $materiaActiva = $horarioActivo->materia;
-            $cursoActivo   = $horarioActivo->curso;
-        }
-
-        // Listado de libros de temas del docente
-        $registros = LibroTema::with(['materia', 'curso', 'tipoclase', 'contenido', 'actividad'])
-            ->where('user_id', auth()->id())
-            ->orderBy('fecha', 'desc')
-            ->orderBy('numeroclase', 'desc')
-            ->paginate(20);
-
-        $materias = Materia::orderBy('nombre')->get();
-        $cursos   = Curso::orderBy('anio')->orderBy('division')->get();
-
-        return view('librotemas.index', compact(
-            'registros', 'materiaActiva', 'cursoActivo', 'materias', 'cursos'
-        ));
-    }
-
-    public function create(Request $request)
-    {
-        $materias   = Materia::orderBy('nombre')->get();
-        $cursos     = Curso::orderBy('anio')->orderBy('division')->get();
-        $tiposclase = TipoClase::orderBy('denominacion')->get();
-
-        $materiaId = $request->materia_id;
-        $cursoId   = $request->curso_id;
-
-        // Contenidos filtrados por materia
-        $contenidos = $materiaId
-            ? Contenido::where('materia_id', $materiaId)->orderBy('tema')->get()
-            : collect();
-
-        // Actividades filtradas por materia y curso
-        $actividades = ($materiaId && $cursoId)
-            ? Actividad::where('materia_id', $materiaId)
-                       ->where('curso_id', $cursoId)
-                       ->where('estado', 'activa')
-                       ->orderBy('titulo')->get()
-            : collect();
-
-        // Número de clase siguiente para esta materia y curso
-        $siguienteClase = 1;
-        if ($materiaId && $cursoId) {
-            $ultimo = LibroTema::where('user_id', auth()->id())
-                ->where('materia_id', $materiaId)
-                ->where('curso_id', $cursoId)
-                ->max('numeroclase');
-            $siguienteClase = $ultimo ? $ultimo + 1 : 1;
-        }
-
-        // Detectar materia/curso activo por horario
         $ahora     = now();
         $diaActual = strtolower($ahora->locale('es')->isoFormat('dddd'));
         $diaActual = str_replace(
@@ -98,27 +24,78 @@ class LibroTemaController extends Controller
         );
         $horaActual = $ahora->format('H:i:s');
 
-        $horarioActivo = Horario::with(['materia', 'curso'])
+        return Horario::with(['materia', 'curso'])
             ->where('user_id', auth()->id())
             ->where('dia', $diaActual)
             ->where('horainicio', '<=', $horaActual)
             ->where('horafin', '>=', $horaActual)
             ->first();
+    }
 
+    public function index(Request $request)
+    {
+        $horarioActivo = $this->detectarHorarioActivo();
         $materiaActiva = $horarioActivo?->materia;
         $cursoActivo   = $horarioActivo?->curso;
 
-        // Si no viene materia_id en la URL pero hay horario activo, usar esa
-        if (!$materiaId && $materiaActiva) {
-            $materiaId = $materiaActiva->id;
-            $cursoId   = $cursoActivo?->id;
+        $query = LibroTema::with(['materia', 'curso', 'tipoclase', 'contenido', 'actividad'])
+            ->where('user_id', auth()->id())
+            ->orderBy('fecha', 'desc')
+            ->orderBy('numeroclase', 'desc');
 
-            $contenidos = Contenido::where('materia_id', $materiaId)->orderBy('tema')->get();
-            $actividades = Actividad::where('materia_id', $materiaId)
-                ->where('curso_id', $cursoId)
-                ->where('estado', 'activa')
-                ->orderBy('titulo')->get();
+        if ($request->filled('materia_id')) {
+            $query->where('materia_id', $request->materia_id);
+        }
+        if ($request->filled('curso_id')) {
+            $query->where('curso_id', $request->curso_id);
+        }
 
+        $registros = $query->paginate(20);
+        $materias  = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $cursos    = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+
+        return view('librotemas.index', compact(
+            'registros', 'materiaActiva', 'cursoActivo', 'materias', 'cursos'
+        ));
+    }
+
+    public function create(Request $request)
+    {
+        $materias   = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $cursos     = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+        $tiposclase = TipoClase::orderBy('denominacion')->get();
+
+        $materiaId = $request->materia_id;
+        $cursoId   = $request->curso_id;
+
+        // Si no viene materia_id, detectar por horario activo
+        if (!$materiaId) {
+            $horarioActivo = $this->detectarHorarioActivo();
+            if ($horarioActivo) {
+                $materiaId = $horarioActivo->materia_id;
+                $cursoId   = $horarioActivo->curso_id;
+            }
+        }
+
+        $materiaActiva = $materiaId ? Materia::find($materiaId) : null;
+        $cursoActivo   = $cursoId   ? Curso::find($cursoId)     : null;
+
+        $contenidos = $materiaId
+            ? Contenido::where('user_id', auth()->id())
+                       ->where('materia_id', $materiaId)
+                       ->orderBy('tema')->get()
+            : collect();
+
+        $actividades = ($materiaId && $cursoId)
+            ? Actividad::where('user_id', auth()->id())
+                       ->where('materia_id', $materiaId)
+                       ->where('curso_id', $cursoId)
+                       ->where('estado', 'activa')
+                       ->orderBy('titulo')->get()
+            : collect();
+
+        $siguienteClase = 1;
+        if ($materiaId && $cursoId) {
             $ultimo = LibroTema::where('user_id', auth()->id())
                 ->where('materia_id', $materiaId)
                 ->where('curso_id', $cursoId)
@@ -165,6 +142,7 @@ class LibroTemaController extends Controller
 
     public function destroy(LibroTema $librotema)
     {
+        abort_if($librotema->user_id !== auth()->id(), 403);
         $librotema->delete();
         return redirect()->route('librotemas.index')
                          ->with('success', 'Registro eliminado correctamente.');

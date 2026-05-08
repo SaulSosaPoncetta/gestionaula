@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Nivel;
@@ -9,7 +8,11 @@ class NivelController extends Controller
 {
     public function index()
     {
-        $niveles = Nivel::withCount('establecimientos')->orderBy('tipo')->paginate(15);
+        $niveles = Nivel::withCount('establecimientos')
+            ->where('user_id', auth()->id())
+            ->orderBy('tipo')
+            ->paginate(15);
+
         return view('niveles.index', compact('niveles'));
     }
 
@@ -26,7 +29,11 @@ class NivelController extends Controller
             'tipo'   => 'required|in:' . implode(',', Nivel::TIPOS),
         ]);
 
-        Nivel::create($request->only('nombre', 'tipo'));
+        Nivel::create([
+            'user_id' => auth()->id(),
+            'nombre'  => $request->nombre,
+            'tipo'    => $request->tipo,
+        ]);
 
         return redirect()->route('niveles.index')
                          ->with('success', 'Nivel creado correctamente.');
@@ -34,12 +41,15 @@ class NivelController extends Controller
 
     public function edit(Nivel $nivel)
     {
+        abort_if($nivel->user_id !== auth()->id(), 403);
         $tipos = Nivel::TIPOS;
         return view('niveles.edit', compact('nivel', 'tipos'));
     }
 
     public function update(Request $request, Nivel $nivel)
     {
+        abort_if($nivel->user_id !== auth()->id(), 403);
+
         $request->validate([
             'nombre' => 'required|string|max:100',
             'tipo'   => 'required|in:' . implode(',', Nivel::TIPOS),
@@ -53,6 +63,7 @@ class NivelController extends Controller
 
     public function destroy(Nivel $nivel)
     {
+        abort_if($nivel->user_id !== auth()->id(), 403);
         $nivel->delete();
         return redirect()->route('niveles.index')
                          ->with('success', 'Nivel eliminado correctamente.');

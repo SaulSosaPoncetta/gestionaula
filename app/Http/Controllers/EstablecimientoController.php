@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Establecimiento;
@@ -11,7 +10,7 @@ class EstablecimientoController extends Controller
     public function index()
     {
         $establecimientos = Establecimiento::with('nivel')
-            ->withCount(['cursos', 'docentes'])
+            ->where('user_id', auth()->id())
             ->orderBy('nombre')
             ->paginate(15);
 
@@ -20,7 +19,7 @@ class EstablecimientoController extends Controller
 
     public function create()
     {
-        $niveles = Nivel::orderBy('tipo')->get();
+        $niveles     = Nivel::where('user_id', auth()->id())->orderBy('tipo')->get();
         $modalidades = Establecimiento::MODALIDADES;
         return view('establecimientos.create', compact('niveles', 'modalidades'));
     }
@@ -29,7 +28,7 @@ class EstablecimientoController extends Controller
     {
         $request->validate([
             'nombre'    => 'required|string|max:200',
-            'cue'       => 'nullable|string|max:20|unique:establecimientos,cue',
+            'cue'       => 'nullable|string|max:20',
             'modalidad' => 'required|in:' . implode(',', Establecimiento::MODALIDADES),
             'nivel_id'  => 'required|exists:niveles,id',
             'direccion' => 'nullable|string|max:200',
@@ -39,9 +38,10 @@ class EstablecimientoController extends Controller
             'email'     => 'nullable|email|max:100',
         ]);
 
-        Establecimiento::create($request->only(
-            'nombre', 'cue', 'modalidad', 'nivel_id',
-            'direccion', 'localidad', 'provincia', 'telefono', 'email'
+        Establecimiento::create(array_merge(
+            $request->only('nombre', 'cue', 'modalidad', 'nivel_id',
+                'direccion', 'localidad', 'provincia', 'telefono', 'email'),
+            ['user_id' => auth()->id()]
         ));
 
         return redirect()->route('establecimientos.index')
@@ -50,22 +50,26 @@ class EstablecimientoController extends Controller
 
     public function show(Establecimiento $establecimiento)
     {
-        $establecimiento->load(['nivel', 'cursos.alumnos', 'docentes']);
+        abort_if($establecimiento->user_id !== auth()->id(), 403);
+        $establecimiento->load(['nivel', 'cursos.alumnos']);
         return view('establecimientos.show', compact('establecimiento'));
     }
 
     public function edit(Establecimiento $establecimiento)
     {
-        $niveles = Nivel::orderBy('tipo')->get();
+        abort_if($establecimiento->user_id !== auth()->id(), 403);
+        $niveles     = Nivel::where('user_id', auth()->id())->orderBy('tipo')->get();
         $modalidades = Establecimiento::MODALIDADES;
         return view('establecimientos.edit', compact('establecimiento', 'niveles', 'modalidades'));
     }
 
     public function update(Request $request, Establecimiento $establecimiento)
     {
+        abort_if($establecimiento->user_id !== auth()->id(), 403);
+
         $request->validate([
             'nombre'    => 'required|string|max:200',
-            'cue'       => 'nullable|string|max:20|unique:establecimientos,cue,' . $establecimiento->id,
+            'cue'       => 'nullable|string|max:20',
             'modalidad' => 'required|in:' . implode(',', Establecimiento::MODALIDADES),
             'nivel_id'  => 'required|exists:niveles,id',
             'direccion' => 'nullable|string|max:200',
@@ -86,6 +90,7 @@ class EstablecimientoController extends Controller
 
     public function destroy(Establecimiento $establecimiento)
     {
+        abort_if($establecimiento->user_id !== auth()->id(), 403);
         $establecimiento->delete();
         return redirect()->route('establecimientos.index')
                          ->with('success', 'Establecimiento eliminado correctamente.');

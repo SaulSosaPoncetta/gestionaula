@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\MaterialTeoricoArchivo;
@@ -50,7 +49,6 @@ class MaterialTeoricoController extends Controller
 
         foreach ($request->file('archivos') as $i => $file) {
             $ruta = $file->store('materialteoricoarchivos/' . auth()->id(), 'public');
-
             MaterialTeoricoArchivo::create([
                 'user_id'     => auth()->id(),
                 'tarea_id'    => $request->tarea_id,
@@ -67,9 +65,9 @@ class MaterialTeoricoController extends Controller
 
     public function destroy(MaterialTeoricoArchivo $materialteoricoarchivo)
     {
+        abort_if($materialteoricoarchivo->user_id !== auth()->id(), 403);
         Storage::disk('public')->delete($materialteoricoarchivo->ruta);
         $materialteoricoarchivo->delete();
-
         return redirect()->route('materialteoricoarchivos.index')
                          ->with('success', 'Archivo eliminado correctamente.');
     }

@@ -14,7 +14,7 @@ class CalificacionController extends Controller
 {
     public function index()
     {
-        $cursos   = Curso::orderBy('anio')->orderBy('division')->get();
+        $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
         $periodos = Periodo::orderBy('orden')->get();
         $tipos    = TipoEvaluacion::orderBy('denominacion')->get();
 
@@ -31,8 +31,8 @@ class CalificacionController extends Controller
             'fecha'             => 'required|date',
         ]);
 
-        $curso   = Curso::with('alumnos')->findOrFail($request->curso_id);
-        $materia = Materia::findOrFail($request->materia_id);
+        $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
+        $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
         $periodo = Periodo::findOrFail($request->periodo_id);
         $tipo    = TipoEvaluacion::findOrFail($request->tipoevaluacion_id);
         $fecha   = $request->fecha;
@@ -41,6 +41,7 @@ class CalificacionController extends Controller
             ->where('materia_id', $request->materia_id)
             ->where('periodo_id', $request->periodo_id)
             ->where('tipoevaluacion_id', $request->tipoevaluacion_id)
+            ->where('user_id', auth()->id())
             ->get()
             ->keyBy('alumno_id');
 
@@ -65,11 +66,11 @@ class CalificacionController extends Controller
 
             Calificacion::updateOrCreate(
                 [
-                    'alumno_id'          => $alumnoId,
-                    'curso_id'           => $request->curso_id,
-                    'materia_id'         => $request->materia_id,
-                    'periodo_id'         => $request->periodo_id,
-                    'tipoevaluacion_id'  => $request->tipoevaluacion_id,
+                    'alumno_id'         => $alumnoId,
+                    'curso_id'          => $request->curso_id,
+                    'materia_id'        => $request->materia_id,
+                    'periodo_id'        => $request->periodo_id,
+                    'tipoevaluacion_id' => $request->tipoevaluacion_id,
                 ],
                 [
                     'user_id'     => auth()->id(),
@@ -85,7 +86,7 @@ class CalificacionController extends Controller
 
     public function historial(Request $request)
     {
-        $cursos   = Curso::orderBy('anio')->orderBy('division')->get();
+        $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
         $periodos = Periodo::orderBy('orden')->get();
         $tipos    = TipoEvaluacion::orderBy('denominacion')->get();
 
@@ -96,6 +97,7 @@ class CalificacionController extends Controller
             $filtros = $request->only(['curso_id', 'materia_id', 'periodo_id', 'tipoevaluacion_id', 'alumno_id']);
 
             $query = Calificacion::with(['alumno', 'materia', 'periodo', 'tipoevaluacion'])
+                ->where('user_id', auth()->id())
                 ->where('curso_id', $request->curso_id);
 
             if ($request->filled('materia_id'))        $query->where('materia_id', $request->materia_id);
@@ -108,7 +110,8 @@ class CalificacionController extends Controller
 
         $alumnos = collect();
         if ($request->filled('curso_id')) {
-            $alumnos = Alumno::where('curso_id', $request->curso_id)
+            $alumnos = Alumno::where('user_id', auth()->id())
+                ->where('curso_id', $request->curso_id)
                 ->orderBy('apellido')->get();
         }
 

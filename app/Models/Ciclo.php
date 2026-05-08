@@ -4,7 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ciclo extends Model
 {
-    protected $fillable = ['nombre', 'tipo', 'descripcion'];
+    protected $fillable = ['user_id', 'nombre', 'tipo', 'descripcion'];
 
     const TIPOS = ['basico', 'superior'];
 

@@ -21,23 +21,19 @@ class DeclaracionController extends Controller
         return view('declaracion.index', compact('declaraciones'));
     }
 
-    /**
-     * Formulario de nueva declaración.
-     * Pre-carga los ítems desde la tabla horarios del docente.
-     */
     public function create()
     {
         $user = auth()->user();
         $dias = self::DIAS;
 
-        // Cargar horarios del docente como base
         $horarios = Horario::with(['curso', 'materia', 'establecimiento'])
             ->where('user_id', $user->id)
             ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado','domingo')")
             ->orderBy('horainicio')
             ->get();
 
-        $establecimientos = Establecimiento::orderBy('nombre')->get();
+        $establecimientos = Establecimiento::where('user_id', auth()->id())
+            ->orderBy('nombre')->get();
         $cicloactual      = date('Y');
 
         return view('declaracion.create', compact(
@@ -45,10 +41,6 @@ class DeclaracionController extends Controller
         ));
     }
 
-    /**
-     * Guarda la declaración.
-     * Los ítems vienen del formulario (pre-llenados desde horarios, editables).
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -90,6 +82,8 @@ class DeclaracionController extends Controller
 
     public function show(Declaracion $declaracion)
     {
+        abort_if($declaracion->user_id !== auth()->id(), 403);
+
         $declaracion->load(['docente', 'items.curso', 'items.materia', 'items.establecimiento']);
         $dias = self::DIAS;
 
@@ -102,7 +96,7 @@ class DeclaracionController extends Controller
 
     public function presentar(Declaracion $declaracion)
     {
-        if ($declaracion->user_id !== auth()->id()) abort(403);
+        abort_if($declaracion->user_id !== auth()->id(), 403);
 
         if ($declaracion->estado !== 'borrador') {
             return redirect()->back()->with('error', 'Solo se pueden presentar declaraciones en borrador.');

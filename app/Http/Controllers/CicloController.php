@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers;
+
 use App\Models\Ciclo;
 use Illuminate\Http\Request;
 
@@ -8,12 +9,18 @@ class CicloController extends Controller
     public function index()
     {
         $ciclos = Ciclo::withCount('materias')
+            ->where('user_id', auth()->id())
             ->orderBy('tipo')
             ->paginate(15);
 
-        // Total de materias en ciclos básicos y superiores
-        $totalBasico   = Ciclo::where('tipo', 'basico')->withCount('materias')->get()->sum('materias_count');
-        $totalSuperior = Ciclo::where('tipo', 'superior')->withCount('materias')->get()->sum('materias_count');
+        // Totales filtrados por usuario
+        $totalBasico   = Ciclo::where('user_id', auth()->id())
+            ->where('tipo', 'basico')
+            ->withCount('materias')->get()->sum('materias_count');
+
+        $totalSuperior = Ciclo::where('user_id', auth()->id())
+            ->where('tipo', 'superior')
+            ->withCount('materias')->get()->sum('materias_count');
 
         return view('ciclos.index', compact('ciclos', 'totalBasico', 'totalSuperior'));
     }
@@ -31,31 +38,44 @@ class CicloController extends Controller
             'tipo'        => 'required|in:' . implode(',', Ciclo::TIPOS),
             'descripcion' => 'nullable|string',
         ]);
-        Ciclo::create($request->only('nombre', 'tipo', 'descripcion'));
+
+        Ciclo::create([
+            'user_id'     => auth()->id(),
+            'nombre'      => $request->nombre,
+            'tipo'        => $request->tipo,
+            'descripcion' => $request->descripcion,
+        ]);
+
         return redirect()->route('ciclos.index')
                          ->with('success', 'Ciclo creado correctamente.');
     }
 
     public function edit(Ciclo $ciclo)
     {
+        abort_if($ciclo->user_id !== auth()->id(), 403);
         $tipos = Ciclo::TIPOS;
         return view('ciclos.edit', compact('ciclo', 'tipos'));
     }
 
     public function update(Request $request, Ciclo $ciclo)
     {
+        abort_if($ciclo->user_id !== auth()->id(), 403);
+
         $request->validate([
             'nombre'      => 'required|string|max:200',
             'tipo'        => 'required|in:' . implode(',', Ciclo::TIPOS),
             'descripcion' => 'nullable|string',
         ]);
+
         $ciclo->update($request->only('nombre', 'tipo', 'descripcion'));
+
         return redirect()->route('ciclos.index')
                          ->with('success', 'Ciclo actualizado correctamente.');
     }
 
     public function destroy(Ciclo $ciclo)
     {
+        abort_if($ciclo->user_id !== auth()->id(), 403);
         $ciclo->delete();
         return redirect()->route('ciclos.index')
                          ->with('success', 'Ciclo eliminado correctamente.');

@@ -9,7 +9,11 @@ class AreaFormacionController extends Controller
 {
     public function index()
     {
-        $areas = AreaFormacion::withCount('materias')->orderBy('nombre')->paginate(15);
+        $areas = AreaFormacion::withCount('materias')
+            ->where('user_id', auth()->id())
+            ->orderBy('nombre')
+            ->paginate(15);
+
         return view('areasformacion.index', compact('areas'));
     }
 
@@ -25,7 +29,11 @@ class AreaFormacionController extends Controller
             'descripcion' => 'nullable|string',
         ]);
 
-        AreaFormacion::create($request->only('nombre', 'descripcion'));
+        AreaFormacion::create([
+            'user_id'     => auth()->id(),
+            'nombre'      => $request->nombre,
+            'descripcion' => $request->descripcion,
+        ]);
 
         return redirect()->route('areasformacion.index')
                          ->with('success', 'Área de formación creada correctamente.');
@@ -33,11 +41,14 @@ class AreaFormacionController extends Controller
 
     public function edit(AreaFormacion $areasformacion)
     {
+        abort_if($areasformacion->user_id !== auth()->id(), 403);
         return view('areasformacion.edit', ['area' => $areasformacion]);
     }
 
     public function update(Request $request, AreaFormacion $areasformacion)
     {
+        abort_if($areasformacion->user_id !== auth()->id(), 403);
+
         $request->validate([
             'nombre'      => 'required|string|max:200',
             'descripcion' => 'nullable|string',
@@ -51,6 +62,7 @@ class AreaFormacionController extends Controller
 
     public function destroy(AreaFormacion $areasformacion)
     {
+        abort_if($areasformacion->user_id !== auth()->id(), 403);
         $areasformacion->delete();
         return redirect()->route('areasformacion.index')
                          ->with('success', 'Área de formación eliminada correctamente.');

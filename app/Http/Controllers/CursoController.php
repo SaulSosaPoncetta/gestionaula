@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Curso;
@@ -15,9 +14,9 @@ class CursoController extends Controller
     public function index()
     {
         $cursos = Curso::with(['establecimiento', 'nivel', 'especialidad'])
+            ->where('user_id', auth()->id())
             ->withCount(['alumnos', 'materias'])
-            ->orderBy('anio')
-            ->orderBy('division')
+            ->orderBy('anio')->orderBy('division')
             ->paginate(15);
 
         return view('cursos.index', compact('cursos'));
@@ -25,9 +24,9 @@ class CursoController extends Controller
 
     public function create()
     {
-        $establecimientos = Establecimiento::with('nivel')->orderBy('nombre')->get();
-        $niveles          = Nivel::orderBy('nombre')->get();
-        $especialidades   = Especialidad::orderBy('nombre')->get();
+        $establecimientos = Establecimiento::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $niveles          = Nivel::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $especialidades   = Especialidad::where('user_id', auth()->id())->orderBy('nombre')->get();
         $anios            = self::ANIOS;
 
         return view('cursos.create', compact('establecimientos', 'niveles', 'especialidades', 'anios'));
@@ -44,10 +43,10 @@ class CursoController extends Controller
             'establecimiento_id' => 'nullable|exists:establecimientos,id',
         ]);
 
-        // nombre generado: "3ro A"
         $nombre = trim(($request->anio ?? '') . ' ' . ($request->division ?? ''));
 
         Curso::create([
+            'user_id'            => auth()->id(),
             'nombre'             => $nombre ?: 'Sin nombre',
             'anio'               => $request->anio,
             'division'           => $request->division,
@@ -57,15 +56,16 @@ class CursoController extends Controller
             'establecimiento_id' => $request->establecimiento_id,
         ]);
 
-        return redirect()->route('cursos.index')
-                         ->with('success', 'Curso creado correctamente.');
+        return redirect()->route('cursos.index')->with('success', 'Curso creado correctamente.');
     }
 
     public function edit(Curso $curso)
     {
-        $establecimientos = Establecimiento::with('nivel')->orderBy('nombre')->get();
-        $niveles          = Nivel::orderBy('nombre')->get();
-        $especialidades   = Especialidad::orderBy('nombre')->get();
+        abort_if($curso->user_id !== auth()->id(), 403);
+
+        $establecimientos = Establecimiento::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $niveles          = Nivel::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $especialidades   = Especialidad::where('user_id', auth()->id())->orderBy('nombre')->get();
         $anios            = self::ANIOS;
 
         return view('cursos.edit', compact('curso', 'establecimientos', 'niveles', 'especialidades', 'anios'));
@@ -73,6 +73,8 @@ class CursoController extends Controller
 
     public function update(Request $request, Curso $curso)
     {
+        abort_if($curso->user_id !== auth()->id(), 403);
+
         $request->validate([
             'anio'               => 'nullable|string|max:10',
             'division'           => 'nullable|string|max:10',
@@ -94,14 +96,13 @@ class CursoController extends Controller
             'establecimiento_id' => $request->establecimiento_id,
         ]);
 
-        return redirect()->route('cursos.index')
-                         ->with('success', 'Curso actualizado correctamente.');
+        return redirect()->route('cursos.index')->with('success', 'Curso actualizado correctamente.');
     }
 
     public function destroy(Curso $curso)
     {
+        abort_if($curso->user_id !== auth()->id(), 403);
         $curso->delete();
-        return redirect()->route('cursos.index')
-                         ->with('success', 'Curso eliminado correctamente.');
+        return redirect()->route('cursos.index')->with('success', 'Curso eliminado correctamente.');
     }
 }

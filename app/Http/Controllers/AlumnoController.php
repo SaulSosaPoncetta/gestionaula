@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Alumno;
@@ -10,9 +9,11 @@ class AlumnoController extends Controller
 {
     public function index(Request $request)
     {
-        $cursos = Curso::orderBy('nombre')->get();
+        $cursos = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
 
-        $query = Alumno::with('curso')->orderBy('apellido');
+        $query = Alumno::with('curso')
+            ->where('user_id', auth()->id())
+            ->orderBy('apellido');
 
         if ($request->filled('curso_id')) {
             $query->where('curso_id', $request->curso_id);
@@ -20,19 +21,18 @@ class AlumnoController extends Controller
         if ($request->filled('buscar')) {
             $query->where(function($q) use ($request) {
                 $q->where('apellido', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('nombre', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('dni', 'like', '%' . $request->buscar . '%');
+                  ->orWhere('nombre',   'like', '%' . $request->buscar . '%')
+                  ->orWhere('dni',      'like', '%' . $request->buscar . '%');
             });
         }
 
         $alumnos = $query->paginate(20);
-
         return view('alumnos.index', compact('alumnos', 'cursos'));
     }
 
     public function create()
     {
-        $cursos = Curso::orderBy('nombre')->get();
+        $cursos = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
         return view('alumnos.create', compact('cursos'));
     }
 
@@ -41,62 +41,72 @@ class AlumnoController extends Controller
         $request->validate([
             'nombre'          => 'required|string|max:100',
             'apellido'        => 'required|string|max:100',
-            'dni'             => 'nullable|string|max:20|unique:alumnos,dni',
+            'dni'             => 'nullable|string|max:20',
             'fechanacimiento' => 'nullable|date',
             'curso_id'        => 'required|exists:cursos,id',
         ]);
 
-        Alumno::create($request->only('nombre', 'apellido', 'dni', 'fechanacimiento', 'curso_id'));
+        Alumno::create([
+            'user_id'         => auth()->id(),
+            'nombre'          => $request->nombre,
+            'apellido'        => $request->apellido,
+            'dni'             => $request->dni,
+            'fechanacimiento' => $request->fechanacimiento,
+            'curso_id'        => $request->curso_id,
+        ]);
 
-        return redirect()->route('alumnos.index')
-                         ->with('success', 'Alumno creado correctamente.');
+        return redirect()->route('alumnos.index')->with('success', 'Alumno creado correctamente.');
+    }
+
+    public function show(Alumno $alumno)
+    {
+        abort_if($alumno->user_id !== auth()->id(), 403);
+
+        $alumno->load(['curso.especialidad', 'curso.nivel', 'curso.establecimiento']);
+
+        $asistencias = \App\Models\Asistencia::with('materia')
+            ->where('alumno_id', $alumno->id)
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        $resumen = [
+            'presente'    => $asistencias->where('estado', 'presente')->count(),
+            'ausente'     => $asistencias->where('estado', 'ausente')->count(),
+            'tarde'       => $asistencias->where('estado', 'tarde')->count(),
+            'justificado' => $asistencias->where('estado', 'justificado')->count(),
+            'total'       => $asistencias->count(),
+        ];
+
+        return view('alumnos.show', compact('alumno', 'asistencias', 'resumen'));
     }
 
     public function edit(Alumno $alumno)
     {
-        $cursos = Curso::orderBy('nombre')->get();
+        abort_if($alumno->user_id !== auth()->id(), 403);
+        $cursos = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
         return view('alumnos.edit', compact('alumno', 'cursos'));
     }
 
     public function update(Request $request, Alumno $alumno)
     {
+        abort_if($alumno->user_id !== auth()->id(), 403);
+
         $request->validate([
             'nombre'          => 'required|string|max:100',
             'apellido'        => 'required|string|max:100',
-            'dni'             => 'nullable|string|max:20|unique:alumnos,dni,' . $alumno->id,
+            'dni'             => 'nullable|string|max:20',
             'fechanacimiento' => 'nullable|date',
             'curso_id'        => 'required|exists:cursos,id',
         ]);
 
         $alumno->update($request->only('nombre', 'apellido', 'dni', 'fechanacimiento', 'curso_id'));
-
-        return redirect()->route('alumnos.index')
-                         ->with('success', 'Alumno actualizado correctamente.');
+        return redirect()->route('alumnos.index')->with('success', 'Alumno actualizado correctamente.');
     }
 
     public function destroy(Alumno $alumno)
     {
+        abort_if($alumno->user_id !== auth()->id(), 403);
         $alumno->delete();
-        return redirect()->route('alumnos.index')
-                         ->with('success', 'Alumno eliminado correctamente.');
+        return redirect()->route('alumnos.index')->with('success', 'Alumno eliminado correctamente.');
     }
-    public function show(Alumno $alumno)
-{
-    $alumno->load(['curso.especialidad', 'curso.nivel', 'curso.establecimiento']);
-
-    $asistencias = \App\Models\Asistencia::with('materia')
-        ->where('alumno_id', $alumno->id)
-        ->orderBy('fecha', 'desc')
-        ->get();
-
-    $resumen = [
-        'presente'    => $asistencias->where('estado', 'presente')->count(),
-        'ausente'     => $asistencias->where('estado', 'ausente')->count(),
-        'tarde'       => $asistencias->where('estado', 'tarde')->count(),
-        'justificado' => $asistencias->where('estado', 'justificado')->count(),
-        'total'       => $asistencias->count(),
-    ];
-
-    return view('alumnos.show', compact('alumno', 'asistencias', 'resumen'));
-}
 }

@@ -29,7 +29,7 @@ class PlanificacionController extends Controller
 
     public function create()
     {
-        $materias = Materia::orderBy('nombre')->get();
+        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
         $ciclo    = date('Y');
         return view('planificaciones.create', compact('materias', 'ciclo'));
     }
@@ -55,6 +55,8 @@ class PlanificacionController extends Controller
 
     public function show(Planificacion $planificacion)
     {
+        abort_if($planificacion->user_id !== auth()->id(), 403);
+
         $planificacion->load([
             'materia',
             'unidades.objetivosaprendizaje',
@@ -75,12 +77,15 @@ class PlanificacionController extends Controller
 
     public function edit(Planificacion $planificacion)
     {
-        $materias = Materia::orderBy('nombre')->get();
+        abort_if($planificacion->user_id !== auth()->id(), 403);
+        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
         return view('planificaciones.edit', compact('planificacion', 'materias'));
     }
 
     public function update(Request $request, Planificacion $planificacion)
     {
+        abort_if($planificacion->user_id !== auth()->id(), 403);
+
         $request->validate([
             'materia_id'  => 'required|exists:materias,id',
             'ciclo'       => 'required|string|max:20',
@@ -99,7 +104,8 @@ class PlanificacionController extends Controller
 
     public function destroy(Planificacion $planificacion)
     {
-        // Eliminar archivos físicos de todas las unidades
+        abort_if($planificacion->user_id !== auth()->id(), 403);
+
         foreach ($planificacion->unidades as $unidad) {
             foreach ($unidad->archivos as $archivo) {
                 Storage::disk('public')->delete($archivo->ruta);
@@ -111,17 +117,16 @@ class PlanificacionController extends Controller
                          ->with('success', 'Planificación eliminada correctamente.');
     }
 
-    // --- Unidades ---
-
     public function storeUnidad(Request $request, Planificacion $planificacion)
     {
+        abort_if($planificacion->user_id !== auth()->id(), 403);
+
         $request->validate([
             'nombre'       => 'required|string|max:300',
             'numeroclases' => 'required|integer|min:1',
         ]);
 
-        $orden = $planificacion->unidades()->count() + 1;
-
+        $orden  = $planificacion->unidades()->count() + 1;
         $unidad = Unidad::create([
             'planificacion_id' => $planificacion->id,
             'nombre'           => $request->nombre,
@@ -129,7 +134,6 @@ class PlanificacionController extends Controller
             'orden'            => $orden,
         ]);
 
-        // Objetivos aprendizaje
         foreach ((array)$request->objetivosaprendizaje as $i => $obj) {
             if (!empty(trim($obj))) {
                 UnidadObjetivoAprendizaje::create([
@@ -140,7 +144,6 @@ class PlanificacionController extends Controller
             }
         }
 
-        // Objetivos enseñanza
         foreach ((array)$request->objetivosensenianza as $i => $obj) {
             if (!empty(trim($obj))) {
                 UnidadObjetivoEnsenianza::create([
@@ -151,7 +154,6 @@ class PlanificacionController extends Controller
             }
         }
 
-        // Actividades
         foreach ((array)$request->actividades as $i => $act) {
             if (!empty(trim($act))) {
                 UnidadActividad::create([
@@ -162,7 +164,6 @@ class PlanificacionController extends Controller
             }
         }
 
-        // Recursos
         foreach ((array)$request->recursos as $i => $rec) {
             if (!empty(trim($rec))) {
                 UnidadRecurso::create([
@@ -173,12 +174,10 @@ class PlanificacionController extends Controller
             }
         }
 
-        // Contenidos seleccionados
         if ($request->contenidos) {
             $unidad->contenidos()->sync($request->contenidos);
         }
 
-        // Archivos PDF (máximo 3)
         if ($request->hasFile('archivos')) {
             $orden = 1;
             foreach ($request->file('archivos') as $file) {
@@ -199,6 +198,8 @@ class PlanificacionController extends Controller
 
     public function destroyUnidad(Planificacion $planificacion, Unidad $unidad)
     {
+        abort_if($planificacion->user_id !== auth()->id(), 403);
+
         foreach ($unidad->archivos as $archivo) {
             Storage::disk('public')->delete($archivo->ruta);
         }

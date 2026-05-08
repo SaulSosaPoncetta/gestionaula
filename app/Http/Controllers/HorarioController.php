@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Horario;
@@ -10,31 +9,30 @@ use Illuminate\Http\Request;
 
 class HorarioController extends Controller
 {
-    const DIAS = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
+    const DIAS = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
 
     public function index()
-{
-    $dias = self::DIAS;
+    {
+        $dias = self::DIAS;
 
-    $horarios = Horario::with(['curso', 'materia', 'establecimiento'])
-        ->where('user_id', auth()->id())
-        ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado','domingo')")
-        ->orderBy('horainicio')
-        ->get()
-        ->groupBy('dia');
+        $horarios = Horario::with(['curso', 'materia', 'establecimiento'])
+            ->where('user_id', auth()->id())
+            ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado','domingo')")
+            ->orderBy('horainicio')
+            ->get()
+            ->groupBy('dia');
 
-    return view('horarios.index', compact('horarios', 'dias'));
-}
+        return view('horarios.index', compact('horarios', 'dias'));
+    }
 
     public function create()
     {
-        $dias            = self::DIAS;
-        $establecimientos = Establecimiento::orderBy('nombre')->get();
-        // Todos los cursos disponibles
-        $cursos          = Curso::with(['establecimiento', 'materias'])
+        $dias             = self::DIAS;
+        $establecimientos = Establecimiento::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $cursos           = Curso::where('user_id', auth()->id())
+                                ->with(['establecimiento', 'materias'])
                                 ->orderBy('anio')->orderBy('division')->get();
-        // Todas las materias para pre-cargar en JS
-        $materias        = Materia::orderBy('nombre')->get();
+        $materias         = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
 
         return view('horarios.create', compact('cursos', 'materias', 'dias', 'establecimientos'));
     }
@@ -66,6 +64,7 @@ class HorarioController extends Controller
 
     public function destroy(Horario $horario)
     {
+        abort_if($horario->user_id !== auth()->id(), 403);
         $horario->delete();
         return redirect()->route('horarios.index')
                          ->with('success', 'Horario eliminado correctamente.');

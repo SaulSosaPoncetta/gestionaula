@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Tarea;
@@ -10,22 +9,23 @@ use Illuminate\Http\Request;
 class TareaController extends Controller
 {
     public function index()
-{
-    $tareas = Tarea::with(['curso', 'materia', 'docente'])
-        ->where('user_id', auth()->id())
-        ->orderBy('fechavencimiento', 'desc')
-        ->paginate(15);
+    {
+        $tareas = Tarea::with(['curso', 'materia'])
+            ->where('user_id', auth()->id())
+            ->orderBy('fechavencimiento', 'desc')
+            ->paginate(15);
 
-    return view('tareas.index', compact('tareas'));
-}
+        return view('tareas.index', compact('tareas'));
+    }
 
-public function create()
-{
-    $cursos = Curso::whereHas('docentes', fn($q) => $q->where('users.id', auth()->id()))
-                   ->with('materias')->orderBy('nombre')->get();
+    public function create()
+    {
+        $cursos = Curso::where('user_id', auth()->id())
+            ->with('materias')
+            ->orderBy('anio')->orderBy('division')->get();
 
-    return view('tareas.create', compact('cursos'));
-}
+        return view('tareas.create', compact('cursos'));
+    }
 
     public function store(Request $request)
     {
@@ -47,7 +47,7 @@ public function create()
             'estado'           => 'activa',
         ]);
 
-        $curso = Curso::with('alumnos')->find($request->curso_id);
+        $curso = Curso::where('user_id', auth()->id())->with('alumnos')->find($request->curso_id);
         foreach ($curso->alumnos as $alumno) {
             Entrega::create([
                 'tarea_id'  => $tarea->id,
@@ -57,23 +57,25 @@ public function create()
         }
 
         return redirect()->route('tareas.index')
-                         ->with('success', 'Tarea creada correctamente.');
+                         ->with('success', 'Práctico creado correctamente.');
     }
 
     public function show(Tarea $tarea)
     {
-        $tarea->load(['curso', 'materia', 'docente', 'entregas.alumno']);
+        abort_if($tarea->user_id !== auth()->id(), 403);
+        $tarea->load(['curso', 'materia', 'entregas.alumno']);
         $entregas = $tarea->entregas->sortBy(fn($e) => $e->alumno->apellido);
-
         return view('tareas.show', compact('tarea', 'entregas'));
     }
 
     public function actualizarentregas(Request $request, Tarea $tarea)
     {
+        abort_if($tarea->user_id !== auth()->id(), 403);
+
         foreach ($request->entregas ?? [] as $entregaId => $datos) {
             Entrega::where('id', $entregaId)->update([
-                'estado'      => $datos['estado'] ?? 'pendiente',
-                'observacion' => $datos['observacion'] ?? null,
+                'estado'       => $datos['estado'] ?? 'pendiente',
+                'observacion'  => $datos['observacion'] ?? null,
                 'fechaentrega' => $datos['estado'] !== 'pendiente' ? now()->toDateString() : null,
             ]);
         }
@@ -84,8 +86,9 @@ public function create()
 
     public function cerrar(Tarea $tarea)
     {
+        abort_if($tarea->user_id !== auth()->id(), 403);
         $tarea->update(['estado' => 'cerrada']);
         return redirect()->route('tareas.index')
-                         ->with('success', 'Tarea cerrada correctamente.');
+                         ->with('success', 'Práctico cerrado correctamente.');
     }
 }

@@ -1,13 +1,12 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
 class Curso extends Model
 {
+    
     protected $fillable = [
-        'nombre', 'anio', 'division', 'turno',
+        'user_id', 'nombre', 'anio', 'division', 'turno',
         'nivel_id', 'especialidad_id', 'establecimiento_id'
     ];
 
@@ -43,9 +42,6 @@ class Curso extends Model
         return $this->belongsTo(Especialidad::class);
     }
 
-    /**
-     * Nombre completo: ej "3ro B Mañana"
-     */
     public function getNombreCompletoAttribute(): string
     {
         $partes = array_filter([

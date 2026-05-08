@@ -9,7 +9,11 @@ class EspecialidadController extends Controller
 {
     public function index()
     {
-        $especialidades = Especialidad::withCount('materias')->orderBy('nombre')->paginate(15);
+        $especialidades = Especialidad::withCount('materias')
+            ->where('user_id', auth()->id())
+            ->orderBy('nombre')
+            ->paginate(15);
+
         return view('especialidades.index', compact('especialidades'));
     }
 
@@ -25,7 +29,11 @@ class EspecialidadController extends Controller
             'descripcion' => 'nullable|string',
         ]);
 
-        Especialidad::create($request->only('nombre', 'descripcion'));
+        Especialidad::create([
+            'user_id'     => auth()->id(),
+            'nombre'      => $request->nombre,
+            'descripcion' => $request->descripcion,
+        ]);
 
         return redirect()->route('especialidades.index')
                          ->with('success', 'Especialidad creada correctamente.');
@@ -33,11 +41,14 @@ class EspecialidadController extends Controller
 
     public function edit(Especialidad $especialidad)
     {
+        abort_if($especialidad->user_id !== auth()->id(), 403);
         return view('especialidades.edit', compact('especialidad'));
     }
 
     public function update(Request $request, Especialidad $especialidad)
     {
+        abort_if($especialidad->user_id !== auth()->id(), 403);
+
         $request->validate([
             'nombre'      => 'required|string|max:200',
             'descripcion' => 'nullable|string',
@@ -51,6 +62,7 @@ class EspecialidadController extends Controller
 
     public function destroy(Especialidad $especialidad)
     {
+        abort_if($especialidad->user_id !== auth()->id(), 403);
         $especialidad->delete();
         return redirect()->route('especialidades.index')
                          ->with('success', 'Especialidad eliminada correctamente.');

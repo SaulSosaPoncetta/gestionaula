@@ -1,23 +1,19 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Model;
 
 class Nivel extends Model
 {
     protected $table = 'niveles';
-    protected $fillable = ['nombre', 'tipo'];
-
-    const TIPOS = ['inicial', 'primario', 'secundario', 'terciario'];
+    protected $fillable = ['user_id', 'nombre', 'tipo'];
 
     public function establecimientos()
     {
         return $this->hasMany(Establecimiento::class);
     }
 
-    public function getTipoLabelAttribute(): string
+    public function cursos()
     {
-        return ucfirst($this->tipo);
+        return $this->hasMany(Curso::class);
     }
 }
