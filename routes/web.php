@@ -138,6 +138,7 @@ Route::get('/contenidos', [ContenidoController::class, 'index'])->name('contenid
 Route::get('/contenidos/crear', [ContenidoController::class, 'create'])->name('contenidos.create');
 Route::post('/contenidos', [ContenidoController::class, 'store'])->name('contenidos.store');
 Route::get('/contenidos/{contenido}/editar', [ContenidoController::class, 'edit'])->name('contenidos.edit');
+Route::get('/contenidos/{contenido}', [ContenidoController::class, 'show'])->name('contenidos.show');
 Route::put('/contenidos/{contenido}', [ContenidoController::class, 'update'])->name('contenidos.update');
 Route::delete('/contenidos/{contenido}', [ContenidoController::class, 'destroy'])->name('contenidos.destroy');
 

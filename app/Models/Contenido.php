@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Contenido extends Model
 {
     protected $fillable = [
-        'user_id', 'materia_id', 'tema', 'fecha', 'observacion'
+        'user_id', 'materia_id', 'numerounidad', 'tema', 'fecha', 'observacion'
     ];
 
     protected $casts = [

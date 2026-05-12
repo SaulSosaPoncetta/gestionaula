@@ -5,8 +5,7 @@
     <div class="col">
         <h4 class="fw-bold"><i class="bi bi-clipboard2-plus me-2"></i>Nueva actividad</h4>
         <p class="text-muted">
-            <strong>{{ $materia->nombre }}</strong> &mdash;
-            <strong>{{ $curso->nombre_completo }}</strong>
+            <strong>{{ $materia->nombre }}</strong>
         </p>
     </div>
     <div class="col-auto">
@@ -19,7 +18,6 @@
 <form method="POST" action="{{ route('actividades.store') }}" id="formActividad">
     @csrf
     <input type="hidden" name="materia_id" value="{{ $materia->id }}">
-    <input type="hidden" name="curso_id"   value="{{ $curso->id }}">
 
     @if($errors->any())
         <div class="alert alert-danger mb-3">
@@ -46,9 +44,11 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label fw-semibold">Tipo de actividad <span class="text-danger">*</span></label>
-                    <select name="tipoactividad_id" class="form-select" required>
-                        <option value="">Selecciona...</option>
+                    <label class="form-label fw-semibold">
+                        Tipo de actividad <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <select name="tipoactividad_id" class="form-select">
+                        <option value="">— Sin especificar —</option>
                         @foreach($tiposactividad as $tipo)
                             <option value="{{ $tipo->id }}"
                                 {{ old('tipoactividad_id') == $tipo->id ? 'selected' : '' }}>
@@ -56,6 +56,24 @@
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">
+                        Tema <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input type="text" name="tema" class="form-control"
+                           value="{{ old('tema') }}"
+                           placeholder="Tema de la actividad">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">
+                        Subtema <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input type="text" name="subtema" class="form-control"
+                           value="{{ old('subtema') }}"
+                           placeholder="Subtema de la actividad">
                 </div>
 
                 <div class="col-md-3">
@@ -70,6 +88,21 @@
                            value="{{ old('fechaentrega') }}" required>
                 </div>
 
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">
+                        Curso <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <select name="curso_id" id="curso_id" class="form-select">
+                        <option value="">— Sin curso asignado —</option>
+                        @foreach($cursos as $curso)
+                            <option value="{{ $curso->id }}"
+                                {{ old('curso_id') == $curso->id ? 'selected' : '' }}>
+                                {{ $curso->nombre_completo }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="col-12">
                     <label class="form-label fw-semibold">Descripción</label>
                     <textarea name="descripcion" class="form-control" rows="2"
@@ -79,7 +112,7 @@
         </div>
     </div>
 
-    {{-- ¿Es grupal? --}}
+    {{-- Modalidad --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white fw-semibold">
             <i class="bi bi-people me-1"></i>Modalidad
@@ -127,7 +160,6 @@
                     </div>
                 </div>
 
-                {{-- Asignación manual --}}
                 <div id="seccionManual" style="display:none">
                     <div class="row g-3" id="contenedorGrupos"></div>
                     <div class="alert alert-info mt-3" id="alertaSinGrupo" style="display:none">
@@ -136,11 +168,11 @@
                     </div>
                 </div>
 
-                {{-- Info aleatorio --}}
                 <div id="seccionAleatorio">
                     <div class="alert alert-success">
                         <i class="bi bi-shuffle me-2"></i>
                         Los grupos se formarán automáticamente de manera aleatoria al guardar.
+                        <span id="infoGruposAleatorio"></span>
                     </div>
                 </div>
             </div>
@@ -158,17 +190,29 @@
 
 @push('scripts')
 <script>
-const totalAlumnos  = {{ $alumnos->count() }};
-const alumnos       = @json($alumnos->values()->map(fn($a) => ['id' => $a->id, 'nombre' => $a->nombre_completo]));
-let asignaciones    = {}; // alumnoId => grupoIndex
+// Alumnos del curso seleccionado
+const alumnosPorCurso = @json($cursos->mapWithKeys(fn($c) => [
+    $c->id => $c->alumnos->map(fn($a) => ['id' => $a->id, 'nombre' => $a->nombre_completo])->values()
+]));
 
-// Toggle sección grupal
+let totalAlumnos = 0;
+let alumnos      = [];
+let asignaciones = {};
+
+document.getElementById('curso_id').addEventListener('change', function () {
+    const cursoId = this.value;
+    alumnos       = cursoId ? (alumnosPorCurso[cursoId] ?? []) : [];
+    totalAlumnos  = alumnos.length;
+    asignaciones  = {};
+    actualizarInfo();
+    if (document.getElementById('modoManual').checked) construirGrupos();
+});
+
 document.getElementById('esgrupal').addEventListener('change', function () {
     document.getElementById('seccionGrupal').style.display = this.checked ? '' : 'none';
     if (this.checked) actualizarInfo();
 });
 
-// Toggle modo
 document.querySelectorAll('[name=modogrupo]').forEach(r => {
     r.addEventListener('change', function () {
         document.getElementById('seccionManual').style.display   = this.value === 'manual'    ? '' : 'none';
@@ -177,7 +221,6 @@ document.querySelectorAll('[name=modogrupo]').forEach(r => {
     });
 });
 
-// Cambio de cantidad de integrantes
 document.getElementById('integrantesporgrupo').addEventListener('input', function () {
     actualizarInfo();
     if (document.getElementById('modoManual').checked) construirGrupos();
@@ -185,15 +228,18 @@ document.getElementById('integrantesporgrupo').addEventListener('input', functio
 
 function actualizarInfo() {
     const n      = parseInt(document.getElementById('integrantesporgrupo').value) || 0;
-    const grupos = n > 0 ? Math.ceil(totalAlumnos / n) : 0;
-    document.getElementById('infoGrupos').textContent =
-        n > 0 ? `Se formarán aproximadamente ${grupos} grupos de ${n} integrantes (total: ${totalAlumnos} alumnos)` : '';
+    const grupos = n > 0 && totalAlumnos > 0 ? Math.ceil(totalAlumnos / n) : 0;
+    const info   = n > 0 && totalAlumnos > 0
+        ? `Se formarán aprox. ${grupos} grupos de ${n} integrantes (${totalAlumnos} alumnos)`
+        : totalAlumnos === 0 ? 'Seleccioná un curso para ver los alumnos' : '';
+    document.getElementById('infoGrupos').textContent          = info;
+    document.getElementById('infoGruposAleatorio').textContent = info ? ` — ${info}` : '';
 }
 
 function construirGrupos() {
-    const n = parseInt(document.getElementById('integrantesporgrupo').value) || 2;
-    const cantGrupos = Math.ceil(totalAlumnos / n);
-    asignaciones = {};
+    const n          = parseInt(document.getElementById('integrantesporgrupo').value) || 2;
+    const cantGrupos = totalAlumnos > 0 ? Math.ceil(totalAlumnos / n) : 3;
+    asignaciones     = {};
 
     const contenedor = document.getElementById('contenedorGrupos');
     contenedor.innerHTML = '';
@@ -215,23 +261,21 @@ function construirGrupos() {
     }
 
     renderizarDisponibles();
-    actualizarInfo();
 }
 
 function renderizarDisponibles() {
-    const n = parseInt(document.getElementById('integrantesporgrupo').value) || 2;
-    const cantGrupos = Math.ceil(totalAlumnos / n);
+    const n          = parseInt(document.getElementById('integrantesporgrupo').value) || 2;
+    const cantGrupos = totalAlumnos > 0 ? Math.ceil(totalAlumnos / n) : 3;
 
-    // Actualizar cada grupo
     for (let g = 0; g < cantGrupos; g++) {
-        const lista = document.getElementById(`listaGrupo${g}`);
-        const cont  = document.getElementById(`contGrupo${g}`);
+        const lista   = document.getElementById(`listaGrupo${g}`);
+        const cont    = document.getElementById(`contGrupo${g}`);
         if (!lista) continue;
 
         const miembros = alumnos.filter(a => asignaciones[a.id] === g);
         cont.textContent = `${miembros.length}/${n}`;
+        lista.innerHTML  = '';
 
-        lista.innerHTML = '';
         if (miembros.length === 0) {
             lista.innerHTML = '<div class="text-muted small text-center mt-2">Sin integrantes</div>';
         } else {
@@ -249,21 +293,8 @@ function renderizarDisponibles() {
                 lista.appendChild(div);
             });
         }
-    }
 
-    // Disponibles sin grupo
-    const sinGrupo = alumnos.filter(a => asignaciones[a.id] === undefined);
-    const alertaSinGrupo = document.getElementById('alertaSinGrupo');
-    document.getElementById('contadorSinGrupo').textContent = sinGrupo.length;
-    alertaSinGrupo.style.display = sinGrupo.length > 0 ? '' : 'none';
-
-    // Selector de alumnos disponibles por grupo
-    for (let g = 0; g < cantGrupos; g++) {
-        const miembros = alumnos.filter(a => asignaciones[a.id] === g);
-        const lista = document.getElementById(`listaGrupo${g}`);
-        if (!lista) continue;
-
-        // Agregar selector si hay disponibles y hay lugar
+        const sinGrupo = alumnos.filter(a => asignaciones[a.id] === undefined);
         if (sinGrupo.length > 0 && miembros.length < n) {
             const sel = document.createElement('select');
             sel.className = 'form-select form-select-sm mt-2';
@@ -280,6 +311,11 @@ function renderizarDisponibles() {
             lista.appendChild(sel);
         }
     }
+
+    const sinGrupo = alumnos.filter(a => asignaciones[a.id] === undefined);
+    const alerta   = document.getElementById('alertaSinGrupo');
+    document.getElementById('contadorSinGrupo').textContent = sinGrupo.length;
+    alerta.style.display = sinGrupo.length > 0 ? '' : 'none';
 }
 
 function quitarAlumno(alumnoId) {
@@ -287,7 +323,6 @@ function quitarAlumno(alumnoId) {
     renderizarDisponibles();
 }
 
-// Init
 actualizarInfo();
 </script>
 @endpush

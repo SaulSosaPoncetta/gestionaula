@@ -19,10 +19,11 @@
         <form method="GET" action="{{ route('contenidos.index') }}" class="row g-3">
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Filtrar por materia</label>
-                <select name="materia_id" class="form-select">
-                    <option value="">Todas las materias</option>
+                <select name="materia_id" id="materia_id" class="form-select">
+                    <option value="">— Seleccione una materia —</option>
                     @foreach($materias as $materia)
-                        <option value="{{ $materia->id }}" {{ request('materia_id') == $materia->id ? 'selected' : '' }}>
+                        <option value="{{ $materia->id }}"
+                            {{ request('materia_id') == $materia->id ? 'selected' : '' }}>
                             {{ $materia->nombre }}
                         </option>
                     @endforeach
@@ -44,9 +45,14 @@
     </div>
 </div>
 
-@if($contenidos->isEmpty())
+{{-- Solo mostrar tabla si hay materia seleccionada --}}
+@if(!request('materia_id'))
     <div class="alert alert-info">
-        <i class="bi bi-info-circle me-2"></i>No hay contenidos registrados.
+        <i class="bi bi-info-circle me-2"></i>Seleccioná una materia para ver sus contenidos.
+    </div>
+@elseif($contenidos->isEmpty())
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-circle me-2"></i>No hay contenidos registrados para esta materia.
     </div>
 @else
 <div class="card border-0 shadow-sm">
@@ -54,20 +60,22 @@
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Fecha</th>
-                    <th>Materia</th>
+                    <th class="ps-4">Materia</th>
+                    <th class="text-center" style="width:80px">Unidad</th>
                     <th>Tema</th>
                     <th>Subtemas</th>
                     <th>Observación</th>
-                    <th></th>
+                    <th class="text-center" style="width:130px">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($contenidos as $contenido)
                 <tr>
-                    <td class="ps-4">{{ $contenido->fecha->format('d/m/Y') }}</td>
-                    <td>
+                    <td class="ps-4">
                         <span class="badge bg-primary">{{ $contenido->materia?->nombre ?? '—' }}</span>
+                    </td>
+                    <td class="text-center">
+                        {{ $contenido->numerounidad ?? '—' }}
                     </td>
                     <td class="fw-semibold">{{ $contenido->tema }}</td>
                     <td>
@@ -82,17 +90,24 @@
                         @endif
                     </td>
                     <td class="text-muted small">{{ $contenido->observacion ?? '—' }}</td>
-                    <td class="text-end pe-3">
-                        <a href="{{ route('contenidos.edit', $contenido) }}" class="btn btn-sm btn-outline-secondary me-1">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <form method="POST" action="{{ route('contenidos.destroy', $contenido) }}" class="d-inline">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger"
-                                    onclick="return confirm('¿Eliminar este contenido?')">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-1">
+                            <a href="{{ route('contenidos.show', $contenido) }}"
+                               class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ route('contenidos.edit', $contenido) }}"
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="POST" action="{{ route('contenidos.destroy', $contenido) }}" class="d-inline">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('¿Eliminar este contenido?')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @endforeach

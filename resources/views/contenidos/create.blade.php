@@ -40,6 +40,17 @@
                     </select>
                     @error('materia_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        Número de unidad <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input type="number" name="numerounidad"
+                           class="form-control @error('numerounidad') is-invalid @enderror"
+                           value="{{ old('numerounidad') }}"
+                           min="1" placeholder="Ej: 1, 2, 3...">
+                    @error('numerounidad')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
             </div>
 
             <div class="row g-3 mt-1">
@@ -72,7 +83,9 @@
 
             <div class="row g-3 mt-1">
                 <div class="col-12">
-                    <label class="form-label fw-semibold">Observación <span class="text-muted fw-normal">(opcional)</span></label>
+                    <label class="form-label fw-semibold">
+                        Observación <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
                     <textarea name="observacion" class="form-control" rows="2"
                               placeholder="Notas adicionales...">{{ old('observacion') }}</textarea>
                 </div>

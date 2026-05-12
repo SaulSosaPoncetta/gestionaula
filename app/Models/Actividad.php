@@ -10,7 +10,8 @@ class Actividad extends Model
 
     protected $fillable = [
         'user_id', 'materia_id', 'curso_id', 'tipoactividad_id',
-        'titulo', 'descripcion', 'fechainicio', 'fechaentrega',
+        'titulo', 'tema', 'subtema', 'descripcion',
+        'fechainicio', 'fechaentrega',
         'esgrupal', 'integrantesporgrupo', 'estado'
     ];
 

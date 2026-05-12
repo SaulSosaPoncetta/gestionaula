@@ -22,48 +22,52 @@ class ActividadController extends Controller
         return view('actividades.index', compact('actividades'));
     }
 
+    /**
+     * Paso 1: Seleccionar solo materia
+     */
     public function seleccionar()
     {
         $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-        $cursos   = collect();
 
-        if (request()->filled('materia_id')) {
-            $cursos = Curso::where('user_id', auth()->id())
-                ->whereHas('materias', fn($q) =>
-                    $q->where('materias.id', request('materia_id'))
-                )->orderBy('anio')->orderBy('division')->get();
-
-            if ($cursos->isEmpty()) {
-                $cursos = Curso::where('user_id', auth()->id())
-                    ->orderBy('anio')->orderBy('division')->get();
-            }
-        }
-
-        return view('actividades.seleccionar', compact('materias', 'cursos'));
+        return view('actividades.seleccionar', compact('materias'));
     }
 
+    /**
+     * Paso 2: Crear la actividad
+     */
     public function create(Request $request)
     {
         $request->validate([
             'materia_id' => 'required|exists:materias,id',
-            'curso_id'   => 'required|exists:cursos,id',
         ]);
 
         $materia        = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
-        $curso          = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
         $tiposactividad = TipoActividad::orderBy('denominacion')->get();
-        $alumnos        = $curso->alumnos->sortBy('apellido');
 
-        return view('actividades.create', compact('materia', 'curso', 'tiposactividad', 'alumnos'));
+        // Cursos relacionados a esta materia del docente
+        $cursos = Curso::where('user_id', auth()->id())
+            ->whereHas('materias', fn($q) => $q->where('materias.id', $request->materia_id))
+            ->with('alumnos')
+            ->orderBy('anio')->orderBy('division')->get();
+
+        if ($cursos->isEmpty()) {
+            $cursos = Curso::where('user_id', auth()->id())
+                ->with('alumnos')
+                ->orderBy('anio')->orderBy('division')->get();
+        }
+
+        return view('actividades.create', compact('materia', 'tiposactividad', 'cursos'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'materia_id'          => 'required|exists:materias,id',
-            'curso_id'            => 'required|exists:cursos,id',
-            'tipoactividad_id'    => 'required|exists:tiposactividad,id',
+            'curso_id'            => 'nullable|exists:cursos,id',
+            'tipoactividad_id'    => 'nullable|exists:tiposactividad,id',
             'titulo'              => 'required|string|max:300',
+            'tema'                => 'nullable|string|max:300',
+            'subtema'             => 'nullable|string|max:300',
             'descripcion'         => 'nullable|string',
             'fechainicio'         => 'required|date',
             'fechaentrega'        => 'required|date|after_or_equal:fechainicio',
@@ -73,12 +77,15 @@ class ActividadController extends Controller
         ]);
 
         $esgrupal  = $request->boolean('esgrupal');
+
         $actividad = Actividad::create([
             'user_id'             => auth()->id(),
             'materia_id'          => $request->materia_id,
             'curso_id'            => $request->curso_id,
             'tipoactividad_id'    => $request->tipoactividad_id,
             'titulo'              => $request->titulo,
+            'tema'                => $request->tema,
+            'subtema'             => $request->subtema,
             'descripcion'         => $request->descripcion,
             'fechainicio'         => $request->fechainicio,
             'fechaentrega'        => $request->fechaentrega,
@@ -87,7 +94,8 @@ class ActividadController extends Controller
             'estado'              => 'activa',
         ]);
 
-        if ($esgrupal && $request->filled('integrantesporgrupo')) {
+        // Procesar grupos solo si hay curso seleccionado
+        if ($esgrupal && $request->filled('integrantesporgrupo') && $request->filled('curso_id')) {
             $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
             $alumnos = $curso->alumnos->pluck('id')->toArray();
 

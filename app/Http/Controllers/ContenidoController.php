@@ -32,39 +32,41 @@ class ContenidoController extends Controller
         return view('contenidos.create', compact('materias'));
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'materia_id'  => 'required|exists:materias,id',
-            'tema'        => 'required|string|max:500',
-            'observacion' => 'nullable|string',
-            'subtemas'    => 'nullable|array|max:3',
-            'subtemas.*'  => 'nullable|string|max:500',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'materia_id'   => 'required|exists:materias,id',
+        'numerounidad' => 'nullable|integer|min:1',
+        'tema'         => 'required|string|max:500',
+        'observacion'  => 'nullable|string',
+        'subtemas'     => 'nullable|array|max:3',
+        'subtemas.*'   => 'nullable|string|max:500',
+    ]);
 
-        $contenido = Contenido::create([
-            'user_id'     => auth()->id(),
-            'materia_id'  => $request->materia_id,
-            'tema'        => $request->tema,
-            'fecha'       => now()->toDateString(),
-            'observacion' => $request->observacion,
-        ]);
+    $contenido = Contenido::create([
+        'user_id'      => auth()->id(),
+        'materia_id'   => $request->materia_id,
+        'numerounidad' => $request->numerounidad,
+        'tema'         => $request->tema,
+        'fecha'        => now()->toDateString(),
+        'observacion'  => $request->observacion,
+    ]);
 
-        if ($request->subtemas) {
-            foreach ($request->subtemas as $orden => $subtema) {
-                if (!empty(trim($subtema))) {
-                    ContenidoSubtema::create([
-                        'contenido_id' => $contenido->id,
-                        'subtema'      => $subtema,
-                        'orden'        => $orden + 1,
-                    ]);
-                }
+    if ($request->subtemas) {
+        foreach ($request->subtemas as $orden => $subtema) {
+            if (!empty(trim($subtema))) {
+                ContenidoSubtema::create([
+                    'contenido_id' => $contenido->id,
+                    'subtema'      => $subtema,
+                    'orden'        => $orden + 1,
+                ]);
             }
         }
-
-        return redirect()->route('contenidos.index')
-                         ->with('success', 'Contenido registrado correctamente.');
     }
+
+    return redirect()->route('contenidos.index')
+                     ->with('success', 'Contenido registrado correctamente.');
+}
 
     public function edit(Contenido $contenido)
     {
@@ -77,7 +79,14 @@ class ContenidoController extends Controller
         }
         return view('contenidos.edit', compact('contenido', 'materias', 'subtemas'));
     }
-
+    
+    public function show(Contenido $contenido)
+    {
+        abort_if($contenido->user_id !== auth()->id(), 403);
+        $contenido->load('subtemas', 'materia');
+        return view('contenidos.show', compact('contenido'));
+    }
+    
     public function update(Request $request, Contenido $contenido)
     {
         abort_if($contenido->user_id !== auth()->id(), 403);
