@@ -4,9 +4,7 @@
 <div class="row mb-4">
     <div class="col">
         <h4 class="fw-bold"><i class="bi bi-clipboard2-plus me-2"></i>Nueva actividad</h4>
-        <p class="text-muted">
-            <strong>{{ $materia->nombre }}</strong>
-        </p>
+        <p class="text-muted"><strong>{{ $materia->nombre }}</strong></p>
     </div>
     <div class="col-auto">
         <a href="{{ route('actividades.seleccionar') }}" class="btn btn-outline-secondary">
@@ -36,6 +34,8 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
+
+                {{-- Título --}}
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Título <span class="text-danger">*</span></label>
                     <input type="text" name="titulo" class="form-control"
@@ -43,6 +43,7 @@
                            placeholder="Ej: Trabajo práctico N°1">
                 </div>
 
+                {{-- Tipo de actividad --}}
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">
                         Tipo de actividad <span class="text-muted fw-normal">(opcional)</span>
@@ -58,24 +59,52 @@
                     </select>
                 </div>
 
-                <div class="col-md-6">
+                {{-- Número de unidad --}}
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">
+                        N° de unidad <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input type="number" name="numerounidad" class="form-control"
+                           value="{{ old('numerounidad') }}" min="1"
+                           placeholder="Ej: 1">
+                </div>
+
+                {{-- Tema (desde contenidos) --}}
+                <div class="col-md-5">
                     <label class="form-label fw-semibold">
                         Tema <span class="text-muted fw-normal">(opcional)</span>
                     </label>
-                    <input type="text" name="tema" class="form-control"
-                           value="{{ old('tema') }}"
-                           placeholder="Tema de la actividad">
+                    <select name="tema" id="selectTema" class="form-select">
+                        <option value="">— Sin tema —</option>
+                        @foreach($contenidos as $cont)
+                            <option value="{{ $cont->tema }}"
+                                    data-id="{{ $cont->id }}"
+                                    data-subtemas="{{ $cont->subtemas->pluck('subtema')->toJson() }}"
+                                {{ old('tema') == $cont->tema ? 'selected' : '' }}>
+                                @if($cont->numerounidad) [Unidad {{ $cont->numerounidad }}] @endif
+                                {{ $cont->tema }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
-                <div class="col-md-6">
+                {{-- Subtemas --}}
+                <div class="col-md-5">
                     <label class="form-label fw-semibold">
-                        Subtema <span class="text-muted fw-normal">(opcional)</span>
+                        Subtemas <span class="text-muted fw-normal">(opcional)</span>
                     </label>
-                    <input type="text" name="subtema" class="form-control"
-                           value="{{ old('subtema') }}"
-                           placeholder="Subtema de la actividad">
+                    <select name="subtema" id="selectSubtema1" class="form-select mb-2">
+                        <option value="">— Subtema 1 —</option>
+                    </select>
+                    <select name="subtema2" id="selectSubtema2" class="form-select mb-2">
+                        <option value="">— Subtema 2 —</option>
+                    </select>
+                    <select name="subtema3" id="selectSubtema3" class="form-select">
+                        <option value="">— Subtema 3 —</option>
+                    </select>
                 </div>
 
+                {{-- Fechas --}}
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Fecha inicio <span class="text-danger">*</span></label>
                     <input type="date" name="fechainicio" class="form-control"
@@ -88,6 +117,7 @@
                            value="{{ old('fechaentrega') }}" required>
                 </div>
 
+                {{-- Curso --}}
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">
                         Curso <span class="text-muted fw-normal">(opcional)</span>
@@ -103,6 +133,7 @@
                     </select>
                 </div>
 
+                {{-- Descripción --}}
                 <div class="col-12">
                     <label class="form-label fw-semibold">Descripción</label>
                     <textarea name="descripcion" class="form-control" rows="2"
@@ -190,7 +221,6 @@
 
 @push('scripts')
 <script>
-// Alumnos del curso seleccionado
 const alumnosPorCurso = @json($cursos->mapWithKeys(fn($c) => [
     $c->id => $c->alumnos->map(fn($a) => ['id' => $a->id, 'nombre' => $a->nombre_completo])->values()
 ]));
@@ -199,6 +229,25 @@ let totalAlumnos = 0;
 let alumnos      = [];
 let asignaciones = {};
 
+// Selector de tema → habilita subtemas
+document.getElementById('selectTema').addEventListener('change', function () {
+    const opt      = this.options[this.selectedIndex];
+    const subtemas = opt.dataset.subtemas ? JSON.parse(opt.dataset.subtemas) : [];
+
+    ['selectSubtema1', 'selectSubtema2', 'selectSubtema3'].forEach((id, i) => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = `<option value="">— Subtema ${i + 1} —</option>`;
+        subtemas.forEach(s => {
+            sel.innerHTML += `<option value="${s}">${s}</option>`;
+        });
+        sel.disabled = subtemas.length === 0;
+    });
+});
+
+// Inicializar subtemas si hay tema seleccionado (old value)
+document.getElementById('selectTema').dispatchEvent(new Event('change'));
+
+// Curso → alumnos para grupos
 document.getElementById('curso_id').addEventListener('change', function () {
     const cursoId = this.value;
     alumnos       = cursoId ? (alumnosPorCurso[cursoId] ?? []) : [];
@@ -215,7 +264,7 @@ document.getElementById('esgrupal').addEventListener('change', function () {
 
 document.querySelectorAll('[name=modogrupo]').forEach(r => {
     r.addEventListener('change', function () {
-        document.getElementById('seccionManual').style.display   = this.value === 'manual'    ? '' : 'none';
+        document.getElementById('seccionManual').style.display    = this.value === 'manual'    ? '' : 'none';
         document.getElementById('seccionAleatorio').style.display = this.value === 'aleatorio' ? '' : 'none';
         if (this.value === 'manual') construirGrupos();
     });
@@ -248,7 +297,7 @@ function construirGrupos() {
         const col = document.createElement('div');
         col.className = 'col-md-4 mb-3';
         col.innerHTML = `
-            <div class="card border shadow-sm" id="tarjetaGrupo${g}">
+            <div class="card border shadow-sm">
                 <div class="card-header bg-primary text-white fw-semibold d-flex justify-content-between">
                     <span>Grupo ${g + 1}</span>
                     <span class="badge bg-white text-primary" id="contGrupo${g}">0/${n}</span>
@@ -259,7 +308,6 @@ function construirGrupos() {
             </div>`;
         contenedor.appendChild(col);
     }
-
     renderizarDisponibles();
 }
 
@@ -268,8 +316,8 @@ function renderizarDisponibles() {
     const cantGrupos = totalAlumnos > 0 ? Math.ceil(totalAlumnos / n) : 3;
 
     for (let g = 0; g < cantGrupos; g++) {
-        const lista   = document.getElementById(`listaGrupo${g}`);
-        const cont    = document.getElementById(`contGrupo${g}`);
+        const lista = document.getElementById(`listaGrupo${g}`);
+        const cont  = document.getElementById(`contGrupo${g}`);
         if (!lista) continue;
 
         const miembros = alumnos.filter(a => asignaciones[a.id] === g);
@@ -313,9 +361,8 @@ function renderizarDisponibles() {
     }
 
     const sinGrupo = alumnos.filter(a => asignaciones[a.id] === undefined);
-    const alerta   = document.getElementById('alertaSinGrupo');
     document.getElementById('contadorSinGrupo').textContent = sinGrupo.length;
-    alerta.style.display = sinGrupo.length > 0 ? '' : 'none';
+    document.getElementById('alertaSinGrupo').style.display = sinGrupo.length > 0 ? '' : 'none';
 }
 
 function quitarAlumno(alumnoId) {

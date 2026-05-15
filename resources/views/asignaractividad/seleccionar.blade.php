@@ -3,7 +3,7 @@
 @section('content')
 <div class="row mb-4">
     <div class="col">
-        <h4 class="fw-bold"><i class="bi bi-clipboard2-arrow me-2"></i>Asignar actividad</h4>
+        <h4 class="fw-bold"><i class="bi bi-clipboard2-arrow me-2"></i>Actividades asignadas</h4>
         <p class="text-muted">Selecciona la materia y el curso para ver las actividades disponibles.</p>
     </div>
     <div class="col-auto">

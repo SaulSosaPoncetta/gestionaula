@@ -8,12 +8,12 @@ class Actividad extends Model
 {
     protected $table = 'actividades';
 
-    protected $fillable = [
-        'user_id', 'materia_id', 'curso_id', 'tipoactividad_id',
-        'titulo', 'tema', 'subtema', 'descripcion',
-        'fechainicio', 'fechaentrega',
-        'esgrupal', 'integrantesporgrupo', 'estado'
-    ];
+protected $fillable = [
+    'user_id', 'materia_id', 'curso_id', 'tipoactividad_id',
+    'titulo', 'numerounidad', 'tema', 'subtema', 'descripcion',
+    'fechainicio', 'fechaentrega',
+    'esgrupal', 'integrantesporgrupo', 'estado'
+];
 
     protected $casts = [
         'fechainicio'  => 'date',

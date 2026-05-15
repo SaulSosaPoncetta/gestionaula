@@ -4,11 +4,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Materia extends Model
 {
-    protected $fillable = [
-        'user_id', 'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
-        'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
-        'cargahorariasemanal', 'cargahorariaanual'
-    ];
+protected $fillable = [
+    'user_id', 'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
+    'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
+    'cargahorariasemanal', 'cargahorariaanual', 'hsporclase', 'cantidadclasesanuales'
+];
 
     const TIPOS     = ['aula', 'taller'];
     const TIPOSHORA = ['catedra', 'modulo'];

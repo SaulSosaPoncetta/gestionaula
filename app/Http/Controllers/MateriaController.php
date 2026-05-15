@@ -41,29 +41,39 @@ class MateriaController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'nombre'              => 'required|string|max:200',
-            'ciclo_id'            => 'nullable|exists:ciclos,id',
-            'area_formacion_id'   => 'nullable|exists:areasformacion,id',
-            'especialidad_id'     => 'nullable|exists:especialidades,id',
-            'establecimiento_id'  => 'nullable|exists:establecimientos,id',
-            'anio'                => 'nullable|string|max:20',
-            'tipomateria'         => 'nullable|in:aula,taller',
-            'tipohora'            => 'nullable|in:' . implode(',', Materia::TIPOSHORA),
-            'cargahorariasemanal' => 'nullable|integer|min:1',
-            'cargahorariaanual'   => 'nullable|integer|min:1',
-        ]);
+{
+    $request->validate([
+        'nombre'              => 'required|string|max:200',
+        'ciclo_id'            => 'nullable|exists:ciclos,id',
+        'area_formacion_id'   => 'nullable|exists:areasformacion,id',
+        'especialidad_id'     => 'nullable|exists:especialidades,id',
+        'establecimiento_id'  => 'nullable|exists:establecimientos,id',
+        'anio'                => 'nullable|string|max:20',
+        'tipomateria'         => 'nullable|in:aula,taller',
+        'tipohora'            => 'nullable|in:' . implode(',', Materia::TIPOSHORA),
+        'cargahorariasemanal' => 'nullable|integer|min:1',
+        'cargahorariaanual'   => 'nullable|integer|min:1',
+        'hsporclase'          => 'nullable|integer|min:1',
+    ]);
 
-        Materia::create(array_merge(
-            $request->only('nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
-                'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
-                'cargahorariasemanal', 'cargahorariaanual'),
-            ['user_id' => auth()->id()]
-        ));
-
-        return redirect()->route('materias.index')->with('success', 'Materia creada correctamente.');
+    // Calcular cantidad de clases anuales
+    $cantidadclasesanuales = null;
+    if ($request->filled('cargahorariaanual') && $request->filled('hsporclase') && $request->hsporclase > 0) {
+        $cantidadclasesanuales = intval($request->cargahorariaanual / $request->hsporclase);
     }
+
+    Materia::create(array_merge(
+        $request->only('nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
+            'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
+            'cargahorariasemanal', 'cargahorariaanual', 'hsporclase'),
+        [
+            'user_id'               => auth()->id(),
+            'cantidadclasesanuales' => $cantidadclasesanuales,
+        ]
+    ));
+
+    return redirect()->route('materias.index')->with('success', 'Materia creada correctamente.');
+}
 
     public function edit(Materia $materia)
     {
@@ -80,28 +90,38 @@ class MateriaController extends Controller
     }
 
     public function update(Request $request, Materia $materia)
-    {
-        abort_if($materia->user_id !== auth()->id(), 403);
+{
+    abort_if($materia->user_id !== auth()->id(), 403);
 
-        $request->validate([
-            'nombre'              => 'required|string|max:200',
-            'ciclo_id'            => 'nullable|exists:ciclos,id',
-            'area_formacion_id'   => 'nullable|exists:areasformacion,id',
-            'especialidad_id'     => 'nullable|exists:especialidades,id',
-            'establecimiento_id'  => 'nullable|exists:establecimientos,id',
-            'anio'                => 'nullable|string|max:20',
-            'tipomateria'         => 'nullable|in:aula,taller',
-            'tipohora'            => 'nullable|in:' . implode(',', Materia::TIPOSHORA),
-            'cargahorariasemanal' => 'nullable|integer|min:1',
-            'cargahorariaanual'   => 'nullable|integer|min:1',
-        ]);
+    $request->validate([
+        'nombre'              => 'required|string|max:200',
+        'ciclo_id'            => 'nullable|exists:ciclos,id',
+        'area_formacion_id'   => 'nullable|exists:areasformacion,id',
+        'especialidad_id'     => 'nullable|exists:especialidades,id',
+        'establecimiento_id'  => 'nullable|exists:establecimientos,id',
+        'anio'                => 'nullable|string|max:20',
+        'tipomateria'         => 'nullable|in:aula,taller',
+        'tipohora'            => 'nullable|in:' . implode(',', Materia::TIPOSHORA),
+        'cargahorariasemanal' => 'nullable|integer|min:1',
+        'cargahorariaanual'   => 'nullable|integer|min:1',
+        'hsporclase'          => 'nullable|integer|min:1',
+    ]);
 
-        $materia->update($request->only('nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
-            'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
-            'cargahorariasemanal', 'cargahorariaanual'));
-
-        return redirect()->route('materias.index')->with('success', 'Materia actualizada correctamente.');
+    // Calcular cantidad de clases anuales
+    $cantidadclasesanuales = null;
+    if ($request->filled('cargahorariaanual') && $request->filled('hsporclase') && $request->hsporclase > 0) {
+        $cantidadclasesanuales = intval($request->cargahorariaanual / $request->hsporclase);
     }
+
+    $materia->update(array_merge(
+        $request->only('nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
+            'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
+            'cargahorariasemanal', 'cargahorariaanual', 'hsporclase'),
+        ['cantidadclasesanuales' => $cantidadclasesanuales]
+    ));
+
+    return redirect()->route('materias.index')->with('success', 'Materia actualizada correctamente.');
+}
 
     public function destroy(Materia $materia)
     {

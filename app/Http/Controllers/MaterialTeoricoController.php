@@ -63,6 +63,21 @@ class MaterialTeoricoController extends Controller
                          ->with('success', 'Material teórico subido correctamente.');
     }
 
+    public function asignar(Request $request, MaterialTeoricoArchivo $materialteoricoarchivo)
+    {
+    abort_if($materialteoricoarchivo->user_id !== auth()->id(), 403);
+
+    $request->validate([
+        'tarea_id' => 'required|exists:actividades,id',
+    ]);
+
+    $materialteoricoarchivo->update([
+        'tarea_id' => $request->tarea_id,
+    ]);
+
+    return redirect()->back()->with('success', 'Material asignado correctamente.');
+    }
+
     public function destroy(MaterialTeoricoArchivo $materialteoricoarchivo)
     {
         abort_if($materialteoricoarchivo->user_id !== auth()->id(), 403);

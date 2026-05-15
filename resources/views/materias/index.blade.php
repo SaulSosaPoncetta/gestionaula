@@ -48,7 +48,9 @@
 </div>
 
 @if($materias->isEmpty())
-    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No hay materias registradas.</div>
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>No hay materias registradas.
+    </div>
 @else
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
@@ -60,8 +62,10 @@
                     <th>Área</th>
                     <th>Tipo</th>
                     <th>Año</th>
-                    <th>HS Sem.</th>
-                    <th>HS Anu.</th>
+                    <th class="text-center">HS Sem.</th>
+                    <th class="text-center">HS Anu.</th>
+                    <th class="text-center">Hs/Clase</th>
+                    <th class="text-center">Clases anuales</th>
                     <th></th>
                 </tr>
             </thead>
@@ -81,10 +85,19 @@
                     <td>{{ $materia->areaformacion?->nombre ?? '—' }}</td>
                     <td>{{ $materia->tipomaterialabel ?? '—' }}</td>
                     <td>{{ $materia->anio ?? '—' }}</td>
-                    <td>{{ $materia->cargahorariasemanal ?? '—' }}</td>
-                    <td>{{ $materia->cargahorariaanual ?? '—' }}</td>
+                    <td class="text-center">{{ $materia->cargahorariasemanal ?? '—' }}</td>
+                    <td class="text-center">{{ $materia->cargahorariaanual ?? '—' }}</td>
+                    <td class="text-center">{{ $materia->hsporclase ?? '—' }}</td>
+                    <td class="text-center">
+                        @if($materia->cantidadclasesanuales)
+                            <span class="badge bg-success">{{ $materia->cantidadclasesanuales }}</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </td>
                     <td class="text-end pe-3">
-                        <a href="{{ route('materias.edit', $materia) }}" class="btn btn-sm btn-outline-secondary me-1">
+                        <a href="{{ route('materias.edit', $materia) }}"
+                           class="btn btn-sm btn-outline-secondary me-1">
                             <i class="bi bi-pencil"></i>
                         </a>
                         <form method="POST" action="{{ route('materias.destroy', $materia) }}" class="d-inline">

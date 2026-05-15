@@ -39,7 +39,7 @@
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('asignaractividad.*') ? 'active' : '' }}"
                                         href="{{ route('asignaractividad.seleccionar') }}">
-                                        <i class="bi bi-clipboard2-arrow me-2"></i>Asignar actividad
+                                        <i class="bi bi-clipboard2-arrow me-2"></i>Actividades asignadas
                                     </a>
                                 </li>
                                 <li>

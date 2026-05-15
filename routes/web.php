@@ -156,6 +156,7 @@ Route::get('/materialteoricoarchivos', [MaterialTeoricoController::class, 'index
 Route::get('/materialteoricoarchivos/crear', [MaterialTeoricoController::class, 'create'])->name('materialteoricoarchivos.create');
 Route::post('/materialteoricoarchivos', [MaterialTeoricoController::class, 'store'])->name('materialteoricoarchivos.store');
 Route::delete('/materialteoricoarchivos/{materialteoricoarchivo}', [MaterialTeoricoController::class, 'destroy'])->name('materialteoricoarchivos.destroy');
+Route::put('/materialteoricoarchivos/{materialteoricoarchivo}/asignar', [MaterialTeoricoController::class, 'asignar'])->name('materialteoricoarchivos.asignar');
 
 // Períodos
 Route::get('/periodos', [PeriodoController::class, 'index'])->name('periodos.index');
