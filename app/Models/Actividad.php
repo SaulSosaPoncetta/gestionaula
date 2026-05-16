@@ -45,4 +45,9 @@ protected $fillable = [
     {
         return $this->hasMany(ActividadGrupo::class)->orderBy('numero');
     }
+
+    public function alumnoestados()
+{
+    return $this->hasMany(ActividadAlumnoEstado::class);
+}
 }

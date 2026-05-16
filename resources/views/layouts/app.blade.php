@@ -43,6 +43,12 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a class="dropdown-item {{ request()->routeIs('calificaractividad.*') ? 'active' : '' }}"
+                                        href="{{ route('calificaractividad.index') }}">
+                                        <i class="bi bi-journal-check me-2"></i>Calificar actividades
+                                    </a>
+                                </li>
+                                <li>
                                     <a class="dropdown-item {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}"
                                         href="{{ route('calificaciones.index') }}">
                                         <i class="bi bi-journal-text me-2"></i>Calificar
@@ -54,6 +60,7 @@
                                         <i class="bi bi-journal-bookmark-fill me-2"></i>Libro de temas
                                     </a>
                                 </li>
+
                             </ul>
                         </li>
 

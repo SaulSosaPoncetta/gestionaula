@@ -24,6 +24,7 @@ use App\Http\Controllers\TipoActividadController;
 use App\Http\Controllers\ActividadController;
 use App\Http\Controllers\LibroTemaController;
 use App\Http\Controllers\AsignarActividadController;
+use App\Http\Controllers\CalificarActividadController;
 
     Route::get('/', function () {
         return redirect()->route('dashboard');
@@ -195,6 +196,12 @@ Route::delete('/librotemas/{librotema}', [LibroTemaController::class, 'destroy']
 
 Route::get('/asignaractividad', [AsignarActividadController::class, 'seleccionar'])->name('asignaractividad.seleccionar');
 Route::get('/asignaractividad/ver', [AsignarActividadController::class, 'ver'])->name('asignaractividad.ver');
+
+Route::get('/calificaractividad', [CalificarActividadController::class, 'index'])->name('calificaractividad.index');
+Route::get('/calificaractividad/ver', [CalificarActividadController::class, 'ver'])->name('calificaractividad.ver');
+Route::post('/calificaractividad/guardar', [CalificarActividadController::class, 'guardar'])->name('calificaractividad.guardar');
+Route::get('/calificaractividad/historial', [CalificarActividadController::class, 'historial'])->name('calificaractividad.historial');
+
 });
 
 require __DIR__.'/auth.php';
