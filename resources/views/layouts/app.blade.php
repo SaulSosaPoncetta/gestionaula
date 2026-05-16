@@ -149,6 +149,12 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a class="dropdown-item {{ request()->routeIs('ceses.*') ? 'active' : '' }}"
+                                        href="{{ route('ceses.index') }}">
+                                        <i class="bi bi-calendar-x me-2"></i>Ceses
+                                    </a>
+                                </li>
+                                <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
@@ -201,6 +207,12 @@
                                     <a class="dropdown-item {{ request()->routeIs('tiposevaluacion.*') ? 'active' : '' }}"
                                         href="{{ route('tiposevaluacion.index') }}">
                                         <i class="bi bi-card-checklist me-2"></i>Tipos de evaluación
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('tipovaloraciones.*') ? 'active' : '' }}"
+                                        href="{{ route('tipovaloraciones.index') }}">
+                                        <i class="bi bi-star me-2"></i>Tipos de valoración
                                     </a>
                                 </li>
                                 <li>

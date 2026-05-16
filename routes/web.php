@@ -25,6 +25,8 @@ use App\Http\Controllers\ActividadController;
 use App\Http\Controllers\LibroTemaController;
 use App\Http\Controllers\AsignarActividadController;
 use App\Http\Controllers\CalificarActividadController;
+use App\Http\Controllers\CeseController;
+use App\Http\Controllers\TipoValoracionController;
 
     Route::get('/', function () {
         return redirect()->route('dashboard');
@@ -201,6 +203,25 @@ Route::get('/calificaractividad', [CalificarActividadController::class, 'index']
 Route::get('/calificaractividad/ver', [CalificarActividadController::class, 'ver'])->name('calificaractividad.ver');
 Route::post('/calificaractividad/guardar', [CalificarActividadController::class, 'guardar'])->name('calificaractividad.guardar');
 Route::get('/calificaractividad/historial', [CalificarActividadController::class, 'historial'])->name('calificaractividad.historial');
+Route::get('/calificaractividad/incompletas', [CalificarActividadController::class, 'incompletas'])->name('calificaractividad.incompletas');
+Route::put('/calificaractividad/{estado}/vencida', [CalificarActividadController::class, 'pasarAVencida'])->name('calificaractividad.vencida');
+Route::get('/calificaractividad/calificadas', [CalificarActividadController::class, 'calificadas'])->name('calificaractividad.calificadas');
+Route::get('/calificaractividad/{estado}/show', [CalificarActividadController::class, 'showCalificada'])->name('calificaractividad.show');
+Route::get('/calificaractividad/{estado}/edit', [CalificarActividadController::class, 'editCalificada'])->name('calificaractividad.edit');
+Route::put('/calificaractividad/{estado}/update', [CalificarActividadController::class, 'updateCalificada'])->name('calificaractividad.update');
+
+
+Route::get('/ceses', [CeseController::class, 'index'])->name('ceses.index');
+Route::get('/ceses/crear', [CeseController::class, 'create'])->name('ceses.create');
+Route::post('/ceses', [CeseController::class, 'store'])->name('ceses.store');
+Route::delete('/ceses/{cese}', [CeseController::class, 'destroy'])->name('ceses.destroy');
+
+Route::get('/tipovaloraciones', [TipoValoracionController::class, 'index'])->name('tipovaloraciones.index');
+Route::get('/tipovaloraciones/crear', [TipoValoracionController::class, 'create'])->name('tipovaloraciones.create');
+Route::post('/tipovaloraciones', [TipoValoracionController::class, 'store'])->name('tipovaloraciones.store');
+Route::get('/tipovaloraciones/{tipovaloracion}/editar', [TipoValoracionController::class, 'edit'])->name('tipovaloraciones.edit');
+Route::put('/tipovaloraciones/{tipovaloracion}', [TipoValoracionController::class, 'update'])->name('tipovaloraciones.update');
+Route::delete('/tipovaloraciones/{tipovaloracion}', [TipoValoracionController::class, 'destroy'])->name('tipovaloraciones.destroy');
 
 });
 

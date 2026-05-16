@@ -34,40 +34,49 @@ class CalificarActividadController extends Controller
         return view('calificaractividad.index', compact('materias', 'cursos'));
     }
 
-    /**
-     * Paso 2: Lista de alumnos con sus actividades
-     */
     public function ver(Request $request)
-    {
-        $request->validate([
-            'materia_id' => 'required|exists:materias,id',
-            'curso_id'   => 'required|exists:cursos,id',
-        ]);
+{
+    $request->validate([
+        'materia_id' => 'required|exists:materias,id',
+        'curso_id'   => 'required|exists:cursos,id',
+    ]);
 
-        $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
-        $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
+    $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
+    $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
 
-        // Actividades de esta materia y curso
-        $actividades = Actividad::where('user_id', auth()->id())
-            ->where('materia_id', $request->materia_id)
-            ->where('curso_id', $request->curso_id)
-            ->where('estado', 'activa')
-            ->orderBy('fechainicio')
-            ->get();
+    $actividades = Actividad::where('user_id', auth()->id())
+        ->where('materia_id', $request->materia_id)
+        ->where('curso_id', $request->curso_id)
+        ->where('estado', 'activa')
+        ->orderBy('fechainicio')
+        ->get();
 
-        // Estados ya registrados
-        $estadosRegistrados = ActividadAlumnoEstado::where('user_id', auth()->id())
-            ->whereIn('actividad_id', $actividades->pluck('id'))
-            ->whereIn('alumno_id', $curso->alumnos->pluck('id'))
-            ->get()
-            ->groupBy(fn($e) => $e->alumno_id . '_' . $e->actividad_id);
+    $alumnos = $curso->alumnos->sortBy('apellido');
 
-        $alumnos = $curso->alumnos->sortBy('apellido');
+    $todosLosEstados = ActividadAlumnoEstado::where('user_id', auth()->id())
+        ->whereIn('actividad_id', $actividades->pluck('id'))
+        ->whereIn('alumno_id', $alumnos->pluck('id'))
+        ->get()
+        ->keyBy(fn($e) => $e->alumno_id . '_' . $e->actividad_id);
 
-        return view('calificaractividad.ver', compact(
-            'materia', 'curso', 'actividades', 'alumnos', 'estadosRegistrados'
-        ));
-    }
+    // Solo mostrar combinaciones alumno+actividad que NO están finalizadas/vencidas/incompletas
+    $estadosFinales = ['finalizado', 'vencida', 'incompleta'];
+
+    // Filtrar: por alumno mostrar solo actividades pendientes o en proceso
+    $estadosRegistrados = $todosLosEstados->filter(
+        fn($e) => !in_array($e->estado, $estadosFinales)
+    )->keyBy(fn($e) => $e->alumno_id . '_' . $e->actividad_id);
+
+    // IDs de combinaciones ya finalizadas para ocultarlas
+    $yaCalificadas = $todosLosEstados->filter(
+        fn($e) => in_array($e->estado, $estadosFinales)
+    )->map(fn($e) => $e->alumno_id . '_' . $e->actividad_id)->values()->toArray();
+
+    return view('calificaractividad.ver', compact(
+        'materia', 'curso', 'actividades', 'alumnos',
+        'estadosRegistrados', 'yaCalificadas'
+    ));
+}
 
     /**
      * Guardar estados y notas
@@ -141,4 +150,126 @@ class CalificarActividadController extends Controller
             'materias', 'cursos', 'registros', 'materia', 'curso'
         ));
     }
+
+/**
+ * Vista de entregas incompletas (solo permite cambiar a vencida)
+ */
+public function incompletas(Request $request)
+{
+    $request->validate([
+        'materia_id' => 'required|exists:materias,id',
+        'curso_id'   => 'required|exists:cursos,id',
+    ]);
+
+    $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
+    $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
+
+    $registros = ActividadAlumnoEstado::with(['alumno', 'actividad'])
+        ->where('user_id', auth()->id())
+        ->where('estado', 'incompleta')
+        ->whereHas('actividad', fn($q) =>
+            $q->where('materia_id', $request->materia_id)
+              ->where('curso_id', $request->curso_id)
+        )
+        ->get();
+
+    return view('calificaractividad.incompletas', compact('materia', 'curso', 'registros'));
+}
+
+/**
+ * Cambiar estado de incompleta a vencida
+ */
+public function pasarAVencida(Request $request, ActividadAlumnoEstado $estado)
+{
+    abort_if($estado->user_id !== auth()->id(), 403);
+    abort_if($estado->estado !== 'incompleta', 403);
+
+    $estado->update([
+        'estado'      => 'vencida',
+        'fechaestado' => now()->toDateString(),
+    ]);
+
+    return redirect()->back()->with('success', 'Estado actualizado a entrega vencida.');
+}
+
+/**
+ * Vista de actividades calificadas
+ */
+public function calificadas(Request $request)
+{
+    $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+    $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+
+    $registros = collect();
+    $materia   = null;
+    $curso     = null;
+
+    if ($request->filled('materia_id') && $request->filled('curso_id')) {
+        $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
+        $curso   = Curso::where('user_id', auth()->id())->findOrFail($request->curso_id);
+
+        $registros = ActividadAlumnoEstado::with(['alumno', 'actividad'])
+            ->where('user_id', auth()->id())
+            ->whereIn('estado', ['finalizado', 'vencida', 'incompleta'])
+            ->whereHas('actividad', fn($q) =>
+                $q->where('materia_id', $request->materia_id)
+                  ->where('curso_id', $request->curso_id)
+            )
+            ->orderBy('created_at', 'desc')
+            ->paginate(30);
+    }
+
+    return view('calificaractividad.calificadas', compact(
+        'materias', 'cursos', 'registros', 'materia', 'curso'
+    ));
+}
+
+/**
+ * Ver detalle de una calificación
+ */
+public function showCalificada(ActividadAlumnoEstado $estado)
+{
+    abort_if($estado->user_id !== auth()->id(), 403);
+    $estado->load(['alumno', 'actividad.materia', 'actividad.curso']);
+    return view('calificaractividad.show', compact('estado'));
+}
+
+/**
+ * Editar una calificación
+ */
+public function editCalificada(ActividadAlumnoEstado $estado)
+{
+    abort_if($estado->user_id !== auth()->id(), 403);
+    $estado->load(['alumno', 'actividad.materia', 'actividad.curso']);
+    return view('calificaractividad.edit', compact('estado'));
+}
+
+/**
+ * Actualizar una calificación
+ */
+public function updateCalificada(Request $request, ActividadAlumnoEstado $estado)
+{
+    abort_if($estado->user_id !== auth()->id(), 403);
+
+    $request->validate([
+        'estado'      => 'required|in:finalizado,vencida,incompleta',
+        'fechaestado' => 'nullable|date',
+        'nota'        => 'nullable|numeric|min:0|max:10',
+        'observacion' => 'nullable|string',
+    ]);
+
+    $estado->update([
+        'estado'      => $request->estado,
+        'fechaestado' => $request->fechaestado,
+        'nota'        => $request->nota,
+        'observacion' => $request->observacion,
+    ]);
+
+    return redirect()->route('calificaractividad.calificadas', [
+        'materia_id' => $estado->actividad->materia_id,
+        'curso_id'   => $estado->actividad->curso_id,
+    ])->with('success', 'Calificación actualizada correctamente.');
+}
+
+
 }

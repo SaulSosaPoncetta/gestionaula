@@ -1,10 +1,36 @@
 @extends('layouts.app')
 
 @section('content')
+{{-- Saludo --}}
 <div class="row mb-4">
     <div class="col">
         <h4 class="fw-bold"><i class="bi bi-house me-2"></i>Panel principal</h4>
-        <p class="text-muted">Bienvenido, <strong>{{ auth()->user()->name }}</strong>.</p>
+        <p class="text-muted mb-0">Bienvenido, <strong>{{ auth()->user()->name }}</strong>.</p>
+        @if($establecimientoActual || $materiaActual)
+        <div class="mt-2 d-flex flex-wrap gap-3">
+            @if($establecimientoActual)
+            <span class="text-muted small">
+                <i class="bi bi-building me-1 text-primary"></i>
+                <strong>Ud. se encuentra en el establecimiento:</strong>
+                {{ $establecimientoActual->nombre }}
+            </span>
+            @endif
+            @if($materiaActual)
+            <span class="text-muted small">
+                <i class="bi bi-book me-1 text-success"></i>
+                <strong>En la materia:</strong> {{ $materiaActual->nombre }}
+            </span>
+            @endif
+            @if($cursoActual)
+            <span class="text-muted small">
+                <i class="bi bi-people me-1 text-warning"></i>
+                <strong>Año:</strong> {{ $cursoActual->anio }}
+                &nbsp;
+                <strong>División:</strong> {{ $cursoActual->division }}
+            </span>
+            @endif
+        </div>
+        @endif
     </div>
 </div>
 
