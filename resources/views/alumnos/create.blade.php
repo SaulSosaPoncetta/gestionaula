@@ -30,33 +30,59 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Apellido <span class="text-danger">*</span></label>
-                    <input type="text" name="apellido" class="form-control @error('apellido') is-invalid @enderror"
+                    <input type="text" name="apellido"
+                           class="form-control @error('apellido') is-invalid @enderror"
                            value="{{ old('apellido') }}" required>
                     @error('apellido')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
-                    <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror"
+                    <input type="text" name="nombre"
+                           class="form-control @error('nombre') is-invalid @enderror"
                            value="{{ old('nombre') }}" required>
                     @error('nombre')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">DNI</label>
-                    <input type="text" name="dni" class="form-control @error('dni') is-invalid @enderror"
+                    <input type="text" name="dni"
+                           class="form-control @error('dni') is-invalid @enderror"
                            value="{{ old('dni') }}" placeholder="Opcional">
                     @error('dni')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
+
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Fecha de nacimiento</label>
                     <input type="date" name="fechanacimiento" class="form-control"
                            value="{{ old('fechanacimiento') }}">
                 </div>
-                <div class="col-md-8">
+
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Teléfono</label>
+                    <input type="text" name="telefono"
+                           class="form-control @error('telefono') is-invalid @enderror"
+                           value="{{ old('telefono') }}"
+                           placeholder="Ej: 2284-123456">
+                    @error('telefono')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="email" name="email"
+                           class="form-control @error('email') is-invalid @enderror"
+                           value="{{ old('email') }}"
+                           placeholder="Ej: alumno@mail.com">
+                    @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-md-12">
                     <label class="form-label fw-semibold">Curso <span class="text-danger">*</span></label>
                     <select name="curso_id" class="form-select @error('curso_id') is-invalid @enderror" required>
                         <option value="">Seleccioná...</option>
                         @foreach($cursos as $curso)
-                            <option value="{{ $curso->id }}" {{ old('curso_id') == $curso->id ? 'selected' : '' }}>
+                            <option value="{{ $curso->id }}"
+                                {{ old('curso_id') == $curso->id ? 'selected' : '' }}>
                                 {{ $curso->nombre_completo }}
                             </option>
                         @endforeach
@@ -64,6 +90,7 @@
                     @error('curso_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
+
             <div class="mt-4 d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-check-circle me-1"></i>Guardar

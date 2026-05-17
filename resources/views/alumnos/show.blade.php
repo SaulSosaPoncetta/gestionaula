@@ -7,9 +7,8 @@
         <p class="text-muted">Ficha del estudiante</p>
     </div>
     <div class="col-auto d-flex gap-2">
-        <a href="{{ route('asistencia.index') }}?curso_id={{ $alumno->curso_id }}&fecha={{ date('Y-m-d') }}"
-           class="btn btn-success">
-            <i class="bi bi-person-check me-1"></i>Registrar asistencia
+        <a href="{{ route('alumnos.edit', $alumno) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-pencil me-1"></i>Editar
         </a>
         <a href="{{ url()->previous() }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Volver
@@ -19,6 +18,8 @@
 
 {{-- Datos del alumno --}}
 <div class="row g-3 mb-4">
+
+    {{-- Datos personales --}}
     <div class="col-md-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white fw-semibold">
@@ -38,10 +39,34 @@
                         <td class="text-muted">Fecha de nacimiento</td>
                         <td>{{ $alumno->fechanacimiento ? $alumno->fechanacimiento->format('d/m/Y') : '—' }}</td>
                     </tr>
+                    <tr>
+                        <td class="text-muted">Teléfono</td>
+                        <td>
+                            @if($alumno->telefono)
+                                <i class="bi bi-telephone me-1 text-muted"></i>{{ $alumno->telefono }}
+                            @else
+                                —
+                            @endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Email</td>
+                        <td>
+                            @if($alumno->email)
+                                <a href="mailto:{{ $alumno->email }}" class="text-decoration-none">
+                                    <i class="bi bi-envelope me-1 text-muted"></i>{{ $alumno->email }}
+                                </a>
+                            @else
+                                —
+                            @endif
+                        </td>
+                    </tr>
                 </table>
             </div>
         </div>
     </div>
+
+    {{-- Datos académicos --}}
     <div class="col-md-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white fw-semibold">
@@ -115,7 +140,7 @@
     </div>
 </div>
 
-{{-- Historial --}}
+{{-- Historial de asistencias --}}
 @if($asistencias->isNotEmpty())
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white fw-semibold">
@@ -140,7 +165,11 @@
                     <td class="text-center">
                         <span class="badge bg-{{ $reg->estadobadge }}">{{ $reg->estadolabel }}</span>
                     </td>
-                    <td>{{ $reg->horallegada ? \Carbon\Carbon::parse($reg->horallegada)->format('H:i') : '—' }}</td>
+                    <td>
+                        {{ $reg->horallegada
+                            ? \Carbon\Carbon::parse($reg->horallegada)->format('H:i')
+                            : '—' }}
+                    </td>
                     <td class="text-muted small">{{ $reg->observacion ?? '—' }}</td>
                 </tr>
                 @endforeach

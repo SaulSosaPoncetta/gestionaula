@@ -37,26 +37,30 @@ class AlumnoController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'nombre'          => 'required|string|max:100',
-            'apellido'        => 'required|string|max:100',
-            'dni'             => 'nullable|string|max:20',
-            'fechanacimiento' => 'nullable|date',
-            'curso_id'        => 'required|exists:cursos,id',
-        ]);
+{
+    $request->validate([
+        'nombre'          => 'required|string|max:100',
+        'apellido'        => 'required|string|max:100',
+        'dni'             => 'nullable|string|max:20',
+        'fechanacimiento' => 'nullable|date',
+        'telefono'        => 'nullable|string|max:30',
+        'email'           => 'nullable|email|max:100',
+        'curso_id'        => 'required|exists:cursos,id',
+    ]);
 
-        Alumno::create([
-            'user_id'         => auth()->id(),
-            'nombre'          => $request->nombre,
-            'apellido'        => $request->apellido,
-            'dni'             => $request->dni,
-            'fechanacimiento' => $request->fechanacimiento,
-            'curso_id'        => $request->curso_id,
-        ]);
+    Alumno::create([
+        'user_id'         => auth()->id(),
+        'nombre'          => $request->nombre,
+        'apellido'        => $request->apellido,
+        'dni'             => $request->dni,
+        'fechanacimiento' => $request->fechanacimiento,
+        'telefono'        => $request->telefono,
+        'email'           => $request->email,
+        'curso_id'        => $request->curso_id,
+    ]);
 
-        return redirect()->route('alumnos.index')->with('success', 'Alumno creado correctamente.');
-    }
+    return redirect()->route('alumnos.index')->with('success', 'Alumno creado correctamente.');
+}
 
     public function show(Alumno $alumno)
     {
@@ -88,20 +92,26 @@ class AlumnoController extends Controller
     }
 
     public function update(Request $request, Alumno $alumno)
-    {
-        abort_if($alumno->user_id !== auth()->id(), 403);
+{
+    abort_if($alumno->user_id !== auth()->id(), 403);
 
-        $request->validate([
-            'nombre'          => 'required|string|max:100',
-            'apellido'        => 'required|string|max:100',
-            'dni'             => 'nullable|string|max:20',
-            'fechanacimiento' => 'nullable|date',
-            'curso_id'        => 'required|exists:cursos,id',
-        ]);
+    $request->validate([
+        'nombre'          => 'required|string|max:100',
+        'apellido'        => 'required|string|max:100',
+        'dni'             => 'nullable|string|max:20',
+        'fechanacimiento' => 'nullable|date',
+        'telefono'        => 'nullable|string|max:30',
+        'email'           => 'nullable|email|max:100',
+        'curso_id'        => 'required|exists:cursos,id',
+    ]);
 
-        $alumno->update($request->only('nombre', 'apellido', 'dni', 'fechanacimiento', 'curso_id'));
-        return redirect()->route('alumnos.index')->with('success', 'Alumno actualizado correctamente.');
-    }
+    $alumno->update($request->only(
+        'nombre', 'apellido', 'dni', 'fechanacimiento',
+        'telefono', 'email', 'curso_id'
+    ));
+
+    return redirect()->route('alumnos.index')->with('success', 'Alumno actualizado correctamente.');
+}
 
     public function destroy(Alumno $alumno)
     {

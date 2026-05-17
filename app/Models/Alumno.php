@@ -1,11 +1,14 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Alumno extends Model
 {
     protected $fillable = [
-        'user_id', 'nombre', 'apellido', 'dni', 'fechanacimiento', 'curso_id'
+        'user_id', 'nombre', 'apellido', 'dni',
+        'fechanacimiento', 'telefono', 'email', 'curso_id'
     ];
 
     protected $casts = ['fechanacimiento' => 'date'];

@@ -122,7 +122,19 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
+                                    <a class="dropdown-item {{ request()->routeIs('calendarioescolar.*') ? 'active' : '' }}"
+                                        href="{{ route('calendarioescolar.index') }}">
+                                        <i class="bi bi-calendar3 me-2"></i>Calendario escolar
+                                    </a>
+                                </li>
+                                <li>
                                     <h6 class="dropdown-header">Académico</h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
+                                        href="{{ route('periodos.index') }}">
+                                        <i class="bi bi-calendar3 me-2"></i>Períodos
+                                    </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('cursos.*') ? 'active' : '' }}"
@@ -191,17 +203,17 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a class="dropdown-item {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
+                                        href="{{ route('periodos.index') }}">
+                                        <i class="bi bi-calendar3 me-2"></i>Períodos
+                                    </a>
+                                </li>
+                                <li>
                                     <hr class="dropdown-divider">
                                 </li>
 
                                 <li>
                                     <h6 class="dropdown-header">Evaluación</h6>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
-                                        href="{{ route('periodos.index') }}">
-                                        <i class="bi bi-calendar3 me-2"></i>Períodos
-                                    </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('tiposevaluacion.*') ? 'active' : '' }}"

@@ -27,6 +27,7 @@ use App\Http\Controllers\AsignarActividadController;
 use App\Http\Controllers\CalificarActividadController;
 use App\Http\Controllers\CeseController;
 use App\Http\Controllers\TipoValoracionController;
+use App\Http\Controllers\CalendarioEscolarController;
 
     Route::get('/', function () {
         return redirect()->route('dashboard');
@@ -222,6 +223,13 @@ Route::post('/tipovaloraciones', [TipoValoracionController::class, 'store'])->na
 Route::get('/tipovaloraciones/{tipovaloracion}/editar', [TipoValoracionController::class, 'edit'])->name('tipovaloraciones.edit');
 Route::put('/tipovaloraciones/{tipovaloracion}', [TipoValoracionController::class, 'update'])->name('tipovaloraciones.update');
 Route::delete('/tipovaloraciones/{tipovaloracion}', [TipoValoracionController::class, 'destroy'])->name('tipovaloraciones.destroy');
+
+Route::get('/calendarioescolar', [CalendarioEscolarController::class, 'index'])->name('calendarioescolar.index');
+Route::get('/calendarioescolar/crear', [CalendarioEscolarController::class, 'create'])->name('calendarioescolar.create');
+Route::post('/calendarioescolar', [CalendarioEscolarController::class, 'store'])->name('calendarioescolar.store');
+Route::get('/calendarioescolar/{calendarioescolar}/editar', [CalendarioEscolarController::class, 'edit'])->name('calendarioescolar.edit');
+Route::put('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarController::class, 'update'])->name('calendarioescolar.update');
+Route::delete('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarController::class, 'destroy'])->name('calendarioescolar.destroy');
 
 });
 

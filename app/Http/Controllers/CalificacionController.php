@@ -85,38 +85,110 @@ class CalificacionController extends Controller
     }
 
     public function historial(Request $request)
-    {
-        $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
-        $periodos = Periodo::orderBy('orden')->get();
-        $tipos    = TipoEvaluacion::orderBy('denominacion')->get();
+{
+    $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+    $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+    $periodos = Periodo::orderBy('orden')->get();
+    $tipos    = TipoEvaluacion::orderBy('denominacion')->get();
 
-        $calificaciones = collect();
-        $filtros        = [];
+    $calificaciones = collect();
+    $filtros        = [];
+    $alumnos        = collect();
 
+    if ($request->filled('curso_id') || $request->filled('alumno_id') || $request->filled('materia_id')) {
+        $filtros = $request->only(['curso_id', 'materia_id', 'periodo_id', 'tipoevaluacion_id', 'alumno_id']);
+
+        // Calificaciones tradicionales
+        $queryCalif = Calificacion::with([
+                'alumno.curso.nivel',
+                'alumno.curso.especialidad',
+                'materia',
+                'periodo',
+                'tipoevaluacion',
+                'docente'
+            ])
+            ->where('user_id', auth()->id());
+
+        if ($request->filled('curso_id'))          $queryCalif->where('curso_id', $request->curso_id);
+        if ($request->filled('materia_id'))        $queryCalif->where('materia_id', $request->materia_id);
+        if ($request->filled('periodo_id'))        $queryCalif->where('periodo_id', $request->periodo_id);
+        if ($request->filled('tipoevaluacion_id')) $queryCalif->where('tipoevaluacion_id', $request->tipoevaluacion_id);
+        if ($request->filled('alumno_id'))         $queryCalif->where('alumno_id', $request->alumno_id);
+
+        $califItems = $queryCalif->get()->map(fn($c) => [
+            'origen'        => 'evaluacion',
+            'alumno'        => $c->alumno,
+            'materia'       => $c->materia?->nombre ?? '—',
+            'periodo'       => $c->periodo?->denominacion ?? '—',
+            'tipoevaluacion'=> $c->tipoevaluacion?->denominacion ?? '—',
+            'trabajo'       => '—',
+            'tiponota'      => 'Evaluación',
+            'nota'          => $c->nota,
+            'observacion'   => $c->observacion,
+            'docente'       => $c->docente?->name ?? '—',
+            'fecha'         => $c->created_at,
+        ]);
+
+        // Calificaciones de actividades
+        $queryAct = \App\Models\ActividadAlumnoEstado::with([
+                'alumno.curso.nivel',
+                'alumno.curso.especialidad',
+                'actividad.materia',
+                'actividad',
+                'docente'
+            ])
+            ->where('user_id', auth()->id())
+            ->whereNotNull('nota');
+
+        if ($request->filled('materia_id')) {
+            $queryAct->whereHas('actividad', fn($q) => $q->where('materia_id', $request->materia_id));
+        }
         if ($request->filled('curso_id')) {
-            $filtros = $request->only(['curso_id', 'materia_id', 'periodo_id', 'tipoevaluacion_id', 'alumno_id']);
-
-            $query = Calificacion::with(['alumno', 'materia', 'periodo', 'tipoevaluacion'])
-                ->where('user_id', auth()->id())
-                ->where('curso_id', $request->curso_id);
-
-            if ($request->filled('materia_id'))        $query->where('materia_id', $request->materia_id);
-            if ($request->filled('periodo_id'))        $query->where('periodo_id', $request->periodo_id);
-            if ($request->filled('tipoevaluacion_id')) $query->where('tipoevaluacion_id', $request->tipoevaluacion_id);
-            if ($request->filled('alumno_id'))         $query->where('alumno_id', $request->alumno_id);
-
-            $calificaciones = $query->orderBy('created_at', 'desc')->paginate(30);
+            $queryAct->whereHas('actividad', fn($q) => $q->where('curso_id', $request->curso_id));
+        }
+        if ($request->filled('alumno_id')) {
+            $queryAct->where('alumno_id', $request->alumno_id);
         }
 
-        $alumnos = collect();
+        $actItems = $queryAct->get()->map(fn($e) => [
+            'origen'        => 'actividad',
+            'alumno'        => $e->alumno,
+            'materia'       => $e->actividad?->materia?->nombre ?? '—',
+            'periodo'       => '—',
+            'tipoevaluacion'=> $e->actividad?->tipoactividad?->denominacion ?? '—',
+            'trabajo'       => $e->actividad?->titulo ?? '—',
+            'tiponota'      => 'Actividad',
+            'nota'          => $e->nota,
+            'observacion'   => $e->observacion,
+            'docente'       => $e->docente?->name ?? '—',
+            'fecha'         => $e->created_at,
+        ]);
+
+        // Unir y agrupar por alumno
+        $calificaciones = $califItems->merge($actItems)
+            ->sortBy([
+                fn($a, $b) => strcmp(
+                    $a['alumno']?->apellido ?? '',
+                    $b['alumno']?->apellido ?? ''
+                ),
+                fn($a, $b) => strcmp(
+                    $a['alumno']?->nombre ?? '',
+                    $b['alumno']?->nombre ?? ''
+                ),
+            ])
+            ->groupBy(fn($item) => $item['alumno']?->id);
+
+        // Alumnos para el filtro
         if ($request->filled('curso_id')) {
             $alumnos = Alumno::where('user_id', auth()->id())
                 ->where('curso_id', $request->curso_id)
                 ->orderBy('apellido')->get();
         }
-
-        return view('calificaciones.historial', compact(
-            'cursos', 'calificaciones', 'filtros', 'periodos', 'tipos', 'alumnos'
-        ));
     }
+
+    return view('calificaciones.historial', compact(
+        'cursos', 'materias', 'calificaciones', 'filtros',
+        'periodos', 'tipos', 'alumnos'
+    ));
+}
 }
