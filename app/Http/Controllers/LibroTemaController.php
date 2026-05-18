@@ -14,23 +14,29 @@ use Illuminate\Http\Request;
 class LibroTemaController extends Controller
 {
     private function detectarHorarioActivo()
-    {
-        $ahora     = now();
-        $diaActual = strtolower($ahora->locale('es')->isoFormat('dddd'));
-        $diaActual = str_replace(
-            ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'],
-            ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'],
-            $diaActual
-        );
-        $horaActual = $ahora->format('H:i:s');
+{
+    $ahora = \Carbon\Carbon::now();
 
-        return Horario::with(['materia', 'curso'])
-            ->where('user_id', auth()->id())
-            ->where('dia', $diaActual)
-            ->where('horainicio', '<=', $horaActual)
-            ->where('horafin', '>=', $horaActual)
-            ->first();
-    }
+    $mapaDias = [
+        1 => 'lunes',
+        2 => 'martes',
+        3 => 'miercoles',
+        4 => 'jueves',
+        5 => 'viernes',
+        6 => 'sabado',
+        7 => 'domingo',
+    ];
+
+    $diaActual  = $mapaDias[$ahora->isoWeekday()];
+    $horaActual = $ahora->format('H:i:s');
+
+    return Horario::with(['materia', 'curso'])
+        ->where('user_id', auth()->id())
+        ->where('dia', $diaActual)
+        ->where('horainicio', '<=', $horaActual)
+        ->where('horafin', '>=', $horaActual)
+        ->first();
+}
 
     public function index(Request $request)
     {

@@ -30,19 +30,37 @@
             <thead class="table-light">
                 <tr>
                     <th class="ps-4">Fecha</th>
+                    <th>Día</th>
                     <th>Denominación</th>
                     <th>Período</th>
                     <th class="text-center">Feriado</th>
                     <th>Fecha inicio</th>
+                    <th>Día inicio</th>
                     <th>Fecha fin</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($eventos as $evento)
+                @php
+                    $dias = [
+                        'Sunday'    => 'Domingo',
+                        'Monday'    => 'Lunes',
+                        'Tuesday'   => 'Martes',
+                        'Wednesday' => 'Miércoles',
+                        'Thursday'  => 'Jueves',
+                        'Friday'    => 'Viernes',
+                        'Saturday'  => 'Sábado',
+                    ];
+                    $diaFecha      = $dias[$evento->fecha->format('l')] ?? '—';
+                    $diaFechaInicio = $evento->fechainicio
+                        ? ($dias[$evento->fechainicio->format('l')] ?? '—')
+                        : '—';
+                @endphp
                 <tr class="{{ $evento->esferiado ? 'table-danger' : '' }}">
-                    <td class="ps-4 fw-semibold">
-                        {{ $evento->fecha->format('d/m/Y') }}
+                    <td class="ps-4 fw-semibold">{{ $evento->fecha->format('d/m/Y') }}</td>
+                    <td>
+                        <span class="badge bg-secondary">{{ $diaFecha }}</span>
                     </td>
                     <td>{{ $evento->denominacion }}</td>
                     <td>
@@ -62,6 +80,13 @@
                         @endif
                     </td>
                     <td>{{ $evento->fechainicio ? $evento->fechainicio->format('d/m/Y') : '—' }}</td>
+                    <td>
+                        @if($evento->fechainicio)
+                            <span class="badge bg-secondary">{{ $diaFechaInicio }}</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </td>
                     <td>{{ $evento->fechafin ? $evento->fechafin->format('d/m/Y') : '—' }}</td>
                     <td class="text-end pe-3">
                         <a href="{{ route('calendarioescolar.edit', $evento) }}"
