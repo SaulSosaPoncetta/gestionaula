@@ -28,6 +28,7 @@ use App\Http\Controllers\CalificarActividadController;
 use App\Http\Controllers\CeseController;
 use App\Http\Controllers\TipoValoracionController;
 use App\Http\Controllers\CalendarioEscolarController;
+use App\Http\Controllers\AsignarActividadNuevoController;
 
     Route::get('/', function () {
         return redirect()->route('dashboard');
@@ -230,6 +231,10 @@ Route::post('/calendarioescolar', [CalendarioEscolarController::class, 'store'])
 Route::get('/calendarioescolar/{calendarioescolar}/editar', [CalendarioEscolarController::class, 'edit'])->name('calendarioescolar.edit');
 Route::put('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarController::class, 'update'])->name('calendarioescolar.update');
 Route::delete('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarController::class, 'destroy'])->name('calendarioescolar.destroy');
+
+Route::get('/asignarnuevo', [AsignarActividadNuevoController::class, 'index'])->name('asignarnuevo.index');
+Route::get('/asignarnuevo/ver', [AsignarActividadNuevoController::class, 'ver'])->name('asignarnuevo.ver');
+Route::post('/asignarnuevo/asignar', [AsignarActividadNuevoController::class, 'asignar'])->name('asignarnuevo.asignar');
 
 });
 
