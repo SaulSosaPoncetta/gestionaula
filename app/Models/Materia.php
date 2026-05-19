@@ -7,7 +7,8 @@ class Materia extends Model
 protected $fillable = [
     'user_id', 'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
     'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
-    'cargahorariasemanal', 'cargahorariaanual', 'hsporclase', 'cantidadclasesanuales'
+    'cargahorariasemanal', 'cargahorariaanual', 'hsporclase',
+    'cantidadclasesanuales', 'porcentajelimite'
 ];
 
     const TIPOS     = ['aula', 'taller'];

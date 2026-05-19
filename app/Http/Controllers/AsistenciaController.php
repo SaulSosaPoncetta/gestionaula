@@ -66,82 +66,99 @@ class AsistenciaController extends Controller
         return view('asistencia.registrar', compact('curso', 'materia', 'fecha', 'asistencias'));
     }
 
-    public function guardar(Request $request)
-    {
-        $request->validate([
-            'curso_id'    => 'required|exists:cursos,id',
-            'materia_id'  => 'required|exists:materias,id',
-            'fecha'       => 'required|date',
-            'asistencias' => 'required|array',
-        ]);
+public function guardar(Request $request)
+{
+    $request->validate([
+        'curso_id'    => 'required|exists:cursos,id',
+        'materia_id'  => 'required|exists:materias,id',
+        'fecha'       => 'required|date',
+        'asistencias' => 'required|array',
+    ]);
 
-        foreach ($request->asistencias as $alumnoId => $datos) {
-            $estado      = $datos['estado'] ?? 'presente';
-            $horallegada = null;
-            $fotoruta    = null;
+    foreach ($request->asistencias as $alumnoId => $datos) {
+        $estado      = $datos['estado'] ?? 'presente';
+        $horallegada = null;
+        $fotoruta    = null;
 
-            if ($estado === 'tarde' && !empty($datos['horallegada'])) {
-                $horallegada = $datos['horallegada'];
-            }
-
-            if ($estado === 'ausente' && $request->hasFile("fotos.{$alumnoId}")) {
-                $file     = $request->file("fotos.{$alumnoId}");
-                $fotoruta = $file->store("justificaciones/{$request->fecha}", 'public');
-                $estado   = 'justificado';
-            }
-
-            Asistencia::updateOrCreate(
-                [
-                    'alumno_id'  => $alumnoId,
-                    'fecha'      => $request->fecha,
-                    'materia_id' => $request->materia_id,
-                ],
-                [
-                    'curso_id'          => $request->curso_id,
-                    'user_id'           => auth()->id(),
-                    'estado'            => $estado,
-                    'horallegada'       => $horallegada,
-                    'fotojustificacion' => $fotoruta,
-                    'observacion'       => $datos['observacion'] ?? null,
-                ]
-            );
+        if ($estado === 'tarde' && !empty($datos['horallegada'])) {
+            $horallegada = $datos['horallegada'];
         }
 
-        return redirect()->route('asistencia.index')
-                         ->with('success', 'Asistencia guardada correctamente.');
+        if ($estado === 'ausente' && $request->hasFile("fotos.{$alumnoId}")) {
+            $file     = $request->file("fotos.{$alumnoId}");
+            $fotoruta = $file->store("justificaciones/{$request->fecha}", 'public');
+            $estado   = 'justificado';
+        }
+
+        Asistencia::updateOrCreate(
+            [
+                'alumno_id'  => $alumnoId,
+                'fecha'      => $request->fecha,
+                'materia_id' => $request->materia_id,
+            ],
+            [
+                'curso_id'          => $request->curso_id,
+                'user_id'           => auth()->id(),
+                'estado'            => $estado,
+                'horallegada'       => $horallegada,
+                'fotojustificacion' => $fotoruta,
+                'observacion'       => $datos['observacion'] ?? null,
+            ]
+        );
+
+        // Actualizar porcentaje de asistencia del alumno
+        \App\Services\AsistenciaService::actualizarPorcentaje($alumnoId, $request->materia_id);
     }
 
-    public function listado(Request $request)
-    {
-        $request->validate([
-            'curso_id'   => 'required|exists:cursos,id',
-            'materia_id' => 'required|exists:materias,id',
-        ]);
+    return redirect()->route('asistencia.index')
+                     ->with('success', 'Asistencia guardada correctamente.');
+}
 
-        $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
-        $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
+public function listado(Request $request)
+{
+    $request->validate([
+        'curso_id'   => 'required|exists:cursos,id',
+        'materia_id' => 'required|exists:materias,id',
+    ]);
 
-        $registros = Asistencia::with('alumno')
-            ->where('curso_id', $request->curso_id)
-            ->where('materia_id', $request->materia_id)
-            ->where('user_id', auth()->id())
-            ->orderBy('fecha', 'desc')
-            ->get();
+    $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
+    $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
 
-        $resumenAlumnos = $curso->alumnos->sortBy('apellido')->map(function($alumno) use ($registros) {
-            $regs = $registros->where('alumno_id', $alumno->id);
-            return [
-                'alumno'      => $alumno,
-                'presente'    => $regs->where('estado', 'presente')->count(),
-                'ausente'     => $regs->where('estado', 'ausente')->count(),
-                'tarde'       => $regs->where('estado', 'tarde')->count(),
-                'justificado' => $regs->where('estado', 'justificado')->count(),
-                'total'       => $regs->count(),
-            ];
-        });
+    $registros = Asistencia::with('alumno')
+        ->where('curso_id', $request->curso_id)
+        ->where('materia_id', $request->materia_id)
+        ->where('user_id', auth()->id())
+        ->orderBy('fecha', 'desc')
+        ->get();
 
-        return view('asistencia.listado', compact('curso', 'materia', 'resumenAlumnos'));
-    }
+    $resumenAlumnos = $curso->alumnos->sortBy('apellido')->map(function($alumno) use ($registros, $materia) {
+        $regs       = $registros->where('alumno_id', $alumno->id);
+        $total      = $regs->count();
+        $presentes  = $regs->whereIn('estado', ['presente', 'tarde', 'justificado'])->count();
+        $porcentaje = $total > 0 ? round(($presentes / $total) * 100, 2) : 100;
+
+        // Calcular color de alerta
+        $color = \App\Services\AsistenciaService::colorAlerta(
+            $porcentaje,
+            $materia->porcentajelimite ?? 75,
+            $total,
+            $materia->cantidadclasesanuales ?? 0
+        );
+
+        return [
+            'alumno'      => $alumno,
+            'presente'    => $presentes,
+            'ausente'     => $regs->where('estado', 'ausente')->count(),
+            'tarde'       => $regs->where('estado', 'tarde')->count(),
+            'justificado' => $regs->where('estado', 'justificado')->count(),
+            'total'       => $total,
+            'porcentaje'  => $porcentaje,
+            'color'       => $color,
+        ];
+    });
+
+    return view('asistencia.listado', compact('curso', 'materia', 'resumenAlumnos'));
+}
 
     public function historial(Request $request)
     {
@@ -181,43 +198,49 @@ class AsistenciaController extends Controller
     }
 
     public function actualizarRegistro(Request $request, Asistencia $asistencia)
-    {
-        abort_if($asistencia->user_id !== auth()->id(), 403);
+{
+    abort_if($asistencia->user_id !== auth()->id(), 403);
 
-        $request->validate([
-            'estado'      => 'required|in:presente,ausente,tarde,justificado',
-            'horallegada' => 'nullable|date_format:H:i',
-            'observacion' => 'nullable|string',
-        ]);
+    $request->validate([
+        'estado'      => 'required|in:presente,ausente,tarde,justificado',
+        'horallegada' => 'nullable|date_format:H:i',
+        'observacion' => 'nullable|string',
+    ]);
 
-        $horallegada = null;
-        $fotoruta    = $asistencia->fotojustificacion;
+    $horallegada = null;
+    $fotoruta    = $asistencia->fotojustificacion;
 
-        if ($request->estado === 'tarde' && $request->filled('horallegada')) {
-            $horallegada = $request->horallegada;
-        }
-
-        if ($request->estado === 'ausente' && $request->hasFile('fotojustificacion')) {
-            if ($asistencia->fotojustificacion) {
-                Storage::disk('public')->delete($asistencia->fotojustificacion);
-            }
-            $fotoruta = $request->file('fotojustificacion')
-                ->store('justificaciones/' . $asistencia->fecha->format('Y-m-d'), 'public');
-            $request->merge(['estado' => 'justificado']);
-        }
-
-        $asistencia->update([
-            'estado'            => $request->estado,
-            'horallegada'       => $horallegada,
-            'fotojustificacion' => $fotoruta,
-            'observacion'       => $request->observacion,
-        ]);
-
-        return redirect()->route('asistencia.alumno', [
-            'alumno_id' => $asistencia->alumno_id,
-            'buscar'    => $asistencia->alumno->apellido,
-        ])->with('success', 'Asistencia actualizada correctamente.');
+    if ($request->estado === 'tarde' && $request->filled('horallegada')) {
+        $horallegada = $request->horallegada;
     }
+
+    if ($request->estado === 'ausente' && $request->hasFile('fotojustificacion')) {
+        if ($asistencia->fotojustificacion) {
+            Storage::disk('public')->delete($asistencia->fotojustificacion);
+        }
+        $fotoruta = $request->file('fotojustificacion')
+            ->store('justificaciones/' . $asistencia->fecha->format('Y-m-d'), 'public');
+        $request->merge(['estado' => 'justificado']);
+    }
+
+    $asistencia->update([
+        'estado'            => $request->estado,
+        'horallegada'       => $horallegada,
+        'fotojustificacion' => $fotoruta,
+        'observacion'       => $request->observacion,
+    ]);
+
+    // Recalcular porcentaje
+    \App\Services\AsistenciaService::actualizarPorcentaje(
+        $asistencia->alumno_id,
+        $asistencia->materia_id
+    );
+
+    return redirect()->route('asistencia.alumno', [
+        'alumno_id' => $asistencia->alumno_id,
+        'buscar'    => $asistencia->alumno->apellido,
+    ])->with('success', 'Asistencia actualizada correctamente.');
+}
 
     public function alumno(Request $request)
     {

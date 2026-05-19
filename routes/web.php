@@ -200,6 +200,7 @@ Route::delete('/librotemas/{librotema}', [LibroTemaController::class, 'destroy']
 
 Route::get('/asignaractividad', [AsignarActividadController::class, 'seleccionar'])->name('asignaractividad.seleccionar');
 Route::get('/asignaractividad/ver', [AsignarActividadController::class, 'ver'])->name('asignaractividad.ver');
+Route::get('/asignaractividad/{asignacion}/detalle', [AsignarActividadController::class, 'detalle'])->name('asignaractividad.detalle');
 
 Route::get('/calificaractividad', [CalificarActividadController::class, 'index'])->name('calificaractividad.index');
 Route::get('/calificaractividad/ver', [CalificarActividadController::class, 'ver'])->name('calificaractividad.ver');

@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Actividad;
+use App\Models\ActividadAsignacion;
 use App\Models\Materia;
 use App\Models\Curso;
 use App\Models\MaterialTeoricoArchivo;
@@ -39,13 +40,19 @@ class AsignarActividadController extends Controller
         $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
         $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
 
-        $actividades = Actividad::with(['tipoactividad', 'grupos.alumnos'])
+        // Asignaciones de actividades para este curso y materia
+        $asignaciones = ActividadAsignacion::with([
+                'actividad.tipoactividad',
+                'actividad.items',
+                'actividad.grupos.alumnos',
+            ])
             ->where('user_id', auth()->id())
-            ->where('materia_id', $request->materia_id)
             ->where('curso_id', $request->curso_id)
+            ->where('materia_id', $request->materia_id)
             ->orderBy('fechainicio', 'desc')
             ->get();
 
+        // Material teórico
         $materialteoricoarchivos = MaterialTeoricoArchivo::with('tarea')
             ->where('user_id', auth()->id())
             ->where(function($q) use ($request) {
@@ -59,7 +66,22 @@ class AsignarActividadController extends Controller
             ->get();
 
         return view('asignaractividad.ver', compact(
-            'materia', 'curso', 'actividades', 'materialteoricoarchivos'
+            'materia', 'curso', 'asignaciones', 'materialteoricoarchivos'
         ));
+    }
+
+    public function detalle(Request $request, ActividadAsignacion $asignacion)
+    {
+        abort_if($asignacion->user_id !== auth()->id(), 403);
+
+        $asignacion->load([
+            'actividad.tipoactividad',
+            'actividad.items',
+            'actividad.grupos.alumnos',
+            'curso',
+            'materia',
+        ]);
+
+        return view('asignaractividad.detalle', compact('asignacion'));
     }
 }

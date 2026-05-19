@@ -148,6 +148,18 @@
                             readonly>
                     </div>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        % límite de asistencia <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="number" name="porcentajelimite" class="form-control"
+                            value="{{ old('porcentajelimite', $materia->porcentajelimite ?? 75) }}" min="1"
+                            max="100" step="0.5" required>
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div class="form-text">Porcentaje mínimo requerido de asistencia.</div>
+                </div>
 
                 <div class="mt-4 d-flex gap-2">
                     <button type="submit" class="btn btn-primary">

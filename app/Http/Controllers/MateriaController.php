@@ -66,9 +66,11 @@ class MateriaController extends Controller
         $request->only('nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
             'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
             'cargahorariasemanal', 'cargahorariaanual', 'hsporclase'),
+            
         [
             'user_id'               => auth()->id(),
             'cantidadclasesanuales' => $cantidadclasesanuales,
+            'porcentajelimite' => $request->porcentajelimite ?? 75,
         ]
     ));
 
@@ -116,7 +118,7 @@ class MateriaController extends Controller
     $materia->update(array_merge(
         $request->only('nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
             'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
-            'cargahorariasemanal', 'cargahorariaanual', 'hsporclase'),
+            'cargahorariasemanal', 'cargahorariaanual', 'hsporclase','porcentajelimite'),
         ['cantidadclasesanuales' => $cantidadclasesanuales]
     ));
 
