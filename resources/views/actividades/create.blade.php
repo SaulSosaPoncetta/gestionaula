@@ -27,7 +27,6 @@
         </div>
     @endif
 
-    {{-- Datos generales --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white fw-semibold">
             <i class="bi bi-info-circle me-1"></i>Datos de la actividad
@@ -35,50 +34,27 @@
         <div class="card-body">
             <div class="row g-3">
 
-                {{-- Título --}}
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Título <span class="text-danger">*</span></label>
-                    <input type="text" name="titulo" class="form-control"
-                           value="{{ old('titulo') }}" required
-                           placeholder="Ej: Trabajo práctico N°1">
-                </div>
-
-                {{-- Tipo de actividad --}}
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">
-                        Tipo de actividad <span class="text-muted fw-normal">(opcional)</span>
-                    </label>
-                    <select name="tipoactividad_id" class="form-select">
-                        <option value="">— Sin especificar —</option>
-                        @foreach($tiposactividad as $tipo)
-                            <option value="{{ $tipo->id }}"
-                                {{ old('tipoactividad_id') == $tipo->id ? 'selected' : '' }}>
-                                {{ $tipo->denominacion }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                {{-- Número de unidad --}}
+                {{-- Numero de unidad --}}
                 <div class="col-md-2">
                     <label class="form-label fw-semibold">
-                        N° de unidad <span class="text-muted fw-normal">(opcional)</span>
+                        N° de unidad <span class="text-danger">*</span>
                     </label>
-                    <input type="number" name="numerounidad" class="form-control"
-                           value="{{ old('numerounidad') }}" min="1"
+                    <input type="number" name="numerounidad"
+                           class="form-control @error('numerounidad') is-invalid @enderror"
+                           value="{{ old('numerounidad') }}" min="1" required
                            placeholder="Ej: 1">
+                    @error('numerounidad')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 {{-- Tema (desde contenidos) --}}
-                <div class="col-md-5">
+                <div class="col-md-7">
                     <label class="form-label fw-semibold">
-                        Tema <span class="text-muted fw-normal">(opcional)</span>
+                        Tema <span class="text-danger">*</span>
                     </label>
-                    <select name="tema" id="selectTema" class="form-select">
-                        <option value="">— Sin tema —</option>
+                    <select name="tema" id="selectTema" class="form-select" required>
+                        <option value="">— Selecciona un tema —</option>
                         @foreach($contenidos as $cont)
                             <option value="{{ $cont->tema }}"
-                                    data-id="{{ $cont->id }}"
                                     data-subtemas="{{ $cont->subtemas->pluck('subtema')->toJson() }}"
                                 {{ old('tema') == $cont->tema ? 'selected' : '' }}>
                                 @if($cont->numerounidad) [Unidad {{ $cont->numerounidad }}] @endif
@@ -88,288 +64,162 @@
                     </select>
                 </div>
 
-                {{-- Subtemas --}}
-                <div class="col-md-5">
-                    <label class="form-label fw-semibold">
-                        Subtemas <span class="text-muted fw-normal">(opcional)</span>
-                    </label>
-                    <select name="subtema" id="selectSubtema1" class="form-select mb-2">
-                        <option value="">— Subtema 1 —</option>
-                    </select>
-                    <select name="subtema2" id="selectSubtema2" class="form-select mb-2">
-                        <option value="">— Subtema 2 —</option>
-                    </select>
-                    <select name="subtema3" id="selectSubtema3" class="form-select">
-                        <option value="">— Subtema 3 —</option>
-                    </select>
-                </div>
-
-                {{-- Fechas --}}
+                {{-- Tipo de actividad --}}
                 <div class="col-md-3">
-                    <label class="form-label fw-semibold">Fecha inicio <span class="text-danger">*</span></label>
-                    <input type="date" name="fechainicio" class="form-control"
-                           value="{{ old('fechainicio', date('Y-m-d')) }}" required>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Fecha entrega <span class="text-danger">*</span></label>
-                    <input type="date" name="fechaentrega" class="form-control"
-                           value="{{ old('fechaentrega') }}" required>
-                </div>
-
-                {{-- Curso --}}
-                <div class="col-md-6">
                     <label class="form-label fw-semibold">
-                        Curso <span class="text-muted fw-normal">(opcional)</span>
+                        Tipo de actividad <span class="text-danger">*</span>
                     </label>
-                    <select name="curso_id" id="curso_id" class="form-select">
-                        <option value="">— Sin curso asignado —</option>
-                        @foreach($cursos as $curso)
-                            <option value="{{ $curso->id }}"
-                                {{ old('curso_id') == $curso->id ? 'selected' : '' }}>
-                                {{ $curso->nombre_completo }}
+                    <select name="tipoactividad_id" class="form-select" required>
+                        <option value="">— Selecciona —</option>
+                        @foreach($tiposactividad as $tipo)
+                            <option value="{{ $tipo->id }}"
+                                {{ old('tipoactividad_id') == $tipo->id ? 'selected' : '' }}>
+                                {{ $tipo->denominacion }}
                             </option>
                         @endforeach
                     </select>
                 </div>
 
-                {{-- Descripción --}}
-                <div class="col-12">
-                    <label class="form-label fw-semibold">Descripción</label>
-                    <textarea name="descripcion" class="form-control" rows="2"
-                              placeholder="Descripción opcional...">{{ old('descripcion') }}</textarea>
+                {{-- Numero de actividad --}}
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">N° de actividad</label>
+                    <input type="number" name="numeroactividad"
+                           class="form-control"
+                           value="{{ old('numeroactividad') }}" min="1"
+                           placeholder="Opcional">
                 </div>
+
+                {{-- Subtema --}}
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">Subtema</label>
+                    <select name="subtema" id="selectSubtema" class="form-select" disabled>
+                        <option value="">— Selecciona primero un tema —</option>
+                    </select>
+                </div>
+
+                {{-- Observaciones --}}
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold">
+                        Observaciones <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input type="text" name="descripcion" class="form-control"
+                           value="{{ old('descripcion') }}"
+                           placeholder="Observaciones opcionales...">
+                </div>
+
             </div>
         </div>
     </div>
 
-    {{-- Modalidad --}}
+    {{-- Consignas / Items --}}
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-header bg-white fw-semibold">
-            <i class="bi bi-people me-1"></i>Modalidad
+            <i class="bi bi-list-ol me-1"></i>Consignas / Items
         </div>
         <div class="card-body">
-            <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" name="esgrupal"
-                       id="esgrupal" value="1" {{ old('esgrupal') ? 'checked' : '' }}>
-                <label class="form-check-label fw-semibold" for="esgrupal">
-                    Trabajo en grupo
-                </label>
+
+            {{-- Tabla de items --}}
+            <div class="table-responsive mb-3">
+                <table class="table table-bordered align-middle mb-0" id="tablaItems">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width:100px" class="text-center">N° Item</th>
+                            <th>Consigna / Pregunta</th>
+                            <th style="width:60px" class="text-center">Quitar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpoItems">
+                        <tr id="filaVacia">
+                            <td colspan="3" class="text-center text-muted py-3">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Presiona "Agregar consigna" para agregar items.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <div id="seccionGrupal" style="{{ old('esgrupal') ? '' : 'display:none' }}">
-                <div class="row g-3 mb-4">
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">
-                            Integrantes por grupo <span class="text-danger">*</span>
-                        </label>
-                        <input type="number" name="integrantesporgrupo" id="integrantesporgrupo"
-                               class="form-control" min="2"
-                               value="{{ old('integrantesporgrupo', 2) }}">
-                        <div class="form-text" id="infoGrupos"></div>
-                    </div>
-                    <div class="col-md-9">
-                        <label class="form-label fw-semibold">Modo de asignación</label>
-                        <div class="d-flex gap-3 mt-2">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="modogrupo"
-                                       id="modoAleatorio" value="aleatorio"
-                                       {{ old('modogrupo', 'aleatorio') === 'aleatorio' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="modoAleatorio">
-                                    <i class="bi bi-shuffle me-1"></i>Aleatorio
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="modogrupo"
-                                       id="modoManual" value="manual"
-                                       {{ old('modogrupo') === 'manual' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="modoManual">
-                                    <i class="bi bi-hand-index me-1"></i>Manual
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="seccionManual" style="display:none">
-                    <div class="row g-3" id="contenedorGrupos"></div>
-                    <div class="alert alert-info mt-3" id="alertaSinGrupo" style="display:none">
-                        <i class="bi bi-info-circle me-2"></i>
-                        Alumnos sin grupo: <span id="contadorSinGrupo" class="fw-bold">0</span>
-                    </div>
-                </div>
-
-                <div id="seccionAleatorio">
-                    <div class="alert alert-success">
-                        <i class="bi bi-shuffle me-2"></i>
-                        Los grupos se formarán automáticamente de manera aleatoria al guardar.
-                        <span id="infoGruposAleatorio"></span>
-                    </div>
-                </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary" id="btnAgregarItem">
+                    <i class="bi bi-plus-circle me-1"></i>Agregar consigna
+                </button>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-check-circle me-1"></i>Guardar actividad
+                </button>
+                <a href="{{ route('actividades.index') }}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
+
         </div>
     </div>
 
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle me-1"></i>Guardar actividad
-        </button>
-        <a href="{{ route('actividades.index') }}" class="btn btn-outline-secondary">Cancelar</a>
-    </div>
 </form>
 @endsection
 
 @push('scripts')
 <script>
-const alumnosPorCurso = @json($cursos->mapWithKeys(fn($c) => [
-    $c->id => $c->alumnos->map(fn($a) => ['id' => $a->id, 'nombre' => $a->nombre_completo])->values()
-]));
+let contadorItems = 0;
 
-let totalAlumnos = 0;
-let alumnos      = [];
-let asignaciones = {};
-
-// Selector de tema → habilita subtemas
+// Selector de tema -> habilita subtemas
 document.getElementById('selectTema').addEventListener('change', function () {
     const opt      = this.options[this.selectedIndex];
     const subtemas = opt.dataset.subtemas ? JSON.parse(opt.dataset.subtemas) : [];
+    const sel      = document.getElementById('selectSubtema');
 
-    ['selectSubtema1', 'selectSubtema2', 'selectSubtema3'].forEach((id, i) => {
-        const sel = document.getElementById(id);
-        sel.innerHTML = `<option value="">— Subtema ${i + 1} —</option>`;
-        subtemas.forEach(s => {
-            sel.innerHTML += `<option value="${s}">${s}</option>`;
-        });
-        sel.disabled = subtemas.length === 0;
+    sel.innerHTML = '<option value="">— Sin subtema —</option>';
+    subtemas.forEach(s => {
+        sel.innerHTML += `<option value="${s}">${s}</option>`;
     });
+    sel.disabled = subtemas.length === 0;
 });
 
-// Inicializar subtemas si hay tema seleccionado (old value)
-document.getElementById('selectTema').dispatchEvent(new Event('change'));
+// Agregar item
+document.getElementById('btnAgregarItem').addEventListener('click', function () {
+    contadorItems++;
+    const fila = document.getElementById('filaVacia');
+    if (fila) fila.remove();
 
-// Curso → alumnos para grupos
-document.getElementById('curso_id').addEventListener('change', function () {
-    const cursoId = this.value;
-    alumnos       = cursoId ? (alumnosPorCurso[cursoId] ?? []) : [];
-    totalAlumnos  = alumnos.length;
-    asignaciones  = {};
-    actualizarInfo();
-    if (document.getElementById('modoManual').checked) construirGrupos();
+    const tbody = document.getElementById('cuerpoItems');
+    const tr    = document.createElement('tr');
+    tr.id = `itemFila${contadorItems}`;
+    tr.innerHTML = `
+        <td class="text-center">
+            <input type="number" name="items[${contadorItems}][numero]"
+                   class="form-control text-center fw-bold"
+                   value="${contadorItems}" min="1" required
+                   style="width:80px;margin:0 auto;">
+        </td>
+        <td>
+            <textarea name="items[${contadorItems}][texto]"
+                      class="form-control" rows="2"
+                      placeholder="Escribi la consigna o pregunta..." required></textarea>
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger"
+                    onclick="quitarItem(${contadorItems})">
+                <i class="bi bi-x"></i>
+            </button>
+        </td>`;
+    tbody.appendChild(tr);
+
+    // Focus en el textarea del nuevo item
+    tr.querySelector('textarea').focus();
 });
 
-document.getElementById('esgrupal').addEventListener('change', function () {
-    document.getElementById('seccionGrupal').style.display = this.checked ? '' : 'none';
-    if (this.checked) actualizarInfo();
-});
+function quitarItem(id) {
+    const fila = document.getElementById(`itemFila${id}`);
+    if (fila) fila.remove();
 
-document.querySelectorAll('[name=modogrupo]').forEach(r => {
-    r.addEventListener('change', function () {
-        document.getElementById('seccionManual').style.display    = this.value === 'manual'    ? '' : 'none';
-        document.getElementById('seccionAleatorio').style.display = this.value === 'aleatorio' ? '' : 'none';
-        if (this.value === 'manual') construirGrupos();
-    });
-});
-
-document.getElementById('integrantesporgrupo').addEventListener('input', function () {
-    actualizarInfo();
-    if (document.getElementById('modoManual').checked) construirGrupos();
-});
-
-function actualizarInfo() {
-    const n      = parseInt(document.getElementById('integrantesporgrupo').value) || 0;
-    const grupos = n > 0 && totalAlumnos > 0 ? Math.ceil(totalAlumnos / n) : 0;
-    const info   = n > 0 && totalAlumnos > 0
-        ? `Se formarán aprox. ${grupos} grupos de ${n} integrantes (${totalAlumnos} alumnos)`
-        : totalAlumnos === 0 ? 'Seleccioná un curso para ver los alumnos' : '';
-    document.getElementById('infoGrupos').textContent          = info;
-    document.getElementById('infoGruposAleatorio').textContent = info ? ` — ${info}` : '';
-}
-
-function construirGrupos() {
-    const n          = parseInt(document.getElementById('integrantesporgrupo').value) || 2;
-    const cantGrupos = totalAlumnos > 0 ? Math.ceil(totalAlumnos / n) : 3;
-    asignaciones     = {};
-
-    const contenedor = document.getElementById('contenedorGrupos');
-    contenedor.innerHTML = '';
-
-    for (let g = 0; g < cantGrupos; g++) {
-        const col = document.createElement('div');
-        col.className = 'col-md-4 mb-3';
-        col.innerHTML = `
-            <div class="card border shadow-sm">
-                <div class="card-header bg-primary text-white fw-semibold d-flex justify-content-between">
-                    <span>Grupo ${g + 1}</span>
-                    <span class="badge bg-white text-primary" id="contGrupo${g}">0/${n}</span>
-                </div>
-                <div class="card-body p-2" id="listaGrupo${g}" style="min-height:80px">
-                    <div class="text-muted small text-center mt-2">Sin integrantes</div>
-                </div>
-            </div>`;
-        contenedor.appendChild(col);
+    // Si no quedan filas mostrar la fila vacía
+    const tbody = document.getElementById('cuerpoItems');
+    if (tbody.children.length === 0) {
+        tbody.innerHTML = `
+            <tr id="filaVacia">
+                <td colspan="3" class="text-center text-muted py-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Presiona "Agregar consigna" para agregar items.
+                </td>
+            </tr>`;
     }
-    renderizarDisponibles();
 }
-
-function renderizarDisponibles() {
-    const n          = parseInt(document.getElementById('integrantesporgrupo').value) || 2;
-    const cantGrupos = totalAlumnos > 0 ? Math.ceil(totalAlumnos / n) : 3;
-
-    for (let g = 0; g < cantGrupos; g++) {
-        const lista = document.getElementById(`listaGrupo${g}`);
-        const cont  = document.getElementById(`contGrupo${g}`);
-        if (!lista) continue;
-
-        const miembros = alumnos.filter(a => asignaciones[a.id] === g);
-        cont.textContent = `${miembros.length}/${n}`;
-        lista.innerHTML  = '';
-
-        if (miembros.length === 0) {
-            lista.innerHTML = '<div class="text-muted small text-center mt-2">Sin integrantes</div>';
-        } else {
-            miembros.forEach(a => {
-                const div = document.createElement('div');
-                div.className = 'd-flex justify-content-between align-items-center mb-1';
-                div.innerHTML = `
-                    <small class="fw-semibold">${a.nombre}</small>
-                    <button type="button" class="btn btn-xs btn-outline-danger"
-                            style="font-size:0.7rem;padding:1px 6px"
-                            onclick="quitarAlumno(${a.id})">
-                        <i class="bi bi-x"></i>
-                    </button>
-                    <input type="hidden" name="grupos[${g}][alumnos][]" value="${a.id}">`;
-                lista.appendChild(div);
-            });
-        }
-
-        const sinGrupo = alumnos.filter(a => asignaciones[a.id] === undefined);
-        if (sinGrupo.length > 0 && miembros.length < n) {
-            const sel = document.createElement('select');
-            sel.className = 'form-select form-select-sm mt-2';
-            sel.innerHTML = '<option value="">+ Agregar alumno...</option>';
-            sinGrupo.forEach(a => {
-                sel.innerHTML += `<option value="${a.id}">${a.nombre}</option>`;
-            });
-            sel.addEventListener('change', function () {
-                if (this.value) {
-                    asignaciones[parseInt(this.value)] = g;
-                    renderizarDisponibles();
-                }
-            });
-            lista.appendChild(sel);
-        }
-    }
-
-    const sinGrupo = alumnos.filter(a => asignaciones[a.id] === undefined);
-    document.getElementById('contadorSinGrupo').textContent = sinGrupo.length;
-    document.getElementById('alertaSinGrupo').style.display = sinGrupo.length > 0 ? '' : 'none';
-}
-
-function quitarAlumno(alumnoId) {
-    delete asignaciones[alumnoId];
-    renderizarDisponibles();
-}
-
-actualizarInfo();
 </script>
 @endpush

@@ -135,6 +135,7 @@
             </div>
         </div>
     </div>
+    
 @endsection
 
 @push('scripts')
@@ -368,25 +369,43 @@
 
         let claseActivaActual = null;
 
-        function accesoRapidoModulo(modulo) {
-            if (claseActivaActual) {
-                abrirModal(
-                    modulo,
-                    claseActivaActual.curso_id,
-                    claseActivaActual.materia_id,
-                    claseActivaActual.curso ?? '',
-                    claseActivaActual.materia ?? '',
-                    claseActivaActual.alumnos
-                );
-            } else {
-                const rutas = {
-                    'asistencia': '/asistencia',
-                    'calificaciones': '/calificaciones',
-                    'practicos': '/tareas',
-                };
-                window.location.href = rutas[modulo] ?? '/dashboard';
-            }
+ function accesoRapidoModulo(modulo) {
+    if (modulo === 'asistencia') {
+        if (claseActivaActual) {
+            // Hay clase activa: ir directo al registro de asistencia con materia y curso
+            const fecha = new Date();
+            const hoy   = `${fecha.getFullYear()}-${pad(fecha.getMonth()+1)}-${pad(fecha.getDate())}`;
+            window.location.href = `/asistencia/registrar?curso_id=${claseActivaActual.curso_id}&materia_id=${claseActivaActual.materia_id}&fecha=${hoy}`;
+        } else {
+            // No hay clase activa: mostrar modal de aviso
+            mostrarModalSinClase();
         }
+        return;
+    }
+
+    // Para los demás módulos
+    if (claseActivaActual) {
+        abrirModal(
+            modulo,
+            claseActivaActual.curso_id,
+            claseActivaActual.materia_id,
+            claseActivaActual.curso ?? '',
+            claseActivaActual.materia ?? '',
+            claseActivaActual.alumnos
+        );
+    } else {
+        const rutas = {
+            'calificaciones': '/calificaciones',
+            'practicos':      '/tareas',
+        };
+        window.location.href = rutas[modulo] ?? '/dashboard';
+    }
+}
+
+function mostrarModalSinClase() {
+    const modalEl = document.getElementById('modalSinClase');
+    new bootstrap.Modal(modalEl).show();
+}
 
         function actualizarReloj() {
             const ahora = new Date();

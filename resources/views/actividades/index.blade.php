@@ -4,12 +4,44 @@
 <div class="row mb-4">
     <div class="col">
         <h4 class="fw-bold"><i class="bi bi-clipboard2-check me-2"></i>Actividades</h4>
-        <p class="text-muted">Gestión de actividades pedagógicas por materia y curso.</p>
+        <p class="text-muted">Gestión de actividades pedagógicas.</p>
     </div>
     <div class="col-auto">
         <a href="{{ route('actividades.seleccionar') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i>Nueva actividad
         </a>
+    </div>
+</div>
+
+{{-- Filtro por materia --}}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('actividades.index') }}" class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Filtrar por materia</label>
+                <select name="materia_id" id="materia_id" class="form-select">
+                    <option value="">— Todas las materias —</option>
+                    @foreach($materias as $materia)
+                        <option value="{{ $materia->id }}"
+                            {{ request('materia_id') == $materia->id ? 'selected' : '' }}>
+                            {{ $materia->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>Filtrar
+                </button>
+            </div>
+            @if(request('materia_id'))
+            <div class="col-md-3 d-flex align-items-end">
+                <a href="{{ route('actividades.index') }}" class="btn btn-outline-secondary w-100">
+                    <i class="bi bi-x-circle me-1"></i>Limpiar
+                </a>
+            </div>
+            @endif
+        </form>
     </div>
 </div>
 
@@ -23,13 +55,12 @@
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Título</th>
+                    <th class="ps-4">Unidad</th>
+                    <th>N° Act.</th>
                     <th>Materia</th>
-                    <th>Curso</th>
+                    <th>Tema</th>
                     <th>Tipo</th>
-                    <th>Inicio</th>
-                    <th>Entrega</th>
-                    <th class="text-center">Grupal</th>
+                    <th class="text-center">Items</th>
                     <th class="text-center">Estado</th>
                     <th></th>
                 </tr>
@@ -37,18 +68,15 @@
             <tbody>
                 @foreach($actividades as $act)
                 <tr>
-                    <td class="ps-4 fw-semibold">{{ $act->titulo }}</td>
+                    <td class="ps-4 text-center">
+                        <span class="badge bg-secondary">{{ $act->numerounidad ?? '—' }}</span>
+                    </td>
+                    <td class="text-center">{{ $act->numeroactividad ?? '—' }}</td>
                     <td>{{ $act->materia?->nombre ?? '—' }}</td>
-                    <td>{{ $act->curso?->nombre_completo ?? '—' }}</td>
+                    <td class="fw-semibold">{{ $act->tema }}</td>
                     <td>{{ $act->tipoactividad?->denominacion ?? '—' }}</td>
-                    <td>{{ $act->fechainicio->format('d/m/Y') }}</td>
-                    <td>{{ $act->fechaentrega->format('d/m/Y') }}</td>
                     <td class="text-center">
-                        @if($act->esgrupal)
-                            <span class="badge bg-info">Grupal</span>
-                        @else
-                            <span class="badge bg-secondary">Individual</span>
-                        @endif
+                        <span class="badge bg-info">{{ $act->items->count() }}</span>
                     </td>
                     <td class="text-center">
                         <span class="badge bg-{{ $act->estado === 'activa' ? 'success' : 'secondary' }}">
@@ -77,3 +105,12 @@
 <div class="mt-3">{{ $actividades->links() }}</div>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+// Auto-submit al cambiar materia
+document.getElementById('materia_id').addEventListener('change', function () {
+    this.closest('form').submit();
+});
+</script>
+@endpush

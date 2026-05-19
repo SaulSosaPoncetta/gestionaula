@@ -3,11 +3,15 @@
 @section('content')
 <div class="row mb-4">
     <div class="col">
-        <h4 class="fw-bold"><i class="bi bi-clipboard2-check me-2"></i>{{ $actividad->titulo }}</h4>
+        <h4 class="fw-bold"><i class="bi bi-clipboard2-check me-2"></i>{{ $actividad->tema }}</h4>
         <p class="text-muted">
-            {{ $actividad->materia?->nombre }} &mdash;
-            {{ $actividad->curso?->nombre_completo }} &mdash;
-            {{ $actividad->tipoactividad?->denominacion }}
+            {{ $actividad->materia?->nombre }}
+            @if($actividad->numerounidad)
+                &mdash; Unidad {{ $actividad->numerounidad }}
+            @endif
+            @if($actividad->numeroactividad)
+                &mdash; Actividad N° {{ $actividad->numeroactividad }}
+            @endif
         </p>
     </div>
     <div class="col-auto d-flex gap-2">
@@ -19,70 +23,85 @@
 
 {{-- Datos generales --}}
 <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-info-circle me-1"></i>Datos de la actividad
+    </div>
     <div class="card-body">
         <div class="row g-3">
-            <div class="col-md-3">
-                <div class="text-muted small">Fecha inicio</div>
-                <div class="fw-semibold">{{ $actividad->fechainicio->format('d/m/Y') }}</div>
+            <div class="col-md-2">
+                <div class="text-muted small">N° Unidad</div>
+                <div class="fw-semibold">{{ $actividad->numerounidad ?? '—' }}</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-muted small">Fecha entrega</div>
-                <div class="fw-semibold">{{ $actividad->fechaentrega->format('d/m/Y') }}</div>
+            <div class="col-md-2">
+                <div class="text-muted small">N° Actividad</div>
+                <div class="fw-semibold">{{ $actividad->numeroactividad ?? '—' }}</div>
             </div>
-            <div class="col-md-3">
-                <div class="text-muted small">Modalidad</div>
-                <div class="fw-semibold">
-                    @if($actividad->esgrupal)
-                        <span class="badge bg-info">Grupal ({{ $actividad->integrantesporgrupo }} por grupo)</span>
-                    @else
-                        <span class="badge bg-secondary">Individual</span>
-                    @endif
-                </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Tipo</div>
+                <div class="fw-semibold">{{ $actividad->tipoactividad?->denominacion ?? '—' }}</div>
             </div>
+            <div class="col-md-4">
+                <div class="text-muted small">Materia</div>
+                <div class="fw-semibold">{{ $actividad->materia?->nombre ?? '—' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="text-muted small">Tema</div>
+                <div class="fw-semibold">{{ $actividad->tema }}</div>
+            </div>
+            @if($actividad->subtema)
+            <div class="col-md-6">
+                <div class="text-muted small">Subtema</div>
+                <div class="fw-semibold">{{ $actividad->subtema }}</div>
+            </div>
+            @endif
+            @if($actividad->descripcion)
+            <div class="col-12">
+                <div class="text-muted small">Observaciones</div>
+                <div>{{ $actividad->descripcion }}</div>
+            </div>
+            @endif
             <div class="col-md-3">
                 <div class="text-muted small">Estado</div>
                 <span class="badge bg-{{ $actividad->estado === 'activa' ? 'success' : 'secondary' }}">
                     {{ ucfirst($actividad->estado) }}
                 </span>
             </div>
-            @if($actividad->descripcion)
-            <div class="col-12">
-                <div class="text-muted small">Descripción</div>
-                <div>{{ $actividad->descripcion }}</div>
+            <div class="col-md-3">
+                <div class="text-muted small">Fecha de creación</div>
+                <div class="fw-semibold">{{ $actividad->created_at->format('d/m/Y') }}</div>
             </div>
-            @endif
         </div>
     </div>
 </div>
 
-{{-- Grupos --}}
-@if($actividad->esgrupal && $actividad->grupos->isNotEmpty())
-<h5 class="fw-bold mb-3"><i class="bi bi-people me-1"></i>Grupos</h5>
-<div class="row g-3">
-    @foreach($actividad->grupos as $grupo)
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-primary text-white fw-semibold">
-                {{ $grupo->nombre }}
-                <span class="badge bg-white text-primary ms-2">{{ $grupo->alumnos->count() }} integrantes</span>
-            </div>
-            <div class="card-body p-0">
-                <ul class="list-group list-group-flush">
-                    @foreach($grupo->alumnos->sortBy('apellido') as $alumno)
-                    <li class="list-group-item">
-                        <i class="bi bi-person me-1 text-muted"></i>
-                        {{ $alumno->nombre_completo }}
-                    </li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
+{{-- Items / Consignas --}}
+@if($actividad->items->isNotEmpty())
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">
+        <i class="bi bi-list-ol me-1"></i>Consignas ({{ $actividad->items->count() }})
     </div>
-    @endforeach
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4 text-center" style="width:100px">N° Item</th>
+                    <th>Consigna / Pregunta</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($actividad->items as $item)
+                <tr>
+                    <td class="ps-4 text-center fw-bold fs-5">{{ $item->numeroitem }}</td>
+                    <td>{{ $item->texto }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
-@elseif(!$actividad->esgrupal)
+@else
 <div class="alert alert-info">
-    <i class="bi bi-info-circle me-2"></i>Esta actividad es individual.
+    <i class="bi bi-info-circle me-2"></i>Esta actividad no tiene consignas cargadas.
 </div>
 @endif
 @endsection

@@ -8,12 +8,12 @@ class Actividad extends Model
 {
     protected $table = 'actividades';
 
-protected $fillable = [
-    'user_id', 'materia_id', 'curso_id', 'tipoactividad_id',
-    'titulo', 'numerounidad', 'tema', 'subtema', 'descripcion',
-    'fechainicio', 'fechaentrega',
-    'esgrupal', 'integrantesporgrupo', 'estado'
-];
+    protected $fillable = [
+        'user_id', 'materia_id', 'curso_id', 'tipoactividad_id',
+        'titulo', 'numerounidad', 'numeroactividad', 'tema', 'subtema',
+        'descripcion', 'fechainicio', 'fechaentrega',
+        'esgrupal', 'integrantesporgrupo', 'estado'
+    ];
 
     protected $casts = [
         'fechainicio'  => 'date',
@@ -46,8 +46,13 @@ protected $fillable = [
         return $this->hasMany(ActividadGrupo::class)->orderBy('numero');
     }
 
+    public function items()
+    {
+        return $this->hasMany(ActividadItem::class)->orderBy('orden');
+    }
+
     public function alumnoestados()
-{
-    return $this->hasMany(ActividadAlumnoEstado::class);
-}
+    {
+        return $this->hasMany(ActividadAlumnoEstado::class);
+    }
 }

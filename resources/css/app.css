@@ -1,2 +1,35 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* Spinner overlay global */
+#spinnerOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+}
+
+#spinnerOverlay.activo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.spinner-box {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 2.5rem 3rem;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    min-width: 220px;
+}
