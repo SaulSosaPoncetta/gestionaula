@@ -212,7 +212,7 @@ Route::get('/calificaractividad/calificadas', [CalificarActividadController::cla
 Route::get('/calificaractividad/{estado}/show', [CalificarActividadController::class, 'showCalificada'])->name('calificaractividad.show');
 Route::get('/calificaractividad/{estado}/edit', [CalificarActividadController::class, 'editCalificada'])->name('calificaractividad.edit');
 Route::put('/calificaractividad/{estado}/update', [CalificarActividadController::class, 'updateCalificada'])->name('calificaractividad.update');
-
+Route::post('/calificaractividad/calificar', [CalificarActividadController::class, 'calificar'])->name('calificaractividad.calificar');
 
 Route::get('/ceses', [CeseController::class, 'index'])->name('ceses.index');
 Route::get('/ceses/crear', [CeseController::class, 'create'])->name('ceses.create');

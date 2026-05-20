@@ -44,4 +44,9 @@ class ActividadAsignacion extends Model
     {
         return $this->hasMany(ActividadGrupo::class, 'actividad_id', 'actividad_id');
     }
+
+    public function notas()
+    {
+        return $this->hasMany(ActividadNota::class, 'asignacion_id');
+    }
 }
