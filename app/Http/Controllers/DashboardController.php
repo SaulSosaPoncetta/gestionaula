@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Horario;
+use App\Models\CalendarioEscolar;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -11,7 +12,6 @@ class DashboardController extends Controller
         $ahora      = Carbon::now();
         $horaActual = $ahora->format('H:i:s');
 
-        // Mapeo directo del número de día al nombre en español
         $mapaDias = [
             1 => 'lunes',
             2 => 'martes',
@@ -36,7 +36,17 @@ class DashboardController extends Controller
         $materiaActual         = $horarioActivo?->materia;
         $cursoActual           = $horarioActivo?->curso;
 
-        // Todos los horarios para el JS del dashboard
+        // Próximos eventos del calendario escolar (desde hoy)
+        $proximosEventos = CalendarioEscolar::where('user_id', auth()->id())
+            ->where('fecha', '>=', $ahora->toDateString())
+            ->orderBy('fecha')
+            ->take(5)
+            ->get();
+
+        // Evento más próximo
+        $proximoEvento = $proximosEventos->first();
+
+        // Todos los horarios para el JS
         $horarios = Horario::with(['materia', 'curso.alumnos', 'establecimiento'])
             ->where('user_id', auth()->id())
             ->get()
@@ -61,7 +71,9 @@ class DashboardController extends Controller
             'horarios',
             'establecimientoActual',
             'materiaActual',
-            'cursoActual'
+            'cursoActual',
+            'proximoEvento',
+            'proximosEventos'
         ));
     }
 }

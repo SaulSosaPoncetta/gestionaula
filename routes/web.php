@@ -29,6 +29,7 @@ use App\Http\Controllers\CeseController;
 use App\Http\Controllers\TipoValoracionController;
 use App\Http\Controllers\CalendarioEscolarController;
 use App\Http\Controllers\AsignarActividadNuevoController;
+use App\Http\Controllers\PrenotaController;
 
     Route::get('/', function () {
         return redirect()->route('dashboard');
@@ -236,6 +237,11 @@ Route::delete('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarContro
 Route::get('/asignarnuevo', [AsignarActividadNuevoController::class, 'index'])->name('asignarnuevo.index');
 Route::get('/asignarnuevo/ver', [AsignarActividadNuevoController::class, 'ver'])->name('asignarnuevo.ver');
 Route::post('/asignarnuevo/asignar', [AsignarActividadNuevoController::class, 'asignar'])->name('asignarnuevo.asignar');
+
+Route::get('/prenotas', [PrenotaController::class, 'index'])->name('prenotas.index');
+Route::post('/prenotas/calcular', [PrenotaController::class, 'calcular'])->name('prenotas.calcular');
+Route::post('/prenotas/guardar', [PrenotaController::class, 'guardar'])->name('prenotas.guardar');
+Route::get('/prenotas/historial', [PrenotaController::class, 'historial'])->name('prenotas.historial');
 
 });
 

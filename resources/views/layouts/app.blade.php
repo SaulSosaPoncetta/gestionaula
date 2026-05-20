@@ -60,7 +60,12 @@
                                         <i class="bi bi-journal-bookmark-fill me-2"></i>Libro de temas
                                     </a>
                                 </li>
-
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('prenotas.*') ? 'active' : '' }}"
+                                        href="{{ route('prenotas.index') }}">
+                                        <i class="bi bi-calculator me-2"></i>Prenotas
+                                    </a>
+                                </li>
                             </ul>
                         </li>
 

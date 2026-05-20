@@ -2,26 +2,113 @@
 
 @section('content')
     {{-- Saludo --}}
-    <div class="row mb-4">
-        <div class="col">
-            <h4 class="fw-bold"><i class="bi bi-house me-2"></i>Panel principal</h4>
-            <p class="text-muted mb-0">Bienvenido, <strong>{{ auth()->user()->name }}</strong>.</p>
-            <div id="leyendaClaseActual"
-                class="mt-3 d-flex flex-column align-items-center justify-content-center
-            w-100 p-3 rounded bg-light border"
-                style="display:none!important">
+<div class="row mb-4">
+    <div class="col">
+        <h4 class="fw-bold"><i class="bi bi-house me-2"></i>Panel principal</h4>
+        <p class="text-muted mb-0">Bienvenido, <strong>{{ auth()->user()->name }}</strong>.</p>
+        <div id="leyendaClaseActual"
+             class="mt-3 d-flex flex-column align-items-center justify-content-center
+                    w-100 p-3 rounded bg-light border"
+             style="display:none!important">
+        </div>
+    </div>
+</div>
+
+{{-- Reloj y Calendario lado a lado --}}
+<div class="row g-3 mb-4">
+
+    {{-- Card reloj --}}
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+            <div class="card-body text-center py-4">
+                <div class="display-3 fw-bold" id="reloj">--:--:--</div>
+                <div class="fs-4 fw-semibold mt-1" id="diaSemana">-</div>
+                <div class="fs-5" id="fechaCompleta">-</div>
             </div>
         </div>
     </div>
 
-    {{-- Card fecha y hora --}}
-    <div class="card border-0 shadow-sm mb-4 bg-primary text-white">
-        <div class="card-body text-center py-4">
-            <div class="display-3 fw-bold" id="reloj">--:--:--</div>
-            <div class="fs-4 fw-semibold mt-1" id="diaSemana">-</div>
-            <div class="fs-5" id="fechaCompleta">-</div>
+    {{-- Card calendario escolar --}}
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-calendar-event me-1 text-primary"></i>Calendario escolar
+            </div>
+            <div class="card-body p-0">
+                @if($proximosEventos->isEmpty())
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                        No hay eventos próximos registrados.
+                        <div class="mt-2">
+                            <a href="{{ route('calendarioescolar.create') }}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar evento
+                            </a>
+                        </div>
+                    </div>
+                @else
+                <ul class="list-group list-group-flush">
+                    @foreach($proximosEventos as $index => $evento)
+                    @php
+                        $dias = [
+                            'Sunday'    => 'Dom',
+                            'Monday'    => 'Lun',
+                            'Tuesday'   => 'Mar',
+                            'Wednesday' => 'Mié',
+                            'Thursday'  => 'Jue',
+                            'Friday'    => 'Vie',
+                            'Saturday'  => 'Sáb',
+                        ];
+                        $diaEvento  = $dias[$evento->fecha->format('l')] ?? '';
+                        $esHoy      = $evento->fecha->isToday();
+                        $esManana   = $evento->fecha->isTomorrow();
+                        $diasFaltan = now()->startOfDay()->diffInDays($evento->fecha->startOfDay());
+                    @endphp
+                    <li class="list-group-item d-flex justify-content-between align-items-center
+                                {{ $index === 0 ? 'border-start border-4 border-primary' : '' }}
+                                {{ $evento->esferiado ? 'list-group-item-danger' : '' }}">
+                        <div>
+                            <div class="fw-semibold {{ $index === 0 ? 'text-primary fs-6' : '' }}">
+                                @if($evento->esferiado)
+                                    <i class="bi bi-calendar-x me-1 text-danger"></i>
+                                @else
+                                    <i class="bi bi-calendar-check me-1 text-primary"></i>
+                                @endif
+                                {{ $evento->denominacion }}
+                            </div>
+                            <div class="text-muted small">
+                                {{ $diaEvento }} {{ $evento->fecha->format('d/m/Y') }}
+                                @if($evento->periodo)
+                                    &mdash; <span class="badge bg-primary">{{ $evento->periodo->denominacion }}</span>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="text-end ms-3">
+                            @if($esHoy)
+                                <span class="badge bg-danger">Hoy</span>
+                            @elseif($esManana)
+                                <span class="badge bg-warning text-dark">Mañana</span>
+                            @else
+                                <span class="badge bg-light text-dark">
+                                    en {{ $diasFaltan }} día{{ $diasFaltan !== 1 ? 's' : '' }}
+                                </span>
+                            @endif
+                        </div>
+                    </li>
+                    @endforeach
+                </ul>
+                <div class="p-2 text-end">
+                    <a href="{{ route('calendarioescolar.index') }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-calendar3 me-1"></i>Ver calendario completo
+                    </a>
+                </div>
+                @endif
+            </div>
         </div>
     </div>
+
+</div>
 
     {{-- Accesos rapidos --}}
     <div class="row g-3 mb-4" id="accesoRapido">
