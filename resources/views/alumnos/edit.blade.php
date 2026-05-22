@@ -76,9 +76,26 @@
                     @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
-                <div class="col-12">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">
+                        Tipo de cursada <span class="text-danger">*</span>
+                    </label>
+                    <select name="tipocursada"
+                            class="form-select @error('tipocursada') is-invalid @enderror" required>
+                        @foreach(\App\Models\Alumno::TIPOSCURSADA as $valor => $label)
+                            <option value="{{ $valor }}"
+                                {{ old('tipocursada', $alumno->tipocursada) === $valor ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('tipocursada')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-md-8">
                     <label class="form-label fw-semibold">Curso <span class="text-danger">*</span></label>
-                    <select name="curso_id" class="form-select @error('curso_id') is-invalid @enderror" required>
+                    <select name="curso_id"
+                            class="form-select @error('curso_id') is-invalid @enderror" required>
                         <option value="">Seleccioná...</option>
                         @foreach($cursos as $curso)
                             <option value="{{ $curso->id }}"

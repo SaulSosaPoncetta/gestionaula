@@ -14,21 +14,22 @@ use Illuminate\Http\Request;
 class ActividadController extends Controller
 {
     public function index(Request $request)
-    {
-        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+{
+    $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
 
-        $query = Actividad::with(['materia', 'tipoactividad', 'items'])
-            ->where('user_id', auth()->id())
-            ->orderBy('created_at', 'desc');
+    $query = Actividad::with(['materia', 'tipoactividad', 'items'])
+        ->where('user_id', auth()->id())
+        ->orderBy('numerounidad')
+        ->orderBy('numeroactividad');
 
-        if ($request->filled('materia_id')) {
-            $query->where('materia_id', $request->materia_id);
-        }
-
-        $actividades = $query->paginate(15);
-
-        return view('actividades.index', compact('actividades', 'materias'));
+    if ($request->filled('materia_id')) {
+        $query->where('materia_id', $request->materia_id);
     }
+
+    $actividades = $query->paginate(15);
+
+    return view('actividades.index', compact('actividades', 'materias'));
+}
 
     public function seleccionar()
     {

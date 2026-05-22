@@ -21,19 +21,26 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <div class="text-muted small">Materia</div>
-                <div class="fw-semibold">{{ $contenido->materia?->nombre ?? '—' }}</div>
+                <div class="fw-semibold fs-5">{{ $contenido->materia?->nombre ?? '—' }}</div>
             </div>
             <div class="col-md-3">
-                <div class="text-muted small">Unidad</div>
-                <div class="fw-semibold">{{ $contenido->numerounidad ?? '—' }}</div>
+                <div class="text-muted small">Número de unidad</div>
+                <div class="fw-semibold fs-5">
+                    @if($contenido->numerounidad)
+                        <span class="badge bg-secondary fs-6">Unidad {{ $contenido->numerounidad }}</span>
+                    @else
+                        <span class="text-muted">—</span>
+                    @endif
+                </div>
             </div>
             <div class="col-md-3">
-                <div class="text-muted small">Fecha</div>
+                <div class="text-muted small">Fecha de registro</div>
                 <div class="fw-semibold">{{ $contenido->fecha->format('d/m/Y') }}</div>
             </div>
 
+            <div class="col-12"><hr></div>
+
             <div class="col-12">
-                <hr>
                 <div class="text-muted small">Tema</div>
                 <div class="fw-semibold fs-5">{{ $contenido->tema }}</div>
             </div>

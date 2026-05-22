@@ -13,7 +13,6 @@
     </div>
 </div>
 
-{{-- Filtro por materia --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form method="GET" action="{{ route('contenidos.index') }}" class="row g-3">
@@ -45,7 +44,6 @@
     </div>
 </div>
 
-{{-- Solo mostrar tabla si hay materia seleccionada --}}
 @if(!request('materia_id'))
     <div class="alert alert-info">
         <i class="bi bi-info-circle me-2"></i>Seleccioná una materia para ver sus contenidos.
@@ -61,7 +59,7 @@
             <thead class="table-light">
                 <tr>
                     <th class="ps-4">Materia</th>
-                    <th class="text-center" style="width:80px">Unidad</th>
+                    <th class="text-center" style="width:90px">Unidad</th>
                     <th>Tema</th>
                     <th>Subtemas</th>
                     <th>Observación</th>
@@ -75,7 +73,11 @@
                         <span class="badge bg-primary">{{ $contenido->materia?->nombre ?? '—' }}</span>
                     </td>
                     <td class="text-center">
-                        {{ $contenido->numerounidad ?? '—' }}
+                        @if($contenido->numerounidad)
+                            <span class="badge bg-secondary">{{ $contenido->numerounidad }}</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
                     </td>
                     <td class="fw-semibold">{{ $contenido->tema }}</td>
                     <td>

@@ -17,22 +17,34 @@
     <div class="card-body">
         <form method="GET" action="{{ route('alumnos.index') }}">
             <div class="row g-3">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <input type="text" name="buscar" class="form-control"
                            placeholder="Buscar por nombre, apellido o DNI..."
                            value="{{ request('buscar') }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <select name="curso_id" class="form-select">
                         <option value="">Todos los cursos</option>
                         @foreach($cursos as $curso)
-                            <option value="{{ $curso->id }}" {{ request('curso_id') == $curso->id ? 'selected' : '' }}>
+                            <option value="{{ $curso->id }}"
+                                {{ request('curso_id') == $curso->id ? 'selected' : '' }}>
                                 {{ $curso->nombre_completo }}
                             </option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-3">
+                    <select name="tipocursada" class="form-select">
+                        <option value="">Todos los tipos</option>
+                        @foreach(\App\Models\Alumno::TIPOSCURSADA as $valor => $label)
+                            <option value="{{ $valor }}"
+                                {{ request('tipocursada') === $valor ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">
                         <i class="bi bi-search me-1"></i>Buscar
                     </button>
@@ -43,7 +55,9 @@
 </div>
 
 @if($alumnos->isEmpty())
-    <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No hay alumnos registrados.</div>
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-2"></i>No hay alumnos registrados.
+    </div>
 @else
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
@@ -52,10 +66,11 @@
                 <tr>
                     <th class="ps-4">Apellido y nombre</th>
                     <th>DNI</th>
-                    <th>Fecha de nacimiento</th>
+                    <th>Nacimiento</th>
                     <th>Año</th>
                     <th>División</th>
                     <th>Turno</th>
+                    <th class="text-center">Tipo cursada</th>
                     <th></th>
                 </tr>
             </thead>
@@ -68,8 +83,18 @@
                     <td>{{ $alumno->curso?->anio ?? '—' }}</td>
                     <td>{{ $alumno->curso?->division ?? '—' }}</td>
                     <td>{{ $alumno->curso?->turno ?? '—' }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-{{ $alumno->tipocursadabadge }}">
+                            {{ $alumno->tipocursadalabel }}
+                        </span>
+                    </td>
                     <td class="text-end pe-3">
-                        <a href="{{ route('alumnos.edit', $alumno) }}" class="btn btn-sm btn-outline-secondary me-1">
+                        <a href="{{ route('alumnos.show', $alumno) }}"
+                           class="btn btn-sm btn-outline-primary me-1">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{{ route('alumnos.edit', $alumno) }}"
+                           class="btn btn-sm btn-outline-secondary me-1">
                             <i class="bi bi-pencil"></i>
                         </a>
                         <form method="POST" action="{{ route('alumnos.destroy', $alumno) }}" class="d-inline">

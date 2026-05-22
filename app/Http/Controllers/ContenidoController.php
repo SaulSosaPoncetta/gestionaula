@@ -88,48 +88,50 @@ public function store(Request $request)
     }
     
     public function update(Request $request, Contenido $contenido)
-    {
-        abort_if($contenido->user_id !== auth()->id(), 403);
+{
+    abort_if($contenido->user_id !== auth()->id(), 403);
 
-        $request->validate([
-            'materia_id'  => 'required|exists:materias,id',
-            'tema'        => 'required|string|max:500',
-            'observacion' => 'nullable|string',
-            'subtemas'    => 'nullable|array|max:3',
-            'subtemas.*'  => 'nullable|string|max:500',
-        ]);
+    $request->validate([
+        'materia_id'   => 'required|exists:materias,id',
+        'numerounidad' => 'nullable|integer|min:1',
+        'tema'         => 'required|string|max:500',
+        'observacion'  => 'nullable|string',
+        'subtemas'     => 'nullable|array|max:3',
+        'subtemas.*'   => 'nullable|string|max:500',
+    ]);
 
-        $contenido->update([
-            'materia_id'  => $request->materia_id,
-            'tema'        => $request->tema,
-            'fecha'       => now()->toDateString(),
-            'observacion' => $request->observacion,
-        ]);
+    $contenido->update([
+        'materia_id'   => $request->materia_id,
+        'numerounidad' => $request->numerounidad,
+        'tema'         => $request->tema,
+        'fecha'        => now()->toDateString(),
+        'observacion'  => $request->observacion,
+    ]);
 
-        $contenido->subtemas()->delete();
+    $contenido->subtemas()->delete();
 
-        if ($request->subtemas) {
-            foreach ($request->subtemas as $orden => $subtema) {
-                if (!empty(trim($subtema))) {
-                    ContenidoSubtema::create([
-                        'contenido_id' => $contenido->id,
-                        'subtema'      => $subtema,
-                        'orden'        => $orden + 1,
-                    ]);
-                }
+    if ($request->subtemas) {
+        foreach ($request->subtemas as $orden => $subtema) {
+            if (!empty(trim($subtema))) {
+                ContenidoSubtema::create([
+                    'contenido_id' => $contenido->id,
+                    'subtema'      => $subtema,
+                    'orden'        => $orden + 1,
+                ]);
             }
         }
-
-        return redirect()->route('contenidos.index')
-                         ->with('success', 'Contenido actualizado correctamente.');
     }
+
+return redirect()->route('contenidos.index', ['materia_id' => $contenido->materia_id])
+                 ->with('success', 'Contenido actualizado correctamente.');
+}
 
     public function destroy(Contenido $contenido)
     {
         abort_if($contenido->user_id !== auth()->id(), 403);
         $contenido->subtemas()->delete();
         $contenido->delete();
-        return redirect()->route('contenidos.index')
-                         ->with('success', 'Contenido eliminado correctamente.');
+return redirect()->route('contenidos.index', ['materia_id' => $contenido->materia_id])
+                 ->with('success', 'Contenido eliminado correctamente.');
     }
 }

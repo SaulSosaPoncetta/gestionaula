@@ -13,7 +13,6 @@
     </div>
 </div>
 
-{{-- Filtro por materia --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form method="GET" action="{{ route('actividades.index') }}" class="row g-3">
@@ -55,10 +54,11 @@
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Unidad</th>
-                    <th>N° Act.</th>
+                    <th class="ps-4 text-center">Unidad</th>
+                    <th class="text-center">N° Act.</th>
                     <th>Materia</th>
                     <th>Tema</th>
+                    <th>Subtema</th>
                     <th>Tipo</th>
                     <th class="text-center">Items</th>
                     <th class="text-center">Estado</th>
@@ -69,11 +69,18 @@
                 @foreach($actividades as $act)
                 <tr>
                     <td class="ps-4 text-center">
-                        <span class="badge bg-secondary">{{ $act->numerounidad ?? '—' }}</span>
+                        @if($act->numerounidad)
+                            <span class="badge bg-secondary">{{ $act->numerounidad }}</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
                     </td>
-                    <td class="text-center">{{ $act->numeroactividad ?? '—' }}</td>
+                    <td class="text-center fw-bold">
+                        {{ $act->numeroactividad ?? '—' }}
+                    </td>
                     <td>{{ $act->materia?->nombre ?? '—' }}</td>
                     <td class="fw-semibold">{{ $act->tema }}</td>
+                    <td class="text-muted small">{{ $act->subtema ?? '—' }}</td>
                     <td>{{ $act->tipoactividad?->denominacion ?? '—' }}</td>
                     <td class="text-center">
                         <span class="badge bg-info">{{ $act->items->count() }}</span>
@@ -108,7 +115,6 @@
 
 @push('scripts')
 <script>
-// Auto-submit al cambiar materia
 document.getElementById('materia_id').addEventListener('change', function () {
     this.closest('form').submit();
 });
