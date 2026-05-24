@@ -19,7 +19,7 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <input type="text" name="buscar" class="form-control"
-                           placeholder="Buscar por nombre, apellido o DNI..."
+                           placeholder="Buscar por nombre, apellido o código..."
                            value="{{ request('buscar') }}">
                 </div>
                 <div class="col-md-3">
@@ -64,8 +64,8 @@
         <table class="table table-hover mb-0 align-middle">
             <thead class="table-light">
                 <tr>
-                    <th class="ps-4">Apellido y nombre</th>
-                    <th>DNI</th>
+                    <th class="ps-4">Código</th>
+                    <th>Apellido y nombre</th>
                     <th>Nacimiento</th>
                     <th>Año</th>
                     <th>División</th>
@@ -77,8 +77,8 @@
             <tbody>
                 @foreach($alumnos as $alumno)
                 <tr>
-                    <td class="ps-4 fw-semibold">{{ $alumno->nombre_completo }}</td>
-                    <td>{{ $alumno->dni ?? '—' }}</td>
+                    <td class="ps-4 font-monospace text-muted small">{{ $alumno->codigo }}</td>
+                    <td class="fw-semibold">{{ $alumno->nombre_completo }}</td>
                     <td>{{ $alumno->fechanacimiento ? $alumno->fechanacimiento->format('d/m/Y') : '—' }}</td>
                     <td>{{ $alumno->curso?->anio ?? '—' }}</td>
                     <td>{{ $alumno->curso?->division ?? '—' }}</td>
@@ -93,7 +93,11 @@
                            class="btn btn-sm btn-outline-primary me-1">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a href="{{ route('alumnos.edit', $alumno) }}"
+                        <a href="{{ route('alumnos.edit', $alumno) . '?' . http_build_query(array_filter([
+                                'filtro_curso_id'    => request('curso_id'),
+                                'filtro_tipocursada' => request('tipocursada'),
+                                'filtro_buscar'      => request('buscar'),
+                            ])) }}"
                            class="btn btn-sm btn-outline-secondary me-1">
                             <i class="bi bi-pencil"></i>
                         </a>

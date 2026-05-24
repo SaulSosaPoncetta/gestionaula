@@ -146,11 +146,15 @@ class LibroTemaController extends Controller
                          ->with('success', 'Tema registrado correctamente.');
     }
 
-    public function destroy(LibroTema $librotema)
-    {
-        abort_if($librotema->user_id !== auth()->id(), 403);
-        $librotema->delete();
-        return redirect()->route('librotemas.index')
-                         ->with('success', 'Registro eliminado correctamente.');
-    }
+public function destroy(LibroTema $librotema)
+{
+    abort_if($librotema->user_id !== auth()->id(), 403);
+    $materiaId = $librotema->materia_id;
+    $cursoId   = $librotema->curso_id;
+    $librotema->delete();
+    return redirect()->route('librotemas.index', array_filter([
+        'materia_id' => $materiaId,
+        'curso_id'   => $cursoId,
+    ]))->with('success', 'Registro eliminado correctamente.');
+}
 }

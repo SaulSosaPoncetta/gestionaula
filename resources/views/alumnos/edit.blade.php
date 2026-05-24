@@ -6,7 +6,11 @@
         <h4 class="fw-bold"><i class="bi bi-pencil me-2"></i>Editar alumno</h4>
     </div>
     <div class="col-auto">
-        <a href="{{ route('alumnos.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('alumnos.index', array_filter([
+            'curso_id'    => request('filtro_curso_id'),
+            'tipocursada' => request('filtro_tipocursada'),
+            'buscar'      => request('filtro_buscar'),
+        ])) }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Volver
         </a>
     </div>
@@ -17,6 +21,10 @@
         <form method="POST" action="{{ route('alumnos.update', $alumno) }}">
             @csrf @method('PUT')
 
+            <input type="hidden" name="filtro_curso_id"    value="{{ request('filtro_curso_id') }}">
+            <input type="hidden" name="filtro_tipocursada" value="{{ request('filtro_tipocursada') }}">
+            <input type="hidden" name="filtro_buscar"      value="{{ request('filtro_buscar') }}">
+
             @if($errors->any())
                 <div class="alert alert-danger mb-3">
                     <ul class="mb-0">
@@ -26,6 +34,15 @@
                     </ul>
                 </div>
             @endif
+
+            {{-- Código de alumno (solo lectura) --}}
+            <div class="alert alert-light border mb-4 d-flex align-items-center gap-3">
+                <i class="bi bi-qr-code fs-3 text-primary"></i>
+                <div>
+                    <div class="text-muted small">Código de alumno</div>
+                    <div class="fw-bold fs-4 font-monospace">{{ $alumno->codigo }}</div>
+                </div>
+            </div>
 
             <div class="row g-3">
                 <div class="col-md-4">
@@ -45,35 +62,9 @@
                 </div>
 
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">DNI</label>
-                    <input type="text" name="dni"
-                           class="form-control @error('dni') is-invalid @enderror"
-                           value="{{ old('dni', $alumno->dni) }}">
-                    @error('dni')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="col-md-4">
                     <label class="form-label fw-semibold">Fecha de nacimiento</label>
                     <input type="date" name="fechanacimiento" class="form-control"
                            value="{{ old('fechanacimiento', $alumno->fechanacimiento?->format('Y-m-d')) }}">
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Teléfono</label>
-                    <input type="text" name="telefono"
-                           class="form-control @error('telefono') is-invalid @enderror"
-                           value="{{ old('telefono', $alumno->telefono) }}"
-                           placeholder="Ej: 2284-123456">
-                    @error('telefono')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Email</label>
-                    <input type="email" name="email"
-                           class="form-control @error('email') is-invalid @enderror"
-                           value="{{ old('email', $alumno->email) }}"
-                           placeholder="Ej: alumno@mail.com">
-                    @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">
@@ -112,7 +103,11 @@
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-check-circle me-1"></i>Actualizar
                 </button>
-                <a href="{{ route('alumnos.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                <a href="{{ route('alumnos.index', array_filter([
+                    'curso_id'    => request('filtro_curso_id'),
+                    'tipocursada' => request('filtro_tipocursada'),
+                    'buscar'      => request('filtro_buscar'),
+                ])) }}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
         </form>
     </div>

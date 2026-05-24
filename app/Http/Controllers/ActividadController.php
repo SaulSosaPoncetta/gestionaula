@@ -108,11 +108,12 @@ class ActividadController extends Controller
         return view('actividades.show', compact('actividad'));
     }
 
-    public function destroy(Actividad $actividad)
-    {
-        abort_if($actividad->user_id !== auth()->id(), 403);
-        $actividad->delete();
-        return redirect()->route('actividades.index')
-                         ->with('success', 'Actividad eliminada correctamente.');
-    }
+public function destroy(Actividad $actividad)
+{
+    abort_if($actividad->user_id !== auth()->id(), 403);
+    $materiaId = $actividad->materia_id;
+    $actividad->delete();
+    return redirect()->route('actividades.index', ['materia_id' => $materiaId])
+                     ->with('success', 'Actividad eliminada correctamente.');
+}
 }

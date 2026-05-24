@@ -20,50 +20,29 @@
     <div class="row g-3 mb-4">
 
         {{-- Datos personales --}}
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-white fw-semibold">
-                    <i class="bi bi-person me-1"></i>Datos personales
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm mb-0">
-                        <tr>
-                            <td class="text-muted" style="width:40%">Apellido y nombre</td>
-                            <td class="fw-semibold">{{ $alumno->nombre_completo }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">DNI</td>
-                            <td>{{ $alumno->dni ?? '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Fecha de nacimiento</td>
-                            <td>{{ $alumno->fechanacimiento ? $alumno->fechanacimiento->format('d/m/Y') : '—' }}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Teléfono</td>
-                            <td>
-                                @if ($alumno->telefono)
-                                    <i class="bi bi-telephone me-1 text-muted"></i>{{ $alumno->telefono }}
-                                @else
-                                    —
-                                @endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted">Email</td>
-                            <td>
-                                @if ($alumno->email)
-                                    <a href="mailto:{{ $alumno->email }}" class="text-decoration-none">
-                                        <i class="bi bi-envelope me-1 text-muted"></i>{{ $alumno->email }}
-                                    </a>
-                                @else
-                                    —
-                                @endif
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
+        <div class="card-body">
+            <table class="table table-sm mb-0">
+                <tr>
+                    <td class="text-muted" style="width:40%">Código de alumno</td>
+                    <td class="fw-bold font-monospace fs-5">{{ $alumno->codigo }}</td>
+                </tr>
+                <tr>
+                    <td class="text-muted">Apellido y nombre</td>
+                    <td class="fw-semibold">{{ $alumno->nombre_completo }}</td>
+                </tr>
+                <tr>
+                    <td class="text-muted">Fecha de nacimiento</td>
+                    <td>{{ $alumno->fechanacimiento ? $alumno->fechanacimiento->format('d/m/Y') : '—' }}</td>
+                </tr>
+                <tr>
+                    <td class="text-muted">Tipo de cursada</td>
+                    <td>
+                        <span class="badge bg-{{ $alumno->tipocursadabadge }}">
+                            {{ $alumno->tipocursadalabel }}
+                        </span>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         {{-- Datos académicos --}}

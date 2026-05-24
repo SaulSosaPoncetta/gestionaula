@@ -8,30 +8,30 @@ use Illuminate\Http\Request;
 class AlumnoController extends Controller
 {
     public function index(Request $request)
-{
-    $cursos = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+    {
+        $cursos = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
 
-    $query = Alumno::with('curso')
-        ->where('user_id', auth()->id())
-        ->orderBy('apellido');
+        $query = Alumno::with('curso')
+            ->where('user_id', auth()->id())
+            ->orderBy('apellido');
 
-    if ($request->filled('curso_id')) {
-        $query->where('curso_id', $request->curso_id);
-    }
-    if ($request->filled('tipocursada')) {
-        $query->where('tipocursada', $request->tipocursada);
-    }
-    if ($request->filled('buscar')) {
-        $query->where(function($q) use ($request) {
-            $q->where('apellido', 'like', '%' . $request->buscar . '%')
-              ->orWhere('nombre',   'like', '%' . $request->buscar . '%')
-              ->orWhere('dni',      'like', '%' . $request->buscar . '%');
-        });
-    }
+        if ($request->filled('curso_id')) {
+            $query->where('curso_id', $request->curso_id);
+        }
+        if ($request->filled('tipocursada')) {
+            $query->where('tipocursada', $request->tipocursada);
+        }
+        if ($request->filled('buscar')) {
+            $query->where(function($q) use ($request) {
+                $q->where('apellido', 'like', '%' . $request->buscar . '%')
+                  ->orWhere('nombre',   'like', '%' . $request->buscar . '%')
+                  ->orWhere('codigo',   'like', '%' . $request->buscar . '%');
+            });
+        }
 
-    $alumnos = $query->paginate(20);
-    return view('alumnos.index', compact('alumnos', 'cursos'));
-}
+        $alumnos = $query->paginate(20);
+        return view('alumnos.index', compact('alumnos', 'cursos'));
+    }
 
     public function create()
     {
@@ -40,37 +40,31 @@ class AlumnoController extends Controller
     }
 
     public function store(Request $request)
-{
-    $request->validate([
-        'nombre'          => 'required|string|max:100',
-        'apellido'        => 'required|string|max:100',
-        'dni'             => 'nullable|string|max:20',
-        'fechanacimiento' => 'nullable|date',
-        'telefono'        => 'nullable|string|max:30',
-        'email'           => 'nullable|email|max:100',
-        'tipocursada'     => 'required|in:regular,libre,recursa,intensifica',
-        'curso_id'        => 'required|exists:cursos,id',
-    ]);
+    {
+        $request->validate([
+            'nombre'          => 'required|string|max:100',
+            'apellido'        => 'required|string|max:100',
+            'fechanacimiento' => 'nullable|date',
+            'tipocursada'     => 'required|in:regular,libre,recursa,intensifica',
+            'curso_id'        => 'required|exists:cursos,id',
+        ]);
 
-    Alumno::create([
-        'user_id'         => auth()->id(),
-        'nombre'          => $request->nombre,
-        'apellido'        => $request->apellido,
-        'dni'             => $request->dni,
-        'fechanacimiento' => $request->fechanacimiento,
-        'telefono'        => $request->telefono,
-        'email'           => $request->email,
-        'tipocursada'     => $request->tipocursada,
-        'curso_id'        => $request->curso_id,
-    ]);
+        Alumno::create([
+            'user_id'         => auth()->id(),
+            'codigo'          => Alumno::generarCodigo(),
+            'nombre'          => $request->nombre,
+            'apellido'        => $request->apellido,
+            'fechanacimiento' => $request->fechanacimiento,
+            'tipocursada'     => $request->tipocursada,
+            'curso_id'        => $request->curso_id,
+        ]);
 
-    return redirect()->route('alumnos.index')->with('success', 'Alumno creado correctamente.');
-}
+        return redirect()->route('alumnos.index')->with('success', 'Alumno creado correctamente.');
+    }
 
     public function show(Alumno $alumno)
     {
         abort_if($alumno->user_id !== auth()->id(), 403);
-
         $alumno->load(['curso.especialidad', 'curso.nivel', 'curso.establecimiento']);
 
         $asistencias = \App\Models\Asistencia::with('materia')
@@ -97,32 +91,34 @@ class AlumnoController extends Controller
     }
 
     public function update(Request $request, Alumno $alumno)
-{
-    abort_if($alumno->user_id !== auth()->id(), 403);
+    {
+        abort_if($alumno->user_id !== auth()->id(), 403);
 
-    $request->validate([
-        'nombre'          => 'required|string|max:100',
-        'apellido'        => 'required|string|max:100',
-        'dni'             => 'nullable|string|max:20',
-        'fechanacimiento' => 'nullable|date',
-        'telefono'        => 'nullable|string|max:30',
-        'email'           => 'nullable|email|max:100',
-        'tipocursada'     => 'required|in:regular,libre,recursa,intensifica',
-        'curso_id'        => 'required|exists:cursos,id',
-    ]);
+        $request->validate([
+            'nombre'          => 'required|string|max:100',
+            'apellido'        => 'required|string|max:100',
+            'fechanacimiento' => 'nullable|date',
+            'tipocursada'     => 'required|in:regular,libre,recursa,intensifica',
+            'curso_id'        => 'required|exists:cursos,id',
+        ]);
 
-    $alumno->update($request->only(
-        'nombre', 'apellido', 'dni', 'fechanacimiento',
-        'telefono', 'email', 'tipocursada', 'curso_id'
-    ));
+        $alumno->update($request->only(
+            'nombre', 'apellido', 'fechanacimiento', 'tipocursada', 'curso_id'
+        ));
 
-    return redirect()->route('alumnos.index')->with('success', 'Alumno actualizado correctamente.');
-}
+        return redirect()->route('alumnos.index', array_filter([
+            'curso_id'    => $request->filtro_curso_id,
+            'tipocursada' => $request->filtro_tipocursada,
+            'buscar'      => $request->filtro_buscar,
+        ]))->with('success', 'Alumno actualizado correctamente.');
+    }
 
     public function destroy(Alumno $alumno)
     {
         abort_if($alumno->user_id !== auth()->id(), 403);
+        $cursoId = $alumno->curso_id;
         $alumno->delete();
-        return redirect()->route('alumnos.index')->with('success', 'Alumno eliminado correctamente.');
+        return redirect()->route('alumnos.index', ['curso_id' => $cursoId])
+                         ->with('success', 'Alumno eliminado correctamente.');
     }
 }

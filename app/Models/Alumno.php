@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Alumno extends Model
 {
     protected $fillable = [
-        'user_id', 'nombre', 'apellido', 'dni',
-        'fechanacimiento', 'telefono', 'email',
-        'porcentajeasistencia', 'curso_id', 'tipocursada'
+        'user_id', 'codigo', 'nombre', 'apellido',
+        'fechanacimiento', 'porcentajeasistencia',
+        'curso_id', 'tipocursada'
     ];
 
     protected $casts = ['fechanacimiento' => 'date'];
@@ -51,5 +51,17 @@ class Alumno extends Model
     public function getTipocursadabadgeAttribute(): string
     {
         return self::BADGESCURSADA[$this->tipocursada] ?? 'secondary';
+    }
+
+    /**
+     * Genera un código único de 8 dígitos
+     */
+    public static function generarCodigo(): string
+    {
+        do {
+            $codigo = str_pad(random_int(0, 99999999), 8, '0', STR_PAD_LEFT);
+        } while (self::where('codigo', $codigo)->exists());
+
+        return $codigo;
     }
 }
