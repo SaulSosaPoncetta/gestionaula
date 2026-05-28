@@ -15,17 +15,13 @@ class AlumnoController extends Controller
             ->where('user_id', auth()->id())
             ->orderBy('apellido');
 
-        if ($request->filled('curso_id')) {
-            $query->where('curso_id', $request->curso_id);
-        }
-        if ($request->filled('tipocursada')) {
-            $query->where('tipocursada', $request->tipocursada);
-        }
+        if ($request->filled('curso_id'))    $query->where('curso_id', $request->curso_id);
+        if ($request->filled('tipocursada')) $query->where('tipocursada', $request->tipocursada);
         if ($request->filled('buscar')) {
             $query->where(function($q) use ($request) {
                 $q->where('apellido', 'like', '%' . $request->buscar . '%')
                   ->orWhere('nombre',   'like', '%' . $request->buscar . '%')
-                  ->orWhere('codigo',   'like', '%' . $request->buscar . '%');
+                  ->orWhere('dni',      'like', '%' . $request->buscar . '%');
             });
         }
 
@@ -44,17 +40,22 @@ class AlumnoController extends Controller
         $request->validate([
             'nombre'          => 'required|string|max:100',
             'apellido'        => 'required|string|max:100',
+            'dni'             => 'nullable|string|max:20',
             'fechanacimiento' => 'nullable|date',
+            'telefono'        => 'nullable|string|max:30',
+            'email'           => 'nullable|email|max:100',
             'tipocursada'     => 'required|in:regular,libre,recursa,intensifica',
             'curso_id'        => 'required|exists:cursos,id',
         ]);
 
         Alumno::create([
             'user_id'         => auth()->id(),
-            'codigo'          => Alumno::generarCodigo(),
             'nombre'          => $request->nombre,
             'apellido'        => $request->apellido,
+            'dni'             => $request->dni,
             'fechanacimiento' => $request->fechanacimiento,
+            'telefono'        => $request->telefono,
+            'email'           => $request->email,
             'tipocursada'     => $request->tipocursada,
             'curso_id'        => $request->curso_id,
         ]);
@@ -97,13 +98,17 @@ class AlumnoController extends Controller
         $request->validate([
             'nombre'          => 'required|string|max:100',
             'apellido'        => 'required|string|max:100',
+            'dni'             => 'nullable|string|max:20',
             'fechanacimiento' => 'nullable|date',
+            'telefono'        => 'nullable|string|max:30',
+            'email'           => 'nullable|email|max:100',
             'tipocursada'     => 'required|in:regular,libre,recursa,intensifica',
             'curso_id'        => 'required|exists:cursos,id',
         ]);
 
         $alumno->update($request->only(
-            'nombre', 'apellido', 'fechanacimiento', 'tipocursada', 'curso_id'
+            'nombre', 'apellido', 'dni', 'fechanacimiento',
+            'telefono', 'email', 'tipocursada', 'curso_id'
         ));
 
         return redirect()->route('alumnos.index', array_filter([

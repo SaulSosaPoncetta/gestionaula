@@ -64,7 +64,8 @@ public function store(Request $request)
         }
     }
 
-    return redirect()->route('contenidos.index')
+    // Volver al index recordando la materia seleccionada
+    return redirect()->route('contenidos.index', ['materia_id' => $request->materia_id])
                      ->with('success', 'Contenido registrado correctamente.');
 }
 

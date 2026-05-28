@@ -27,11 +27,6 @@
                 </div>
             @endif
 
-            <div class="alert alert-info mb-4">
-                <i class="bi bi-info-circle me-2"></i>
-                El código de alumno se generará automáticamente al guardar.
-            </div>
-
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Apellido <span class="text-danger">*</span></label>
@@ -50,9 +45,33 @@
                 </div>
 
                 <div class="col-md-4">
+                    <label class="form-label fw-semibold">DNI</label>
+                    <input type="text" name="dni"
+                           class="form-control @error('dni') is-invalid @enderror"
+                           value="{{ old('dni') }}" placeholder="Opcional">
+                    @error('dni')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-md-4">
                     <label class="form-label fw-semibold">Fecha de nacimiento</label>
                     <input type="date" name="fechanacimiento" class="form-control"
                            value="{{ old('fechanacimiento') }}">
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Teléfono</label>
+                    <input type="text" name="telefono"
+                           class="form-control @error('telefono') is-invalid @enderror"
+                           value="{{ old('telefono') }}" placeholder="Ej: 2284-123456">
+                    @error('telefono')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Email</label>
+                    <input type="email" name="email"
+                           class="form-control @error('email') is-invalid @enderror"
+                           value="{{ old('email') }}" placeholder="Ej: alumno@mail.com">
+                    @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="col-md-4">

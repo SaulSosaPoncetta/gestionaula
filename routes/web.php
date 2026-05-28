@@ -31,6 +31,8 @@ use App\Http\Controllers\CalendarioEscolarController;
 use App\Http\Controllers\AsignarActividadNuevoController;
 use App\Http\Controllers\PrenotaController;
 
+require __DIR__.'/auth.php';
+
     Route::get('/', function () {
         return redirect()->route('dashboard');
     });
@@ -245,4 +247,3 @@ Route::get('/prenotas/historial', [PrenotaController::class, 'historial'])->name
 
 });
 
-require __DIR__.'/auth.php';
