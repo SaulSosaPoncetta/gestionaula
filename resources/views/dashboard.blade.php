@@ -6,19 +6,118 @@
     <div class="col">
         <h4 class="fw-bold"><i class="bi bi-house me-2"></i>Panel principal</h4>
         <p class="text-muted mb-0">Bienvenido, <strong>{{ auth()->user()->name }}</strong>.</p>
-        <div id="leyendaClaseActual"
-             class="mt-3 d-flex flex-column align-items-center justify-content-center
-                    w-100 p-3 rounded bg-light border"
-             style="display:none!important">
-        </div>
     </div>
 </div>
 
-{{-- Reloj y Calendario lado a lado --}}
+{{-- Cards Clase actual y Próxima clase --}}
+<div class="row g-3 mb-4">
+
+    {{-- Clase actual --}}
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100 border-start border-success border-4">
+            <div class="card-header bg-white fw-bold text-success">
+                <i class="bi bi-play-circle me-1"></i>Clase actual
+            </div>
+            <div class="card-body" id="leyendaClaseActual">
+                @if($establecimientoActual || $materiaActual)
+                    @if($establecimientoActual)
+                    <div class="mb-2">
+                        <div class="text-muted small">Establecimiento</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-building me-1 text-primary"></i>
+                            {{ $establecimientoActual->nombre }}
+                        </div>
+                    </div>
+                    @endif
+                    @if($materiaActual)
+                    <div class="mb-2">
+                        <div class="text-muted small">Materia</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-book me-1 text-success"></i>
+                            {{ $materiaActual->nombre }}
+                        </div>
+                    </div>
+                    @endif
+                    @if($cursoActual)
+                    <div>
+                        <div class="text-muted small">Curso</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-people me-1 text-warning"></i>
+                            {{ $cursoActual->nombre_completo }}
+                        </div>
+                    </div>
+                    @endif
+                @else
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-clock fs-2 d-block mb-2"></i>
+                        No hay clase activa en este momento.
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Próxima clase --}}
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
+            <div class="card-header bg-white fw-bold text-primary">
+                <i class="bi bi-skip-forward-circle me-1"></i>Próxima clase
+            </div>
+            <div class="card-body">
+                @if($proximoHorario ?? false)
+                    @if($diaProximo && $horaProximo)
+                    <div class="mb-2">
+                        <div class="text-muted small">Cuándo</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-calendar me-1 text-primary"></i>
+                            {{ ucfirst($diaProximo) }} a las {{ $horaProximo }}
+                        </div>
+                    </div>
+                    @endif
+                    @if($establecimientoProximo)
+                    <div class="mb-2">
+                        <div class="text-muted small">Establecimiento</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-building me-1 text-primary"></i>
+                            {{ $establecimientoProximo->nombre }}
+                        </div>
+                    </div>
+                    @endif
+                    @if($materiaProxima)
+                    <div class="mb-2">
+                        <div class="text-muted small">Materia</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-book me-1 text-success"></i>
+                            {{ $materiaProxima->nombre }}
+                        </div>
+                    </div>
+                    @endif
+                    @if($cursoProximo)
+                    <div>
+                        <div class="text-muted small">Curso</div>
+                        <div class="fw-semibold">
+                            <i class="bi bi-people me-1 text-warning"></i>
+                            {{ $cursoProximo->nombre_completo }}
+                        </div>
+                    </div>
+                    @endif
+                @else
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                        No hay próximas clases registradas.
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{-- Reloj, Calendario y Mapa --}}
 <div class="row g-3 mb-4">
 
     {{-- Card reloj --}}
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100 bg-primary text-white">
             <div class="card-body text-center py-4">
                 <div class="display-3 fw-bold" id="reloj">--:--:--</div>
@@ -29,7 +128,7 @@
     </div>
 
     {{-- Card calendario escolar --}}
-    <div class="col-md-6">
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white fw-semibold">
                 <i class="bi bi-calendar-event me-1 text-primary"></i>Calendario escolar
@@ -38,7 +137,7 @@
                 @if($proximosEventos->isEmpty())
                     <div class="p-4 text-center text-muted">
                         <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
-                        No hay eventos próximos registrados.
+                        No hay eventos próximos.
                         <div class="mt-2">
                             <a href="{{ route('calendarioescolar.create') }}"
                                class="btn btn-sm btn-outline-primary">
@@ -68,7 +167,7 @@
                                 {{ $index === 0 ? 'border-start border-4 border-primary' : '' }}
                                 {{ $evento->esferiado ? 'list-group-item-danger' : '' }}">
                         <div>
-                            <div class="fw-semibold {{ $index === 0 ? 'text-primary fs-6' : '' }}">
+                            <div class="fw-semibold {{ $index === 0 ? 'text-primary' : '' }} small">
                                 @if($evento->esferiado)
                                     <i class="bi bi-calendar-x me-1 text-danger"></i>
                                 @else
@@ -76,22 +175,20 @@
                                 @endif
                                 {{ $evento->denominacion }}
                             </div>
-                            <div class="text-muted small">
+                            <div class="text-muted" style="font-size:0.75rem">
                                 {{ $diaEvento }} {{ $evento->fecha->format('d/m/Y') }}
                                 @if($evento->periodo)
-                                    &mdash; <span class="badge bg-primary">{{ $evento->periodo->denominacion }}</span>
+                                    <span class="badge bg-primary ms-1">{{ $evento->periodo->denominacion }}</span>
                                 @endif
                             </div>
                         </div>
-                        <div class="text-end ms-3">
+                        <div class="ms-2">
                             @if($esHoy)
                                 <span class="badge bg-danger">Hoy</span>
                             @elseif($esManana)
                                 <span class="badge bg-warning text-dark">Mañana</span>
                             @else
-                                <span class="badge bg-light text-dark">
-                                    en {{ $diasFaltan }} día{{ $diasFaltan !== 1 ? 's' : '' }}
-                                </span>
+                                <span class="badge bg-light text-dark">{{ $diasFaltan }}d</span>
                             @endif
                         </div>
                     </li>
@@ -100,8 +197,104 @@
                 <div class="p-2 text-end">
                     <a href="{{ route('calendarioescolar.index') }}"
                        class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-calendar3 me-1"></i>Ver calendario completo
+                        <i class="bi bi-calendar3 me-1"></i>Ver todo
                     </a>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Card mapa del establecimiento actual --}}
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">
+                <i class="bi bi-geo-alt me-1 text-danger"></i>Ubicación del establecimiento
+            </div>
+            <div class="card-body p-0">
+                @if($establecimientoActual)
+                @php
+                    $direccionMaps = urlencode(
+                        ($establecimientoActual->direccion ?? '') . ', ' .
+                        ($establecimientoActual->localidad ?? '') . ', ' .
+                        ($establecimientoActual->provincia ?? '')
+                    );
+                @endphp
+                <div class="p-3 border-bottom">
+                    <div class="fw-semibold">{{ $establecimientoActual->nombre }}</div>
+                    <div class="text-muted small">
+                        <i class="bi bi-geo me-1"></i>
+                        {{ $establecimientoActual->direccion ?? '—' }},
+                        {{ $establecimientoActual->localidad ?? '' }}
+                    </div>
+                    @if($establecimientoActual->telefono)
+                    <div class="text-muted small">
+                        <i class="bi bi-telephone me-1"></i>
+                        {{ $establecimientoActual->telefono }}
+                    </div>
+                    @endif
+                </div>
+                <div style="height:200px;overflow:hidden">
+                    <iframe
+                        width="100%"
+                        height="200"
+                        frameborder="0"
+                        style="border:0"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="https://maps.google.com/maps?q={{ $direccionMaps }}&output=embed&z=15"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="p-2 text-end">
+                    <a href="https://maps.google.com/maps?q={{ $direccionMaps }}"
+                       target="_blank" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Ver en Google Maps
+                    </a>
+                </div>
+                @elseif($establecimientoProximo)
+                @php
+                    $direccionMaps = urlencode(
+                        ($establecimientoProximo->direccion ?? '') . ', ' .
+                        ($establecimientoProximo->localidad ?? '') . ', ' .
+                        ($establecimientoProximo->provincia ?? '')
+                    );
+                @endphp
+                <div class="p-3 border-bottom">
+                    <div class="text-muted small mb-1">Próximo establecimiento</div>
+                    <div class="fw-semibold">{{ $establecimientoProximo->nombre }}</div>
+                    <div class="text-muted small">
+                        <i class="bi bi-geo me-1"></i>
+                        {{ $establecimientoProximo->direccion ?? '—' }},
+                        {{ $establecimientoProximo->localidad ?? '' }}
+                    </div>
+                    @if($establecimientoProximo->telefono)
+                    <div class="text-muted small">
+                        <i class="bi bi-telephone me-1"></i>
+                        {{ $establecimientoProximo->telefono }}
+                    </div>
+                    @endif
+                </div>
+                <div style="height:200px;overflow:hidden">
+                    <iframe
+                        width="100%"
+                        height="200"
+                        frameborder="0"
+                        style="border:0"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        src="https://maps.google.com/maps?q={{ $direccionMaps }}&output=embed&z=15"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="p-2 text-end">
+                    <a href="https://maps.google.com/maps?q={{ $direccionMaps }}"
+                       target="_blank" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>Ver en Google Maps
+                    </a>
+                </div>
+                @else
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-geo-alt fs-2 d-block mb-2"></i>
+                    No hay establecimiento activo ni próximo.
                 </div>
                 @endif
             </div>
