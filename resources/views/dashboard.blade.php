@@ -57,60 +57,70 @@
         </div>
     </div>
 
-    {{-- Próxima clase --}}
-    <div class="col-md-6">
-        <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
-            <div class="card-header bg-white fw-bold text-primary">
-                <i class="bi bi-skip-forward-circle me-1"></i>Próxima clase
-            </div>
-            <div class="card-body">
-                @if($proximoHorario ?? false)
-                    @if($diaProximo && $horaProximo)
-                    <div class="mb-2">
-                        <div class="text-muted small">Cuándo</div>
-                        <div class="fw-semibold">
-                            <i class="bi bi-calendar me-1 text-primary"></i>
-                            {{ ucfirst($diaProximo) }} a las {{ $horaProximo }}
-                        </div>
+{{-- Proximo establecimiento --}}
+<div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100 border-start border-primary border-4">
+        <div class="card-header bg-white fw-bold text-primary">
+            <i class="bi bi-skip-forward-circle me-1"></i>Próximo establecimiento
+        </div>
+        <div class="card-body">
+            @if($materiaProxima || $establecimientoProximo)
+                @if($diaProximo && $horaProximo)
+                <div class="mb-2">
+                    <div class="text-muted small">Cuándo</div>
+                    <div class="fw-semibold">
+                        <i class="bi bi-calendar me-1 text-primary"></i>
+                        {{ ucfirst($diaProximo) }} a las {{ $horaProximo }}
                     </div>
-                    @endif
-                    @if($establecimientoProximo)
-                    <div class="mb-2">
-                        <div class="text-muted small">Establecimiento</div>
-                        <div class="fw-semibold">
-                            <i class="bi bi-building me-1 text-primary"></i>
-                            {{ $establecimientoProximo->nombre }}
-                        </div>
-                    </div>
-                    @endif
-                    @if($materiaProxima)
-                    <div class="mb-2">
-                        <div class="text-muted small">Materia</div>
-                        <div class="fw-semibold">
-                            <i class="bi bi-book me-1 text-success"></i>
-                            {{ $materiaProxima->nombre }}
-                        </div>
-                    </div>
-                    @endif
-                    @if($cursoProximo)
-                    <div>
-                        <div class="text-muted small">Curso</div>
-                        <div class="fw-semibold">
-                            <i class="bi bi-people me-1 text-warning"></i>
-                            {{ $cursoProximo->nombre_completo }}
-                        </div>
-                    </div>
-                    @endif
-                @else
-                    <div class="text-center text-muted py-3">
-                        <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
-                        No hay próximas clases registradas.
-                    </div>
+                </div>
                 @endif
-            </div>
+                @if($establecimientoProximo)
+                <div class="mb-2">
+                    <div class="text-muted small">Establecimiento</div>
+                    <div class="fw-semibold">
+                        <i class="bi bi-building me-1 text-primary"></i>
+                        {{ $establecimientoProximo->nombre }}
+                    </div>
+                    @if($establecimientoProximo->direccion)
+                    <div class="text-muted small">
+                        <i class="bi bi-geo me-1"></i>
+                        {{ $establecimientoProximo->direccion }}
+                        @if($establecimientoProximo->localidad), {{ $establecimientoProximo->localidad }}@endif
+                    </div>
+                    @endif
+                    @if($establecimientoProximo->telefono)
+                    <div class="text-muted small">
+                        <i class="bi bi-telephone me-1"></i>{{ $establecimientoProximo->telefono }}
+                    </div>
+                    @endif
+                </div>
+                @endif
+                @if($materiaProxima)
+                <div class="mb-2">
+                    <div class="text-muted small">Materia</div>
+                    <div class="fw-semibold">
+                        <i class="bi bi-book me-1 text-success"></i>
+                        {{ $materiaProxima->nombre }}
+                    </div>
+                </div>
+                @endif
+                @if($cursoProximo)
+                <div>
+                    <div class="text-muted small">Curso</div>
+                    <div class="fw-semibold">
+                        <i class="bi bi-people me-1 text-warning"></i>
+                        {{ $cursoProximo->nombre_completo }}
+                    </div>
+                </div>
+                @endif
+            @else
+                <div class="text-center text-muted py-3">
+                    <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                    No hay próximas clases registradas.
+                </div>
+            @endif
         </div>
     </div>
-
 </div>
 
 {{-- Reloj, Calendario y Mapa --}}
@@ -554,98 +564,90 @@
         }
 
         function renderClaseActual(clases) {
-            const container = document.getElementById('claseActualContainer');
+    const container = document.getElementById('claseActualContainer');
 
-            if (clases.length === 0) {
-                container.innerHTML = `
+    if (clases.length === 0) {
+        container.innerHTML = `
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center text-muted py-4">
                     <i class="bi bi-clock fs-3 mb-2 d-block"></i>
                     No hay clase en este momento segun tu horario.
                 </div>
             </div>`;
-                return;
-            }
+        return;
+    }
 
-            let html = '';
-            clases.forEach(clase => {
-                const alumnosJson = JSON.stringify(clase.alumnos).replace(/"/g, '&quot;');
-                const cursoNombre = (clase.curso ?? '').replace(/"/g, '&quot;');
-                const materiaNombre = (clase.materia ?? '').replace(/"/g, '&quot;');
-                const fecha = new Date();
-                const hoy = `${fecha.getFullYear()}-${pad(fecha.getMonth()+1)}-${pad(fecha.getDate())}`;
+    let html = '';
+    clases.forEach(clase => {
+        const fecha = new Date();
+        const hoy   = `${fecha.getFullYear()}-${pad(fecha.getMonth()+1)}-${pad(fecha.getDate())}`;
 
-                html += `
+        html += `
         <div class="card border-0 shadow-sm mb-3 border-start border-success border-4">
             <div class="card-body">
-                <div class="text-center mb-3">
-                    <div class="fs-3 fw-bold text-success">
-                        <i class="bi bi-book me-2"></i>${clase.materia ?? 'Sin materia'}
-                    </div>
-                    <div class="fs-5 text-muted fw-semibold">${clase.curso ?? '-'}</div>
-                    <div class="text-muted small">${clase.horainicio} - ${clase.horafin}</div>
-                    ${clase.establecimiento ? `<div class="text-muted small"><i class="bi bi-building me-1"></i>${clase.establecimiento}</div>` : ''}
-                </div>
-                <hr>
-                <div class="fw-semibold mb-2">
+                <div class="fw-semibold mb-3">
                     <i class="bi bi-people me-1"></i>Estudiantes
                 </div>`;
 
-                if (clase.alumnos.length > 0) {
-                    html += `
+        if (clase.alumnos.length > 0) {
+            html += `
                 <table class="table table-hover table-sm mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
                             <th style="width:40px">#</th>
                             <th>Apellido y nombre</th>
-                            <th class="text-center" style="width:120px">Asistencia</th>
-                            <th class="text-center" style="width:130px">Calificaciones</th>
-                            <th class="text-center" style="width:110px">Practicos</th>
-                            <th class="text-center" style="width:100px">Ficha</th>
+                            <th class="text-center" style="width:130px">Asistencia</th>
+                            <th class="text-center" style="width:140px">Calificaciones</th>
+                            <th class="text-center" style="width:120px">Practicos</th>
+                            <th class="text-center" style="width:110px">Ficha</th>
                         </tr>
                     </thead>
                     <tbody>`;
-                    clase.alumnos.forEach((a, idx) => {
-                        html += `
+
+            clase.alumnos.forEach((a, idx) => {
+                html += `
                         <tr>
                             <td class="text-muted">${idx + 1}</td>
                             <td class="fw-semibold">${a.nombre}</td>
                             <td class="text-center">
                                 <a href="/asistencia/alumno?alumno_id=${a.id}&buscar=${encodeURIComponent(a.nombre)}"
-                                   class="btn btn-xs btn-outline-primary" style="font-size:0.75rem;padding:2px 8px;">
-                                    <i class="bi bi-person-check"></i>
+                                   class="btn btn-sm btn-primary w-100">
+                                    <i class="bi bi-person-check text-white"></i>
                                 </a>
                             </td>
                             <td class="text-center">
                                 <a href="/calificaciones/historial?curso_id=${clase.curso_id}&materia_id=${clase.materia_id}&alumno_id=${a.id}"
-                                   class="btn btn-xs btn-outline-success" style="font-size:0.75rem;padding:2px 8px;">
-                                    <i class="bi bi-journal-text"></i>
+                                   class="btn btn-sm btn-success w-100">
+                                    <i class="bi bi-journal-text text-white"></i>
                                 </a>
                             </td>
                             <td class="text-center">
                                 <a href="/tareas?curso_id=${clase.curso_id}"
-                                   class="btn btn-xs btn-outline-warning" style="font-size:0.75rem;padding:2px 8px;">
-                                    <i class="bi bi-clipboard-check"></i>
+                                   class="btn btn-sm btn-warning w-100">
+                                    <i class="bi bi-clipboard-check text-white"></i>
                                 </a>
                             </td>
                             <td class="text-center">
                                 <a href="/alumnos/${a.id}"
-                                   class="btn btn-xs btn-outline-dark" style="font-size:0.75rem;padding:2px 8px;">
-                                    <i class="bi bi-eye"></i>
+                                   class="btn btn-sm btn-dark w-100">
+                                    <i class="bi bi-eye text-white"></i>
                                 </a>
                             </td>
                         </tr>`;
-                    });
-                    html += `</tbody></table>`;
-                } else {
-                    html += `<div class="text-muted small">No hay alumnos registrados en este curso.</div>`;
-                }
-
-                html += `</div></div>`;
             });
 
-            container.innerHTML = html;
+            html += `
+                    </tbody>
+                </table>`;
+        } else {
+            html += `<div class="text-muted small">No hay alumnos registrados en este curso.</div>`;
         }
+
+        html += `</div></div>`;
+    });
+
+    container.innerHTML = html;
+}
 
         let claseActivaActual = null;
 

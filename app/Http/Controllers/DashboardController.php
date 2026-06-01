@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Horario;
 use App\Models\CalendarioEscolar;
+use App\Models\Establecimiento;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -24,9 +25,15 @@ class DashboardController extends Controller
 
         $diaActual = $mapaDias[$ahora->isoWeekday()];
 
-        // Todos los horarios del docente ordenados por día y hora
+        // IDs de establecimientos del usuario logueado
+        $establecimientosDelUsuario = Establecimiento::where('user_id', auth()->id())
+            ->pluck('id')
+            ->toArray();
+
+        // Todos los horarios del docente
         $todosLosHorarios = Horario::with(['materia', 'curso', 'establecimiento'])
             ->where('user_id', auth()->id())
+            ->whereIn('establecimiento_id', $establecimientosDelUsuario)
             ->get();
 
         // Horario activo ahora
@@ -41,14 +48,17 @@ class DashboardController extends Controller
         $materiaActual         = $horarioActivo?->materia;
         $cursoActual           = $horarioActivo?->curso;
 
-        // Próxima clase: siguiente horario después del actual en el día de hoy
-        // o el primer horario del próximo día
+        // Verificar que el establecimiento pertenece al usuario
+        if ($establecimientoActual && !in_array($establecimientoActual->id, $establecimientosDelUsuario)) {
+            $establecimientoActual = null;
+        }
+
+        // Próxima clase
         $ordenDias = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
         $diaIndex  = array_search($diaActual, $ordenDias);
 
         $proximoHorario = null;
 
-        // Buscar en el día de hoy después de la hora actual
         $proximoHoy = $todosLosHorarios
             ->where('dia', $diaActual)
             ->filter(fn($h) => $h->horainicio > $horaActual)
@@ -58,7 +68,6 @@ class DashboardController extends Controller
         if ($proximoHoy) {
             $proximoHorario = $proximoHoy;
         } else {
-            // Buscar en los días siguientes
             for ($i = 1; $i <= 7; $i++) {
                 $proximoDia = $ordenDias[($diaIndex + $i) % 7];
                 $proximoEnDia = $todosLosHorarios
@@ -78,14 +87,19 @@ class DashboardController extends Controller
         $diaProximo             = $proximoHorario?->dia;
         $horaProximo            = $proximoHorario ? substr($proximoHorario->horainicio, 0, 5) : null;
 
-        // Próximos eventos del calendario
+        // Verificar que el establecimiento próximo pertenece al usuario
+        if ($establecimientoProximo && !in_array($establecimientoProximo->id, $establecimientosDelUsuario)) {
+            $establecimientoProximo = null;
+        }
+
+        // Próximos eventos del calendario del usuario
         $proximosEventos = CalendarioEscolar::where('user_id', auth()->id())
             ->where('fecha', '>=', $ahora->toDateString())
             ->orderBy('fecha')
             ->take(5)
             ->get();
 
-        // Todos los horarios para el JS
+        // Todos los horarios para el JS — solo alumnos del usuario
         $horarios = $todosLosHorarios->map(fn($h) => [
             'dia'             => $h->dia,
             'horainicio'      => substr($h->horainicio, 0, 5),
@@ -94,7 +108,9 @@ class DashboardController extends Controller
             'materia_id'      => $h->materia_id,
             'curso_id'        => $h->curso_id,
             'curso'           => $h->curso?->nombre_completo,
-            'establecimiento' => $h->establecimiento?->nombre,
+            'establecimiento' => in_array($h->establecimiento_id, $establecimientosDelUsuario)
+                                    ? $h->establecimiento?->nombre
+                                    : null,
             'alumnos'         => $h->curso?->alumnos
                 ->where('user_id', auth()->id())
                 ->map(fn($a) => [
