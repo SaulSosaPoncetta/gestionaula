@@ -11,7 +11,8 @@
         </p>
     </div>
     <div class="col-auto">
-        <a href="{{ route('asistencia.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('asistencia.accion', ['curso_id' => $curso->id, 'materia_id' => $materia?->id]) }}"
+           class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Volver
         </a>
     </div>
@@ -22,11 +23,56 @@
         <i class="bi bi-exclamation-triangle me-2"></i>Este curso no tiene alumnos registrados.
     </div>
 @else
+
+{{-- Resumen del día --}}
+@php
+    $presentesHoy    = $asistencias->where('estado', 'presente')->count();
+    $ausentesHoy     = $asistencias->where('estado', 'ausente')->count();
+    $justificadosHoy = $asistencias->where('estado', 'justificado')->count();
+    $tardeHoy        = $asistencias->where('estado', 'tarde')->count();
+    $totalAlumnos    = $curso->alumnos->count();
+@endphp
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-success">{{ $presentesHoy }}</div>
+                <div class="text-muted small">Presentes hoy</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-danger">{{ $ausentesHoy }}</div>
+                <div class="text-muted small">Ausentes hoy</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-info">{{ $justificadosHoy }}</div>
+                <div class="text-muted small">Justificados hoy</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card border-0 shadow-sm text-center">
+            <div class="card-body py-2">
+                <div class="fs-3 fw-bold text-warning">{{ $tardeHoy }}</div>
+                <div class="text-muted small">Tarde hoy</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <form method="POST" action="{{ route('asistencia.guardar') }}" enctype="multipart/form-data">
     @csrf
-    <input type="hidden" name="curso_id" value="{{ $curso->id }}">
+    <input type="hidden" name="curso_id"   value="{{ $curso->id }}">
     <input type="hidden" name="materia_id" value="{{ $materia?->id }}">
-    <input type="hidden" name="fecha" value="{{ $fecha }}">
+    <input type="hidden" name="fecha"      value="{{ $fecha }}">
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
@@ -45,7 +91,7 @@
                 <tbody>
                     @foreach($curso->alumnos->sortBy('apellido') as $alumno)
                     @php
-                        $reg = $asistencias[$alumno->id] ?? null;
+                        $reg          = $asistencias[$alumno->id] ?? null;
                         $estadoActual = $reg?->estado ?? 'presente';
                     @endphp
                     <tr class="fila-alumno" data-alumno="{{ $alumno->id }}">
@@ -81,7 +127,8 @@
                         </td>
 
                         <td>
-                            <div class="campo-foto" {{ $estadoActual !== 'ausente' ? 'style=display:none' : '' }}>
+                            <div class="campo-foto"
+                                 {{ !in_array($estadoActual, ['ausente','justificado']) ? 'style=display:none' : '' }}>
                                 <input type="file"
                                        class="form-control form-control-sm"
                                        name="fotos[{{ $alumno->id }}]"
@@ -112,7 +159,8 @@
         <button type="submit" class="btn btn-success">
             <i class="bi bi-check-circle me-1"></i>Guardar asistencia
         </button>
-        <a href="{{ route('asistencia.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+        <a href="{{ route('asistencia.accion', ['curso_id' => $curso->id, 'materia_id' => $materia?->id]) }}"
+           class="btn btn-outline-secondary">Cancelar</a>
     </div>
 </form>
 @endif

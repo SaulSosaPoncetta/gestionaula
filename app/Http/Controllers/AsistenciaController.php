@@ -110,8 +110,11 @@ public function guardar(Request $request)
         \App\Services\AsistenciaService::actualizarPorcentaje($alumnoId, $request->materia_id);
     }
 
-    return redirect()->route('asistencia.index')
-                     ->with('success', 'Asistencia guardada correctamente.');
+    return redirect()->route('asistencia.registrar', [
+    'curso_id'   => $request->curso_id,
+    'materia_id' => $request->materia_id,
+    'fecha'      => $request->fecha,
+])->with('success', 'Asistencia guardada correctamente.');
 }
 
 public function listado(Request $request)
@@ -161,34 +164,50 @@ public function listado(Request $request)
 }
 
     public function historial(Request $request)
-    {
-        $materias    = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-        $cursos      = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
-        $asistencias = collect();
-        $filtros     = [];
+{
+    $materias    = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+    $cursos      = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+    $asistencias = collect();
+    $filtros     = [];
+    $resumen     = [];
+    $alumnos     = collect();
 
-        if ($request->filled('curso_id') || $request->filled('materia_id')) {
-            $query = Asistencia::with(['alumno', 'materia', 'curso'])
-                ->where('user_id', auth()->id());
+    if ($request->filled('curso_id')) {
+        $filtros = $request->only(['curso_id', 'materia_id', 'fechainicio', 'fechafin', 'alumno_id']);
 
-            if ($request->filled('materia_id')) {
-                $query->where('materia_id', $request->materia_id);
-                $filtros['materia_id'] = $request->materia_id;
-            }
-            if ($request->filled('curso_id')) {
-                $query->where('curso_id', $request->curso_id);
-                $filtros['curso_id'] = $request->curso_id;
-            }
-            if ($request->filled('fecha')) {
-                $query->where('fecha', $request->fecha);
-                $filtros['fecha'] = $request->fecha;
-            }
+        $query = Asistencia::with(['alumno', 'materia', 'curso'])
+            ->where('user_id', auth()->id())
+            ->where('curso_id', $request->curso_id);
 
-            $asistencias = $query->orderBy('fecha', 'desc')->paginate(30);
-        }
+        if ($request->filled('materia_id'))   $query->where('materia_id', $request->materia_id);
+        if ($request->filled('alumno_id'))    $query->where('alumno_id', $request->alumno_id);
+        if ($request->filled('fechainicio'))  $query->where('fecha', '>=', $request->fechainicio);
+        if ($request->filled('fechafin'))     $query->where('fecha', '<=', $request->fechafin);
 
-        return view('asistencia.historial', compact('materias', 'cursos', 'asistencias', 'filtros'));
+        $asistencias = $query->orderBy('alumno_id')->orderBy('fecha', 'desc')->get();
+
+        // Resumen
+        $resumen = [
+            'presente'    => $asistencias->where('estado', 'presente')->count(),
+            'ausente'     => $asistencias->where('estado', 'ausente')->count(),
+            'tarde'       => $asistencias->where('estado', 'tarde')->count(),
+            'justificado' => $asistencias->where('estado', 'justificado')->count(),
+            'total'       => $asistencias->count(),
+        ];
+
+        // Agrupar por alumno
+        $asistencias = $asistencias->groupBy('alumno_id');
+
+        $alumnos = Alumno::where('user_id', auth()->id())
+            ->where('curso_id', $request->curso_id)
+            ->orderBy('apellido')->get();
     }
+
+    return view('asistencia.historial', compact(
+        'materias', 'cursos', 'asistencias', 'filtros',
+        'resumen', 'alumnos'
+    ));
+}
 
     public function editarRegistro(Asistencia $asistencia)
     {
