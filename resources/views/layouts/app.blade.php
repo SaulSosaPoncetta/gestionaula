@@ -33,13 +33,16 @@
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('asistencia.*') ? 'active' : '' }}"
                                         href="{{ route('asistencia.index') }}">
-                                        <i class="bi bi-person-check me-2"></i>Tomar Asistencia
+                                        <i class="bi bi-person-check me-2"></i>Asistencia
                                     </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('asignaractividad.*') ? 'active' : '' }}"
                                         href="{{ route('asignaractividad.seleccionar') }}">
-                                        <i class="bi bi-clipboard2-arrow me-2"></i>Actividades asignadas
+                                        <i class="bi bi-journal me-2"></i>Act. Asignadas
                                     </a>
                                 </li>
                                 <li>
@@ -49,21 +52,27 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
                                     <a class="dropdown-item {{ request()->routeIs('calificaciones.*') ? 'active' : '' }}"
                                         href="{{ route('calificaciones.index') }}">
                                         <i class="bi bi-journal-text me-2"></i>Calificar
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('librotemas.*') ? 'active' : '' }}"
-                                        href="{{ route('librotemas.index') }}">
-                                        <i class="bi bi-journal-bookmark-fill me-2"></i>Libro de temas
-                                    </a>
-                                </li>
-                                <li>
                                     <a class="dropdown-item {{ request()->routeIs('prenotas.*') ? 'active' : '' }}"
                                         href="{{ route('prenotas.index') }}">
                                         <i class="bi bi-calculator me-2"></i>Prenotas
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('librotemas.*') ? 'active' : '' }}"
+                                        href="{{ route('librotemas.index') }}">
+                                        <i class="bi bi-journal-bookmark-fill me-2"></i>Libro de temas
                                     </a>
                                 </li>
                             </ul>
@@ -86,10 +95,16 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('actividades.*') ? 'active' : '' }}"
-                                        href="{{ route('actividades.index') }}">
-                                        <i class="bi bi-clipboard2-check me-2"></i>Actividades
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
+                                        href="{{ route('materialteoricoarchivos.index') }}">
+                                        <i class="bi bi-file-earmark-pdf me-2"></i>Material teórico
                                     </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('tiposactividad.*') ? 'active' : '' }}"
@@ -98,17 +113,19 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a class="dropdown-item {{ request()->routeIs('actividades.*') ? 'active' : '' }}"
+                                        href="{{ route('actividades.index') }}">
+                                        <i class="bi bi-clipboard2-check me-2"></i>Actividades
+                                    </a>
+                                </li>
+
+                                <li>
                                     <a class="dropdown-item {{ request()->routeIs('asignarnuevo.*') ? 'active' : '' }}"
                                         href="{{ route('asignarnuevo.index') }}">
-                                        <i class="bi bi-clipboard2-arrow me-2"></i>Asignar actividad
+                                        <i class="bi bi-journal me-2"></i>Asignar Act.
                                     </a>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item {{ request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
-                                        href="{{ route('materialteoricoarchivos.index') }}">
-                                        <i class="bi bi-file-earmark-pdf me-2"></i>Material teórico
-                                    </a>
-                                </li>
+
                             </ul>
                         </li>
 
@@ -136,6 +153,9 @@
                                         href="{{ route('calendarioescolar.index') }}">
                                         <i class="bi bi-calendar3 me-2"></i>Calendario escolar
                                     </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
                                 </li>
                                 <li>
                                     <h6 class="dropdown-header">Académico</h6>

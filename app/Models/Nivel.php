@@ -1,10 +1,13 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Nivel extends Model
 {
-    protected $table = 'niveles';
+    const TIPOS = ['inicial', 'primario', 'secundario', 'terciario', 'universitario'];
+
     protected $fillable = ['user_id', 'nombre', 'tipo'];
 
     public function establecimientos()
