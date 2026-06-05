@@ -563,7 +563,9 @@
             new bootstrap.Modal(document.getElementById('modalAcceso')).show();
         }
 
-        function renderClaseActual(clases) {
+let statsCache = {};
+
+function renderClaseActual(clases) {
     const container = document.getElementById('claseActualContainer');
 
     if (clases.length === 0) {
@@ -577,76 +579,221 @@
         return;
     }
 
-    let html = '';
     clases.forEach(clase => {
-        const fecha = new Date();
-        const hoy   = `${fecha.getFullYear()}-${pad(fecha.getMonth()+1)}-${pad(fecha.getDate())}`;
+        const cacheKey = `${clase.curso_id}_${clase.materia_id}`;
 
-        html += `
+        if (statsCache[cacheKey]) {
+            renderTablaConStats(container, clase, statsCache[cacheKey]);
+            return;
+        }
+
+        // Mostrar loading
+        container.innerHTML = `
+            <div class="card border-0 shadow-sm mb-3 border-start border-success border-4">
+                <div class="card-body text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-2 text-muted">Cargando estadísticas...</div>
+                </div>
+            </div>`;
+
+        fetch(`/api/dashboard/stats/${clase.curso_id}/${clase.materia_id}`)
+            .then(r => r.json())
+            .then(data => {
+                statsCache[cacheKey] = data;
+                renderTablaConStats(container, clase, data);
+            })
+            .catch(() => {
+                container.innerHTML = `<div class="alert alert-warning">No se pudieron cargar las estadísticas.</div>`;
+            });
+    });
+}
+
+function renderTablaConStats(container, clase, data) {
+    const alumnos = data.alumnos;
+    const graficos = data.graficos;
+
+    let html = `
         <div class="card border-0 shadow-sm mb-3 border-start border-success border-4">
             <div class="card-body">
                 <div class="fw-semibold mb-3">
-                    <i class="bi bi-people me-1"></i>Estudiantes
+                    <i class="bi bi-people me-1"></i>Estudiantes — ${clase.materia ?? ''} ${clase.curso ?? ''}
                 </div>`;
 
-        if (clase.alumnos.length > 0) {
-            html += `
-                <table class="table table-hover table-sm mb-0 align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th style="width:40px">#</th>
-                            <th>Apellido y nombre</th>
-                            <th class="text-center" style="width:130px">Asistencia</th>
-                            <th class="text-center" style="width:140px">Calificaciones</th>
-                            <th class="text-center" style="width:120px">Practicos</th>
-                            <th class="text-center" style="width:110px">Ficha</th>
-                        </tr>
-                    </thead>
-                    <tbody>`;
+    if (alumnos.length > 0) {
+        html += `
+            <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">#</th>
+                        <th>Alumno</th>
+                        <th class="text-center" title="Presentes"><span class="badge bg-success">Pres.</span></th>
+                        <th class="text-center" title="Ausentes"><span class="badge bg-danger">Aus.</span></th>
+                        <th class="text-center" title="Justificados"><span class="badge bg-info">Just.</span></th>
+                        <th class="text-center" title="Actividades asignadas"><span class="badge bg-secondary">Act.</span></th>
+                        <th class="text-center" title="Entregadas a tiempo"><span class="badge bg-success">Entr.</span></th>
+                        <th class="text-center" title="Entregadas vencidas"><span class="badge bg-warning text-dark">Venc.</span></th>
+                        <th class="text-center">Última valoración</th>
+                        <th class="text-center">Última nota</th>
+                    </tr>
+                </thead>
+                <tbody>`;
 
-            clase.alumnos.forEach((a, idx) => {
-                html += `
-                        <tr>
-                            <td class="text-muted">${idx + 1}</td>
-                            <td class="fw-semibold">${a.nombre}</td>
-                            <td class="text-center">
-                                <a href="/asistencia/alumno?alumno_id=${a.id}&buscar=${encodeURIComponent(a.nombre)}"
-                                   class="btn btn-sm btn-primary w-100">
-                                    <i class="bi bi-person-check text-white"></i>
-                                </a>
-                            </td>
-                            <td class="text-center">
-                                <a href="/calificaciones/historial?curso_id=${clase.curso_id}&materia_id=${clase.materia_id}&alumno_id=${a.id}"
-                                   class="btn btn-sm btn-success w-100">
-                                    <i class="bi bi-journal-text text-white"></i>
-                                </a>
-                            </td>
-                            <td class="text-center">
-                                <a href="/tareas?curso_id=${clase.curso_id}"
-                                   class="btn btn-sm btn-warning w-100">
-                                    <i class="bi bi-clipboard-check text-white"></i>
-                                </a>
-                            </td>
-                            <td class="text-center">
-                                <a href="/alumnos/${a.id}"
-                                   class="btn btn-sm btn-dark w-100">
-                                    <i class="bi bi-eye text-white"></i>
-                                </a>
-                            </td>
-                        </tr>`;
-            });
+        alumnos.forEach((a, idx) => {
+            let notaColor = 'secondary';
+            if (a.ultimaNota !== null) {
+                notaColor = a.ultimaNota >= 7 ? 'success' : (a.ultimaNota >= 4 ? 'warning' : 'danger');
+            }
 
             html += `
-                    </tbody>
-                </table>`;
-        } else {
-            html += `<div class="text-muted small">No hay alumnos registrados en este curso.</div>`;
-        }
+                <tr>
+                    <td class="ps-3 text-muted">${idx + 1}</td>
+                    <td class="fw-semibold">${a.nombre}</td>
+                    <td class="text-center"><span class="badge bg-success">${a.presentes}</span></td>
+                    <td class="text-center"><span class="badge bg-danger">${a.ausentes}</span></td>
+                    <td class="text-center"><span class="badge bg-info">${a.justificados}</span></td>
+                    <td class="text-center"><span class="badge bg-secondary">${a.asignadas}</span></td>
+                    <td class="text-center"><span class="badge bg-success">${a.entregadas}</span></td>
+                    <td class="text-center"><span class="badge bg-warning text-dark">${a.vencidas}</span></td>
+                    <td class="text-center">
+                        ${a.ultimaValoracion !== '—'
+                            ? `<span class="badge bg-primary">${a.ultimaValoracion}</span>`
+                            : '<span class="text-muted small">—</span>'
+                        }
+                    </td>
+                    <td class="text-center">
+                        ${a.ultimaNota !== null
+                            ? `<span class="badge bg-${notaColor} fs-6">${parseFloat(a.ultimaNota).toFixed(2)}</span>`
+                            : '<span class="text-muted small">—</span>'
+                        }
+                    </td>
+                </tr>`;
+        });
 
-        html += `</div></div>`;
-    });
+        html += `
+                </tbody>
+            </table>
+            </div>`;
+    } else {
+        html += `<div class="text-muted small">No hay alumnos registrados en este curso.</div>`;
+    }
+
+    html += `</div></div>`;
+
+    // Gráficos
+    html += `
+    <div class="row g-3 mt-2">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-semibold small">
+                    <i class="bi bi-pie-chart me-1 text-primary"></i>Distribución de notas
+                </div>
+                <div class="card-body" style="height:220px">
+                    <canvas id="chartDistribucion"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-semibold small">
+                    <i class="bi bi-graph-up me-1 text-success"></i>Tendencia de asistencias
+                </div>
+                <div class="card-body" style="height:220px">
+                    <canvas id="chartAsistencias"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white fw-semibold small">
+                    <i class="bi bi-graph-up-arrow me-1 text-warning"></i>Tendencia de aprobación
+                </div>
+                <div class="card-body" style="height:220px">
+                    <canvas id="chartCierres"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>`;
 
     container.innerHTML = html;
+
+    // Inicializar gráficos
+    setTimeout(() => {
+        // 1. Distribución de notas (dona)
+        const dist = graficos.distribucion;
+        new Chart(document.getElementById('chartDistribucion'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Aprobados ≥7', 'Regulares 4-6', 'Reprobados <4', 'Sin nota'],
+                datasets: [{
+                    data: [dist.aprobados, dist.regulares, dist.reprobados, dist.sinNota],
+                    backgroundColor: ['#198754', '#ffc107', '#dc3545', '#adb5bd'],
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 } } }
+                }
+            }
+        });
+
+        // 2. Tendencia de asistencias (línea)
+        const asist = graficos.asistencias;
+        new Chart(document.getElementById('chartAsistencias'), {
+            type: 'line',
+            data: {
+                labels: asist.map(a => a.fecha),
+                datasets: [{
+                    label: '% Asistencia',
+                    data: asist.map(a => a.porcentaje),
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25,135,84,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
+                    x: { ticks: { font: { size: 10 } } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 3. Tendencia de aprobación por cierre (barras)
+        const cierres = graficos.cierres;
+        new Chart(document.getElementById('chartCierres'), {
+            type: 'bar',
+            data: {
+                labels: cierres.map(c => c.label),
+                datasets: [{
+                    label: 'Promedio',
+                    data: cierres.map(c => c.promedio),
+                    backgroundColor: cierres.map(c =>
+                        c.promedio >= 7 ? '#198754' :
+                        c.promedio >= 4 ? '#ffc107' : '#dc3545'
+                    ),
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { min: 0, max: 10, ticks: { stepSize: 1 } },
+                    x: { ticks: { font: { size: 10 } } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }, 100);
 }
 
         let claseActivaActual = null;

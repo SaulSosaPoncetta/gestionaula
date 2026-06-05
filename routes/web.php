@@ -30,6 +30,7 @@ use App\Http\Controllers\TipoValoracionController;
 use App\Http\Controllers\CalendarioEscolarController;
 use App\Http\Controllers\AsignarActividadNuevoController;
 use App\Http\Controllers\PrenotaController;
+use App\Http\Controllers\ProyectoController;
 
 require __DIR__.'/auth.php';
 
@@ -245,5 +246,144 @@ Route::post('/prenotas/calcular', [PrenotaController::class, 'calcular'])->name(
 Route::post('/prenotas/guardar', [PrenotaController::class, 'guardar'])->name('prenotas.guardar');
 Route::get('/prenotas/historial', [PrenotaController::class, 'historial'])->name('prenotas.historial');
 
+Route::get('/proyectos', [ProyectoController::class, 'index'])->name('proyectos.index');
+Route::get('/proyectos/crear', [ProyectoController::class, 'create'])->name('proyectos.create');
+Route::post('/proyectos', [ProyectoController::class, 'store'])->name('proyectos.store');
+Route::get('/proyectos/{proyecto}', [ProyectoController::class, 'show'])->name('proyectos.show');
+Route::get('/proyectos/{proyecto}/editar', [ProyectoController::class, 'edit'])->name('proyectos.edit');
+Route::put('/proyectos/{proyecto}', [ProyectoController::class, 'update'])->name('proyectos.update');
+Route::delete('/proyectos/{proyecto}', [ProyectoController::class, 'destroy'])->name('proyectos.destroy');
+Route::get('/carpetacampo/{carpeta}', [ProyectoController::class, 'carpeta'])->name('proyectos.carpeta');
+Route::post('/carpetacampo/{carpeta}/entrada', [ProyectoController::class, 'agregarEntrada'])->name('proyectos.entrada.store');
+Route::delete('/carpetacampo/entrada/{entrada}', [ProyectoController::class, 'eliminarEntrada'])->name('proyectos.entrada.destroy');
+
+Route::get('/api/cursos/{curso}/alumnos', function(\App\Models\Curso $curso) {
+    abort_if($curso->user_id !== auth()->id(), 403);
+    return $curso->alumnos()
+        ->where('alumnos.user_id', auth()->id())
+        ->orderBy('apellido')
+        ->get()
+        ->map(fn($a) => [
+            'id'               => $a->id,
+            'nombre_completo'  => $a->nombre_completo,
+            'tipocursadalabel' => $a->tipocursadalabel,
+            'tipocursadabadge' => $a->tipocursadabadge,
+        ]);
+})->middleware(['web', 'auth'])->name('api.curso.alumnos');
+
 });
 
+Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso $curso, \App\Models\Materia $materia) {
+    abort_if($curso->user_id !== auth()->id(), 403);
+    abort_if($materia->user_id !== auth()->id(), 403);
+
+    $alumnos = $curso->alumnos()->where('alumnos.user_id', auth()->id())->get();
+
+    // Asignaciones activas para esta materia y curso
+    $asignaciones = \App\Models\ActividadAsignacion::where('materia_id', $materia->id)
+        ->where('curso_id', $curso->id)
+        ->where('user_id', auth()->id())
+        ->pluck('id');
+
+    $stats = $alumnos->map(function($alumno) use ($materia, $asignaciones) {
+
+        // Asistencias
+        $asistencias  = \App\Models\Asistencia::where('alumno_id', $alumno->id)
+            ->where('materia_id', $materia->id)
+            ->where('user_id', auth()->id())
+            ->get();
+
+        $presentes    = $asistencias->whereIn('estado', ['presente', 'tarde'])->count();
+        $ausentes     = $asistencias->where('estado', 'ausente')->count();
+        $justificados = $asistencias->where('estado', 'justificado')->count();
+
+        // Actividades
+        $totalAsignadas = $asignaciones->count();
+
+        $notas = \App\Models\ActividadNota::where('alumno_id', $alumno->id)
+            ->whereIn('asignacion_id', $asignaciones)
+            ->where('user_id', auth()->id())
+            ->get();
+
+        $entregadas       = $notas->where('estado', 'entregado')->count();
+        $vencidas         = $notas->where('estado', 'vencido')->count();
+
+        // Última valoración y nota de cierre
+        $ultimoCierre = \App\Models\CierreNota::where('alumno_id', $alumno->id)
+            ->where('materia_id', $materia->id)
+            ->where('user_id', auth()->id())
+            ->orderBy('fecharegistro', 'desc')
+            ->first();
+
+        return [
+            'id'              => $alumno->id,
+            'nombre'          => $alumno->nombre_completo,
+            'presentes'       => $presentes,
+            'ausentes'        => $ausentes,
+            'justificados'    => $justificados,
+            'asignadas'       => $totalAsignadas,
+            'entregadas'      => $entregadas,
+            'vencidas'        => $vencidas,
+            'ultimaValoracion'=> $ultimoCierre?->notavalorativa ?? '—',
+            'ultimaNota'      => $ultimoCierre?->notanumerica ?? null,
+            'tipocierre'      => $ultimoCierre?->tipocierre ?? '—',
+        ];
+    });
+
+    // Datos para gráficos del curso
+    $totalAlumnos = $alumnos->count();
+
+    // Distribución aprobados/reprobados
+    $cierres = \App\Models\CierreNota::where('materia_id', $materia->id)
+        ->where('curso_id', $curso->id)
+        ->where('user_id', auth()->id())
+        ->orderBy('fecharegistro', 'desc')
+        ->get()
+        ->groupBy('alumno_id')
+        ->map(fn($g) => $g->first());
+
+    $aprobados   = $cierres->where('notanumerica', '>=', 7)->count();
+    $regulares   = $cierres->where('notanumerica', '>=', 4)->where('notanumerica', '<', 7)->count();
+    $reprobados  = $cierres->where('notanumerica', '<', 4)->count();
+    $sinNota     = $totalAlumnos - $cierres->count();
+
+    // Tendencia de asistencias por fecha (últimas 10 clases)
+    $tendenciaAsistencias = \App\Models\Asistencia::where('materia_id', $materia->id)
+        ->where('curso_id', $curso->id)
+        ->where('user_id', auth()->id())
+        ->selectRaw('fecha, COUNT(*) as total,
+            SUM(CASE WHEN estado IN ("presente","tarde","justificado") THEN 1 ELSE 0 END) as presentes')
+        ->groupBy('fecha')
+        ->orderBy('fecha', 'desc')
+        ->limit(10)
+        ->get()
+        ->reverse()
+        ->values()
+        ->map(fn($r) => [
+            'fecha'      => \Carbon\Carbon::parse($r->fecha)->format('d/m'),
+            'porcentaje' => $r->total > 0 ? round(($r->presentes / $r->total) * 100, 1) : 0,
+        ]);
+
+    // Tendencia de notas promedio por tipo de cierre
+    $tendenciaCierres = \App\Models\CierreNota::where('materia_id', $materia->id)
+        ->where('curso_id', $curso->id)
+        ->where('user_id', auth()->id())
+        ->selectRaw('tipocierre, fecharegistro, AVG(notanumerica) as promedio')
+        ->groupBy('tipocierre', 'fecharegistro')
+        ->orderBy('fecharegistro')
+        ->get()
+        ->map(fn($r) => [
+            'label'    => $r->tipocierre,
+            'promedio' => round($r->promedio, 2),
+            'fecha'    => \Carbon\Carbon::parse($r->fecharegistro)->format('d/m/Y'),
+        ]);
+
+    return response()->json([
+        'alumnos'              => $stats,
+        'graficos' => [
+            'distribucion' => compact('aprobados', 'regulares', 'reprobados', 'sinNota'),
+            'asistencias'  => $tendenciaAsistencias,
+            'cierres'      => $tendenciaCierres,
+        ],
+    ]);
+})->middleware(['web', 'auth'])->name('api.dashboard.stats');

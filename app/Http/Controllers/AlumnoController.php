@@ -20,8 +20,8 @@ class AlumnoController extends Controller
         if ($request->filled('buscar')) {
             $query->where(function($q) use ($request) {
                 $q->where('apellido', 'like', '%' . $request->buscar . '%')
-                  ->orWhere('nombre',   'like', '%' . $request->buscar . '%')
-                  ->orWhere('dni',      'like', '%' . $request->buscar . '%');
+                  ->orWhere('nombre',   'like', '%' . $request->buscar . '%');
+                  
             });
         }
 

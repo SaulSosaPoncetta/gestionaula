@@ -125,7 +125,12 @@
                                         <i class="bi bi-journal me-2"></i>Asignar Act.
                                     </a>
                                 </li>
-
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('proyectos.*') ? 'active' : '' }}"
+                                        href="{{ route('proyectos.index') }}">
+                                        <i class="bi bi-folder2-open me-2"></i>Proyectos
+                                    </a>
+                                </li>
                             </ul>
                         </li>
 
@@ -364,6 +369,7 @@
             });
         });
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </body>
 
 </html>

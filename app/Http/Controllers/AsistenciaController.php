@@ -216,7 +216,7 @@ public function listado(Request $request)
         return view('asistencia.editar', compact('asistencia'));
     }
 
-    public function actualizarRegistro(Request $request, Asistencia $asistencia)
+public function actualizarRegistro(Request $request, Asistencia $asistencia)
 {
     abort_if($asistencia->user_id !== auth()->id(), 403);
 
@@ -249,57 +249,76 @@ public function listado(Request $request)
         'observacion'       => $request->observacion,
     ]);
 
-    // Recalcular porcentaje
     \App\Services\AsistenciaService::actualizarPorcentaje(
         $asistencia->alumno_id,
         $asistencia->materia_id
     );
 
-    return redirect()->route('asistencia.alumno', [
-        'alumno_id' => $asistencia->alumno_id,
-        'buscar'    => $asistencia->alumno->apellido,
-    ])->with('success', 'Asistencia actualizada correctamente.');
+    return redirect()->route('asistencia.alumno', array_filter([
+        'alumno_id'  => $asistencia->alumno_id,
+        'materia_id' => $request->filtro_materia_id,
+        'curso_id'   => $request->filtro_curso_id,
+    ]))->with('success', 'Asistencia actualizada correctamente.');
 }
 
     public function alumno(Request $request)
-    {
-        $alumnos = collect();
-        $alumno  = null;
-        $resumen = [];
-        $detalle = collect();
+{
+    $alumnos  = collect();
+    $alumno   = null;
+    $resumen  = [];
+    $detalle  = collect();
+    $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
 
-        if ($request->filled('buscar')) {
-            $alumnos = Alumno::with('curso')
-                ->where('user_id', auth()->id())
-                ->where(function ($q) use ($request) {
-                    $q->where('apellido', 'like', '%' . $request->buscar . '%')
-                      ->orWhere('nombre',   'like', '%' . $request->buscar . '%')
-                      ->orWhere('dni',      'like', '%' . $request->buscar . '%');
-                })
-                ->orderBy('apellido')
-                ->get();
-        }
-
-        if ($request->filled('alumno_id')) {
-            $alumno = Alumno::where('user_id', auth()->id())->with('curso')->findOrFail($request->alumno_id);
-
-            $registros = Asistencia::with(['materia', 'curso'])
-                ->where('alumno_id', $alumno->id)
-                ->where('user_id', auth()->id())
-                ->orderBy('fecha', 'desc')
-                ->get();
-
-            $resumen = [
-                'presente'    => $registros->where('estado', 'presente')->count(),
-                'ausente'     => $registros->where('estado', 'ausente')->count(),
-                'tarde'       => $registros->where('estado', 'tarde')->count(),
-                'justificado' => $registros->where('estado', 'justificado')->count(),
-                'total'       => $registros->count(),
-            ];
-
-            $detalle = $registros;
-        }
-
-        return view('asistencia.alumno', compact('alumnos', 'alumno', 'resumen', 'detalle'));
+    // Si viene alumno_id directo, cargarlo sin buscar
+    if ($request->filled('alumno_id')) {
+        $alumno = Alumno::where('user_id', auth()->id())
+            ->with('curso')
+            ->find($request->alumno_id);
     }
+
+    // Si viene búsqueda por texto y no hay alumno_id
+    if (!$alumno && $request->filled('buscar')) {
+        $alumnos = Alumno::with('curso')
+            ->where('user_id', auth()->id())
+            ->where(function ($q) use ($request) {
+                $q->where('apellido', 'like', '%' . $request->buscar . '%')
+                  ->orWhere('nombre',   'like', '%' . $request->buscar . '%');
+                 
+            })
+            ->orderBy('apellido')
+            ->get();
+
+        // Si hay un solo resultado, usarlo directamente
+        if ($alumnos->count() === 1) {
+            $alumno  = $alumnos->first();
+            $alumnos = collect();
+        }
+    }
+
+    if ($alumno) {
+        $query = Asistencia::with(['materia', 'curso'])
+            ->where('alumno_id', $alumno->id)
+            ->where('user_id', auth()->id());
+
+        if ($request->filled('materia_id')) {
+            $query->where('materia_id', $request->materia_id);
+        }
+
+        $registros = $query->orderBy('fecha', 'desc')->get();
+
+        $resumen = [
+            'presente'    => $registros->where('estado', 'presente')->count(),
+            'ausente'     => $registros->where('estado', 'ausente')->count(),
+            'tarde'       => $registros->where('estado', 'tarde')->count(),
+            'justificado' => $registros->where('estado', 'justificado')->count(),
+            'total'       => $registros->count(),
+        ];
+
+        $detalle = $registros;
+    }
+
+    return view('asistencia.alumno', compact(
+        'alumnos', 'alumno', 'resumen', 'detalle', 'materias'
+    ));
+}
 }

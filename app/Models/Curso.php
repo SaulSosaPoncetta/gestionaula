@@ -1,10 +1,12 @@
 <?php
 namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Curso extends Model
 {
-    
+    use HasFactory;
     protected $fillable = [
         'user_id', 'nombre', 'anio', 'division', 'turno',
         'nivel_id', 'especialidad_id', 'establecimiento_id'
