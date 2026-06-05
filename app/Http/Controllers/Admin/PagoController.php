@@ -10,10 +10,6 @@ use Illuminate\Support\Facades\Storage;
 
 class PagoController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'role:admin']);
-    }
 
     public function index(Request $request)
     {

@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Suscripcion extends Model
 {
+    protected $table = 'suscripciones';
     protected $fillable = [
         'user_id', 'plan_id', 'montomensual', 'estado',
         'fechainicio', 'fechavencimiento', 'proximopago', 'observaciones'

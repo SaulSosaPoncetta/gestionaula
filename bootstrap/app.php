@@ -10,15 +10,17 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware) {
-$middleware->append(\App\Http\Middleware\CuentaActiva::class);
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->append(\App\Http\Middleware\SeguridadWeb::class);
+    $middleware->append(\App\Http\Middleware\CuentaActiva::class);
 
-$middleware->alias([
-    'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
-    'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-    'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
-]);
-    })
+    $middleware->alias([
+        'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
+        'permission'         => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        'seguridad'          => \App\Http\Middleware\SeguridadWeb::class,
+    ]);
+})
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();

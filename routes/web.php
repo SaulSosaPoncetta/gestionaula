@@ -1,3 +1,4 @@
+PHP
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,7 @@ use App\Http\Controllers\CalendarioEscolarController;
 use App\Http\Controllers\AsignarActividadNuevoController;
 use App\Http\Controllers\PrenotaController;
 use App\Http\Controllers\ProyectoController;
+use App\Http\Middleware\SeguridadWeb;
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PlanController;
@@ -39,15 +41,18 @@ use App\Http\Controllers\Admin\PagoController;
 
 require __DIR__.'/auth.php';
 
-    Route::get('/', function () {
-        return redirect()->route('dashboard');
-    });
+Route::get('/', function () {
+    return redirect()->route('dashboard');
+});
 
-    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
+Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-    Route::middleware(['auth', 'role:docente'])->group(function () {
+// ==========================================
+// GRUPO DE DOCENTES
+// ==========================================
+Route::middleware(['auth', 'role:docente'])->group(function () {
     
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
     Route::get('/asistencia/accion', [AsistenciaController::class, 'accion'])->name('asistencia.accion');
@@ -63,7 +68,6 @@ require __DIR__.'/auth.php';
     Route::get('/calificaciones/cargar', [CalificacionController::class, 'cargar'])->name('calificaciones.cargar');
     Route::post('/calificaciones/guardar', [CalificacionController::class, 'guardar'])->name('calificaciones.guardar');
     Route::get('/calificaciones/historial', [CalificacionController::class, 'historial'])->name('calificaciones.historial');
-    Route::get('/asistencia/alumno', [AsistenciaController::class, 'alumno'])->name('asistencia.alumno');
 
     Route::get('/tareas', [TareaController::class, 'index'])->name('tareas.index');
     Route::get('/tareas/crear', [TareaController::class, 'create'])->name('tareas.create');
@@ -97,7 +101,6 @@ require __DIR__.'/auth.php';
     Route::put('/materias/{materia}', [MateriaController::class, 'update'])->name('materias.update');
     Route::delete('/materias/{materia}', [MateriaController::class, 'destroy'])->name('materias.destroy');
 
-
     Route::get('/alumnos', [AlumnoController::class, 'index'])->name('alumnos.index');
     Route::get('/alumnos/crear', [AlumnoController::class, 'create'])->name('alumnos.create');
     Route::post('/alumnos', [AlumnoController::class, 'store'])->name('alumnos.store');
@@ -128,148 +131,167 @@ require __DIR__.'/auth.php';
     Route::delete('/establecimientos/{establecimiento}', [EstablecimientoController::class, 'destroy'])->name('establecimientos.destroy');
 
     Route::get('/areasformacion', [AreaFormacionController::class, 'index'])->name('areasformacion.index');
-Route::get('/areasformacion/crear', [AreaFormacionController::class, 'create'])->name('areasformacion.create');
-Route::post('/areasformacion', [AreaFormacionController::class, 'store'])->name('areasformacion.store');
-Route::get('/areasformacion/{areasformacion}/editar', [AreaFormacionController::class, 'edit'])->name('areasformacion.edit');
-Route::put('/areasformacion/{areasformacion}', [AreaFormacionController::class, 'update'])->name('areasformacion.update');
-Route::delete('/areasformacion/{areasformacion}', [AreaFormacionController::class, 'destroy'])->name('areasformacion.destroy');
+    Route::get('/areasformacion/crear', [AreaFormacionController::class, 'create'])->name('areasformacion.create');
+    Route::post('/areasformacion', [AreaFormacionController::class, 'store'])->name('areasformacion.store');
+    Route::get('/areasformacion/{areasformacion}/editar', [AreaFormacionController::class, 'edit'])->name('areasformacion.edit');
+    Route::put('/areasformacion/{areasformacion}', [AreaFormacionController::class, 'update'])->name('areasformacion.update');
+    Route::delete('/areasformacion/{areasformacion}', [AreaFormacionController::class, 'destroy'])->name('areasformacion.destroy');
 
-Route::get('/ciclos', [CicloController::class, 'index'])->name('ciclos.index');
-Route::get('/ciclos/crear', [CicloController::class, 'create'])->name('ciclos.create');
-Route::post('/ciclos', [CicloController::class, 'store'])->name('ciclos.store');
-Route::get('/ciclos/{ciclo}/editar', [CicloController::class, 'edit'])->name('ciclos.edit');
-Route::put('/ciclos/{ciclo}', [CicloController::class, 'update'])->name('ciclos.update');
-Route::delete('/ciclos/{ciclo}', [CicloController::class, 'destroy'])->name('ciclos.destroy');
+    Route::get('/ciclos', [CicloController::class, 'index'])->name('ciclos.index');
+    Route::get('/ciclos/crear', [CicloController::class, 'create'])->name('ciclos.create');
+    Route::post('/ciclos', [CicloController::class, 'store'])->name('ciclos.store');
+    Route::get('/ciclos/{ciclo}/editar', [CicloController::class, 'edit'])->name('ciclos.edit');
+    Route::put('/ciclos/{ciclo}', [CicloController::class, 'update'])->name('ciclos.update');
+    Route::delete('/ciclos/{ciclo}', [CicloController::class, 'destroy'])->name('ciclos.destroy');
 
-Route::get('/especialidades', [EspecialidadController::class, 'index'])->name('especialidades.index');
-Route::get('/especialidades/crear', [EspecialidadController::class, 'create'])->name('especialidades.create');
-Route::post('/especialidades', [EspecialidadController::class, 'store'])->name('especialidades.store');
-Route::get('/especialidades/{especialidad}/editar', [EspecialidadController::class, 'edit'])->name('especialidades.edit');
-Route::put('/especialidades/{especialidad}', [EspecialidadController::class, 'update'])->name('especialidades.update');
-Route::delete('/especialidades/{especialidad}', [EspecialidadController::class, 'destroy'])->name('especialidades.destroy');
+    Route::get('/especialidades', [EspecialidadController::class, 'index'])->name('especialidades.index');
+    Route::get('/especialidades/crear', [EspecialidadController::class, 'create'])->name('especialidades.create');
+    Route::post('/especialidades', [EspecialidadController::class, 'store'])->name('especialidades.store');
+    Route::get('/especialidades/{especialidad}/editar', [EspecialidadController::class, 'edit'])->name('especialidades.edit');
+    Route::put('/especialidades/{especialidad}', [EspecialidadController::class, 'update'])->name('especialidades.update');
+    Route::delete('/especialidades/{especialidad}', [EspecialidadController::class, 'destroy'])->name('especialidades.destroy');
 
-Route::get('/contenidos', [ContenidoController::class, 'index'])->name('contenidos.index');
-Route::get('/contenidos/crear', [ContenidoController::class, 'create'])->name('contenidos.create');
-Route::post('/contenidos', [ContenidoController::class, 'store'])->name('contenidos.store');
-Route::get('/contenidos/{contenido}/editar', [ContenidoController::class, 'edit'])->name('contenidos.edit');
-Route::get('/contenidos/{contenido}', [ContenidoController::class, 'show'])->name('contenidos.show');
-Route::put('/contenidos/{contenido}', [ContenidoController::class, 'update'])->name('contenidos.update');
-Route::delete('/contenidos/{contenido}', [ContenidoController::class, 'destroy'])->name('contenidos.destroy');
+    Route::get('/contenidos', [ContenidoController::class, 'index'])->name('contenidos.index');
+    Route::get('/contenidos/crear', [ContenidoController::class, 'create'])->name('contenidos.create');
+    Route::post('/contenidos', [ContenidoController::class, 'store'])->name('contenidos.store');
+    Route::get('/contenidos/{contenido}/editar', [ContenidoController::class, 'edit'])->name('contenidos.edit');
+    Route::get('/contenidos/{contenido}', [ContenidoController::class, 'show'])->name('contenidos.show');
+    Route::put('/contenidos/{contenido}', [ContenidoController::class, 'update'])->name('contenidos.update');
+    Route::delete('/contenidos/{contenido}', [ContenidoController::class, 'destroy'])->name('contenidos.destroy');
 
-Route::get('/planificaciones', [PlanificacionController::class, 'index'])->name('planificaciones.index');
-Route::get('/planificaciones/crear', [PlanificacionController::class, 'create'])->name('planificaciones.create');
-Route::post('/planificaciones', [PlanificacionController::class, 'store'])->name('planificaciones.store');
-Route::get('/planificaciones/{planificacion}', [PlanificacionController::class, 'show'])->name('planificaciones.show');
-Route::get('/planificaciones/{planificacion}/editar', [PlanificacionController::class, 'edit'])->name('planificaciones.edit');
-Route::put('/planificaciones/{planificacion}', [PlanificacionController::class, 'update'])->name('planificaciones.update');
-Route::delete('/planificaciones/{planificacion}', [PlanificacionController::class, 'destroy'])->name('planificaciones.destroy');
-Route::post('/planificaciones/{planificacion}/unidades', [PlanificacionController::class, 'storeUnidad'])->name('planificaciones.unidades.store');
-Route::delete('/planificaciones/{planificacion}/unidades/{unidad}', [PlanificacionController::class, 'destroyUnidad'])->name('planificaciones.unidades.destroy');
+    Route::get('/planificaciones', [PlanificacionController::class, 'index'])->name('planificaciones.index');
+    Route::get('/planificaciones/crear', [PlanificacionController::class, 'create'])->name('planificaciones.create');
+    Route::post('/planificaciones', [PlanificacionController::class, 'store'])->name('planificaciones.store');
+    Route::get('/planificaciones/{planificacion}', [PlanificacionController::class, 'show'])->name('planificaciones.show');
+    Route::get('/planificaciones/{planificacion}/editar', [PlanificacionController::class, 'edit'])->name('planificaciones.edit');
+    Route::put('/planificaciones/{planificacion}', [PlanificacionController::class, 'update'])->name('planificaciones.update');
+    Route::delete('/planificaciones/{planificacion}', [PlanificacionController::class, 'destroy'])->name('planificaciones.destroy');
+    Route::post('/planificaciones/{planificacion}/unidades', [PlanificacionController::class, 'storeUnidad'])->name('planificaciones.unidades.store');
+    Route::delete('/planificaciones/{planificacion}/unidades/{unidad}', [PlanificacionController::class, 'destroyUnidad'])->name('planificaciones.unidades.destroy');
 
-Route::get('/materialteoricoarchivos', [MaterialTeoricoController::class, 'index'])->name('materialteoricoarchivos.index');
-Route::get('/materialteoricoarchivos/crear', [MaterialTeoricoController::class, 'create'])->name('materialteoricoarchivos.create');
-Route::post('/materialteoricoarchivos', [MaterialTeoricoController::class, 'store'])->name('materialteoricoarchivos.store');
-Route::delete('/materialteoricoarchivos/{materialteoricoarchivo}', [MaterialTeoricoController::class, 'destroy'])->name('materialteoricoarchivos.destroy');
-Route::put('/materialteoricoarchivos/{materialteoricoarchivo}/asignar', [MaterialTeoricoController::class, 'asignar'])->name('materialteoricoarchivos.asignar');
+    Route::get('/materialteoricoarchivos', [MaterialTeoricoController::class, 'index'])->name('materialteoricoarchivos.index');
+    Route::get('/materialteoricoarchivos/crear', [MaterialTeoricoController::class, 'create'])->name('materialteoricoarchivos.create');
+    Route::post('/materialteoricoarchivos', [MaterialTeoricoController::class, 'store'])->name('materialteoricoarchivos.store');
+    Route::delete('/materialteoricoarchivos/{materialteoricoarchivo}', [MaterialTeoricoController::class, 'destroy'])->name('materialteoricoarchivos.destroy');
+    Route::put('/materialteoricoarchivos/{materialteoricoarchivo}/asignar', [MaterialTeoricoController::class, 'asignar'])->name('materialteoricoarchivos.asignar');
 
-// Períodos
-Route::get('/periodos', [PeriodoController::class, 'index'])->name('periodos.index');
-Route::get('/periodos/crear', [PeriodoController::class, 'create'])->name('periodos.create');
-Route::post('/periodos', [PeriodoController::class, 'store'])->name('periodos.store');
-Route::get('/periodos/{periodo}/editar', [PeriodoController::class, 'edit'])->name('periodos.edit');
-Route::put('/periodos/{periodo}', [PeriodoController::class, 'update'])->name('periodos.update');
-Route::delete('/periodos/{periodo}', [PeriodoController::class, 'destroy'])->name('periodos.destroy');
+    Route::get('/periodos', [PeriodoController::class, 'index'])->name('periodos.index');
+    Route::get('/periodos/crear', [PeriodoController::class, 'create'])->name('periodos.create');
+    Route::post('/periodos', [PeriodoController::class, 'store'])->name('periodos.store');
+    Route::get('/periodos/{periodo}/editar', [PeriodoController::class, 'edit'])->name('periodos.edit');
+    Route::put('/periodos/{periodo}', [PeriodoController::class, 'update'])->name('periodos.update');
+    Route::delete('/periodos/{periodo}', [PeriodoController::class, 'destroy'])->name('periodos.destroy');
 
-// Tipos de evaluación
-Route::get('/tiposevaluacion', [TipoEvaluacionController::class, 'index'])->name('tiposevaluacion.index');
-Route::get('/tiposevaluacion/crear', [TipoEvaluacionController::class, 'create'])->name('tiposevaluacion.create');
-Route::post('/tiposevaluacion', [TipoEvaluacionController::class, 'store'])->name('tiposevaluacion.store');
-Route::get('/tiposevaluacion/{tiposevaluacion}/editar', [TipoEvaluacionController::class, 'edit'])->name('tiposevaluacion.edit');
-Route::put('/tiposevaluacion/{tiposevaluacion}', [TipoEvaluacionController::class, 'update'])->name('tiposevaluacion.update');
-Route::delete('/tiposevaluacion/{tiposevaluacion}', [TipoEvaluacionController::class, 'destroy'])->name('tiposevaluacion.destroy');
+    Route::get('/tiposevaluacion', [TipoEvaluacionController::class, 'index'])->name('tiposevaluacion.index');
+    Route::get('/tiposevaluacion/crear', [TipoEvaluacionController::class, 'create'])->name('tiposevaluacion.create');
+    Route::post('/tiposevaluacion', [TipoEvaluacionController::class, 'store'])->name('tiposevaluacion.store');
+    Route::get('/tiposevaluacion/{tiposevaluacion}/editar', [TipoEvaluacionController::class, 'edit'])->name('tiposevaluacion.edit');
+    Route::put('/tiposevaluacion/{tiposevaluacion}', [TipoEvaluacionController::class, 'update'])->name('tiposevaluacion.update');
+    Route::delete('/tiposevaluacion/{tiposevaluacion}', [TipoEvaluacionController::class, 'destroy'])->name('tiposevaluacion.destroy');
 
-Route::get('/tiposactividad', [TipoActividadController::class, 'index'])->name('tiposactividad.index');
-Route::get('/tiposactividad/crear', [TipoActividadController::class, 'create'])->name('tiposactividad.create');
-Route::post('/tiposactividad', [TipoActividadController::class, 'store'])->name('tiposactividad.store');
-Route::get('/tiposactividad/{tiposactividad}/editar', [TipoActividadController::class, 'edit'])->name('tiposactividad.edit');
-Route::put('/tiposactividad/{tiposactividad}', [TipoActividadController::class, 'update'])->name('tiposactividad.update');
-Route::delete('/tiposactividad/{tiposactividad}', [TipoActividadController::class, 'destroy'])->name('tiposactividad.destroy');
+    Route::get('/tiposactividad', [TipoActividadController::class, 'index'])->name('tiposactividad.index');
+    Route::get('/tiposactividad/crear', [TipoActividadController::class, 'create'])->name('tiposactividad.create');
+    Route::post('/tiposactividad', [TipoActividadController::class, 'store'])->name('tiposactividad.store');
+    Route::get('/tiposactividad/{tiposactividad}/editar', [TipoActividadController::class, 'edit'])->name('tiposactividad.edit');
+    Route::put('/tiposactividad/{tiposactividad}', [TipoActividadController::class, 'update'])->name('tiposactividad.update');
+    Route::delete('/tiposactividad/{tiposactividad}', [TipoActividadController::class, 'destroy'])->name('tiposactividad.destroy');
 
-Route::get('/actividades', [ActividadController::class, 'index'])->name('actividades.index');
-Route::get('/actividades/seleccionar', [ActividadController::class, 'seleccionar'])->name('actividades.seleccionar');
-Route::get('/actividades/crear', [ActividadController::class, 'create'])->name('actividades.create');
-Route::post('/actividades', [ActividadController::class, 'store'])->name('actividades.store');
-Route::get('/actividades/{actividad}', [ActividadController::class, 'show'])->name('actividades.show');
-Route::delete('/actividades/{actividad}', [ActividadController::class, 'destroy'])->name('actividades.destroy');
+    Route::get('/actividades', [ActividadController::class, 'index'])->name('actividades.index');
+    Route::get('/actividades/seleccionar', [ActividadController::class, 'seleccionar'])->name('actividades.seleccionar');
+    Route::get('/actividades/crear', [ActividadController::class, 'create'])->name('actividades.create');
+    Route::post('/actividades', [ActividadController::class, 'store'])->name('actividades.store');
+    Route::get('/actividades/{actividad}', [ActividadController::class, 'show'])->name('actividades.show');
+    Route::delete('/actividades/{actividad}', [ActividadController::class, 'destroy'])->name('actividades.destroy');
 
-Route::get('/librotemas', [LibroTemaController::class, 'index'])->name('librotemas.index');
-Route::get('/librotemas/crear', [LibroTemaController::class, 'create'])->name('librotemas.create');
-Route::post('/librotemas', [LibroTemaController::class, 'store'])->name('librotemas.store');
-Route::delete('/librotemas/{librotema}', [LibroTemaController::class, 'destroy'])->name('librotemas.destroy');
+    Route::get('/librotemas', [LibroTemaController::class, 'index'])->name('librotemas.index');
+    Route::get('/librotemas/crear', [LibroTemaController::class, 'create'])->name('librotemas.create');
+    Route::post('/librotemas', [LibroTemaController::class, 'store'])->name('librotemas.store');
+    Route::delete('/librotemas/{librotema}', [LibroTemaController::class, 'destroy'])->name('librotemas.destroy');
 
-Route::get('/asignaractividad', [AsignarActividadController::class, 'seleccionar'])->name('asignaractividad.seleccionar');
-Route::get('/asignaractividad/ver', [AsignarActividadController::class, 'ver'])->name('asignaractividad.ver');
-Route::get('/asignaractividad/{asignacion}/detalle', [AsignarActividadController::class, 'detalle'])->name('asignaractividad.detalle');
+    Route::get('/asignaractividad', [AsignarActividadController::class, 'seleccionar'])->name('asignaractividad.seleccionar');
+    Route::get('/asignaractividad/ver', [AsignarActividadController::class, 'ver'])->name('asignaractividad.ver');
+    Route::get('/asignaractividad/{asignacion}/detalle', [AsignarActividadController::class, 'detalle'])->name('asignaractividad.detalle');
 
-Route::get('/calificaractividad', [CalificarActividadController::class, 'index'])->name('calificaractividad.index');
-Route::get('/calificaractividad/ver', [CalificarActividadController::class, 'ver'])->name('calificaractividad.ver');
-Route::post('/calificaractividad/guardar', [CalificarActividadController::class, 'guardar'])->name('calificaractividad.guardar');
-Route::get('/calificaractividad/historial', [CalificarActividadController::class, 'historial'])->name('calificaractividad.historial');
-Route::get('/calificaractividad/incompletas', [CalificarActividadController::class, 'incompletas'])->name('calificaractividad.incompletas');
-Route::put('/calificaractividad/{estado}/vencida', [CalificarActividadController::class, 'pasarAVencida'])->name('calificaractividad.vencida');
-Route::get('/calificaractividad/calificadas', [CalificarActividadController::class, 'calificadas'])->name('calificaractividad.calificadas');
-Route::get('/calificaractividad/{estado}/show', [CalificarActividadController::class, 'showCalificada'])->name('calificaractividad.show');
-Route::get('/calificaractividad/{estado}/edit', [CalificarActividadController::class, 'editCalificada'])->name('calificaractividad.edit');
-Route::put('/calificaractividad/{estado}/update', [CalificarActividadController::class, 'updateCalificada'])->name('calificaractividad.update');
-Route::post('/calificaractividad/calificar', [CalificarActividadController::class, 'calificar'])->name('calificaractividad.calificar');
+    Route::get('/calificaractividad', [CalificarActividadController::class, 'index'])->name('calificaractividad.index');
+    Route::get('/calificaractividad/ver', [CalificarActividadController::class, 'ver'])->name('calificaractividad.ver');
+    Route::post('/calificaractividad/guardar', [CalificarActividadController::class, 'guardar'])->name('calificaractividad.guardar');
+    Route::get('/calificaractividad/historial', [CalificarActividadController::class, 'historial'])->name('calificaractividad.historial');
+    Route::get('/calificaractividad/incompletas', [CalificarActividadController::class, 'incompletas'])->name('calificaractividad.incompletas');
+    Route::put('/calificaractividad/{estado}/vencida', [CalificarActividadController::class, 'pasarAVencida'])->name('calificaractividad.vencida');
+    Route::get('/calificaractividad/calificadas', [CalificarActividadController::class, 'calificadas'])->name('calificaractividad.calificadas');
+    Route::get('/calificaractividad/{estado}/show', [CalificarActividadController::class, 'showCalificada'])->name('calificaractividad.show');
+    Route::get('/calificaractividad/{estado}/edit', [CalificarActividadController::class, 'editCalificada'])->name('calificaractividad.edit');
+    Route::put('/calificaractividad/{estado}/update', [CalificarActividadController::class, 'updateCalificada'])->name('calificaractividad.update');
+    Route::post('/calificaractividad/calificar', [CalificarActividadController::class, 'calificar'])->name('calificaractividad.calificar');
 
-Route::get('/ceses', [CeseController::class, 'index'])->name('ceses.index');
-Route::get('/ceses/crear', [CeseController::class, 'create'])->name('ceses.create');
-Route::post('/ceses', [CeseController::class, 'store'])->name('ceses.store');
-Route::delete('/ceses/{cese}', [CeseController::class, 'destroy'])->name('ceses.destroy');
+    Route::get('/ceses', [CeseController::class, 'index'])->name('ceses.index');
+    Route::get('/ceses/crear', [CeseController::class, 'create'])->name('ceses.create');
+    Route::post('/ceses', [CeseController::class, 'store'])->name('ceses.store');
+    Route::delete('/ceses/{cese}', [CeseController::class, 'destroy'])->name('ceses.destroy');
 
-Route::get('/tipovaloraciones', [TipoValoracionController::class, 'index'])->name('tipovaloraciones.index');
-Route::get('/tipovaloraciones/crear', [TipoValoracionController::class, 'create'])->name('tipovaloraciones.create');
-Route::post('/tipovaloraciones', [TipoValoracionController::class, 'store'])->name('tipovaloraciones.store');
-Route::get('/tipovaloraciones/{tipovaloracion}/editar', [TipoValoracionController::class, 'edit'])->name('tipovaloraciones.edit');
-Route::put('/tipovaloraciones/{tipovaloracion}', [TipoValoracionController::class, 'update'])->name('tipovaloraciones.update');
-Route::delete('/tipovaloraciones/{tipovaloracion}', [TipoValoracionController::class, 'destroy'])->name('tipovaloraciones.destroy');
+    Route::get('/tipovaloraciones', [TipoValoracionController::class, 'index'])->name('tipovaloraciones.index');
+    Route::get('/tipovaloraciones/crear', [TipoValoracionController::class, 'create'])->name('tipovaloraciones.create');
+    Route::post('/tipovaloraciones', [TipoValoracionController::class, 'store'])->name('tipovaloraciones.store');
+    Route::get('/tipovaloraciones/{tipovaloracion}/editar', [TipoValoracionController::class, 'edit'])->name('tipovaloraciones.edit');
+    Route::put('/tipovaloraciones/{tipovaloracion}', [TipoValoracionController::class, 'update'])->name('tipovaloraciones.update');
+    Route::delete('/tipovaloraciones/{tipovaloracion}', [TipoValoracionController::class, 'destroy'])->name('tipovaloraciones.destroy');
 
-Route::get('/calendarioescolar', [CalendarioEscolarController::class, 'index'])->name('calendarioescolar.index');
-Route::get('/calendarioescolar/crear', [CalendarioEscolarController::class, 'create'])->name('calendarioescolar.create');
-Route::post('/calendarioescolar', [CalendarioEscolarController::class, 'store'])->name('calendarioescolar.store');
-Route::get('/calendarioescolar/{calendarioescolar}/editar', [CalendarioEscolarController::class, 'edit'])->name('calendarioescolar.edit');
-Route::put('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarController::class, 'update'])->name('calendarioescolar.update');
-Route::delete('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarController::class, 'destroy'])->name('calendarioescolar.destroy');
+    Route::get('/calendarioescolar', [CalendarioEscolarController::class, 'index'])->name('calendarioescolar.index');
+    Route::get('/calendarioescolar/crear', [CalendarioEscolarController::class, 'create'])->name('calendarioescolar.create');
+    Route::post('/calendarioescolar', [CalendarioEscolarController::class, 'store'])->name('calendarioescolar.store');
+    Route::get('/calendarioescolar/{calendarioescolar}/editar', [CalendarioEscolarController::class, 'edit'])->name('calendarioescolar.edit');
+    Route::put('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarController::class, 'update'])->name('calendarioescolar.update');
+    Route::delete('/calendarioescolar/{calendarioescolar}', [CalendarioEscolarController::class, 'destroy'])->name('calendarioescolar.destroy');
 
-Route::get('/asignarnuevo', [AsignarActividadNuevoController::class, 'index'])->name('asignarnuevo.index');
-Route::get('/asignarnuevo/ver', [AsignarActividadNuevoController::class, 'ver'])->name('asignarnuevo.ver');
-Route::post('/asignarnuevo/asignar', [AsignarActividadNuevoController::class, 'asignar'])->name('asignarnuevo.asignar');
+    Route::get('/asignarnuevo', [AsignarActividadNuevoController::class, 'index'])->name('asignarnuevo.index');
+    Route::get('/asignarnuevo/ver', [AsignarActividadNuevoController::class, 'ver'])->name('asignarnuevo.ver');
+    Route::post('/asignarnuevo/asignar', [AsignarActividadNuevoController::class, 'asignar'])->name('asignarnuevo.asignar');
 
-Route::get('/prenotas', [PrenotaController::class, 'index'])->name('prenotas.index');
-Route::post('/prenotas/calcular', [PrenotaController::class, 'calcular'])->name('prenotas.calcular');
-Route::post('/prenotas/guardar', [PrenotaController::class, 'guardar'])->name('prenotas.guardar');
-Route::get('/prenotas/historial', [PrenotaController::class, 'historial'])->name('prenotas.historial');
+    Route::get('/prenotas', [PrenotaController::class, 'index'])->name('prenotas.index');
+    Route::post('/prenotas/calcular', [PrenotaController::class, 'calcular'])->name('prenotas.calcular');
+    Route::post('/prenotas/guardar', [PrenotaController::class, 'guardar'])->name('prenotas.guardar');
+    Route::get('/prenotas/historial', [PrenotaController::class, 'historial'])->name('prenotas.historial');
 
-Route::get('/proyectos', [ProyectoController::class, 'index'])->name('proyectos.index');
-Route::get('/proyectos/crear', [ProyectoController::class, 'create'])->name('proyectos.create');
-Route::post('/proyectos', [ProyectoController::class, 'store'])->name('proyectos.store');
-Route::get('/proyectos/{proyecto}', [ProyectoController::class, 'show'])->name('proyectos.show');
-Route::get('/proyectos/{proyecto}/editar', [ProyectoController::class, 'edit'])->name('proyectos.edit');
-Route::put('/proyectos/{proyecto}', [ProyectoController::class, 'update'])->name('proyectos.update');
-Route::delete('/proyectos/{proyecto}', [ProyectoController::class, 'destroy'])->name('proyectos.destroy');
-Route::get('/carpetacampo/{carpeta}', [ProyectoController::class, 'carpeta'])->name('proyectos.carpeta');
-Route::post('/carpetacampo/{carpeta}/entrada', [ProyectoController::class, 'agregarEntrada'])->name('proyectos.entrada.store');
-Route::delete('/carpetacampo/entrada/{entrada}', [ProyectoController::class, 'eliminarEntrada'])->name('proyectos.entrada.destroy');
+    Route::get('/proyectos', [ProyectoController::class, 'index'])->name('proyectos.index');
+    Route::get('/proyectos/crear', [ProyectoController::class, 'create'])->name('proyectos.create');
+    Route::post('/proyectos', [ProyectoController::class, 'store'])->name('proyectos.store');
+    Route::get('/proyectos/{proyecto}', [ProyectoController::class, 'show'])->name('proyectos.show');
+    Route::get('/proyectos/{proyecto}/editar', [ProyectoController::class, 'edit'])->name('proyectos.edit');
+    Route::put('/proyectos/{proyecto}', [ProyectoController::class, 'update'])->name('proyectos.update');
+    Route::delete('/proyectos/{proyecto}', [ProyectoController::class, 'destroy'])->name('proyectos.destroy');
+    Route::get('/carpetacampo/{carpeta}', [ProyectoController::class, 'carpeta'])->name('proyectos.carpeta');
+    Route::post('/carpetacampo/{carpeta}/entrada', [ProyectoController::class, 'agregarEntrada'])->name('proyectos.entrada.store');
+    Route::delete('/carpetacampo/entrada/{entrada}', [ProyectoController::class, 'eliminarEntrada'])->name('proyectos.entrada.destroy');
 
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/api/cursos/{curso}/alumnos', function(\App\Models\Curso $curso) {
+        abort_if($curso->user_id !== auth()->id(), 403);
+        return $curso->alumnos()
+            ->where('alumnos.user_id', auth()->id())
+            ->orderBy('apellido')
+            ->get()
+            ->map(fn($a) => [
+                'id'               => $a->id,
+                'nombre_completo'  => $a->nombre_completo,
+                'tipocursadalabel' => $a->tipocursadalabel,
+                'tipocursadabadge' => $a->tipocursadabadge,
+            ]);
+    })->middleware(['web', 'auth'])->name('api.curso.alumnos');
+});
 
-    // Dashboard
+// ==========================================
+// GRUPO DE ADMINISTRACIÓN (CORREGIDO)
+// ==========================================
+// Añadimos ->prefix('admin') para las URLs y ->as('admin.') para los nombres
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->as('admin.')->group(function () {
+
+    // URL: /admin  -> Nombre de ruta: admin.dashboard
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // Usuarios
     Route::get('/usuario/{user}', [AdminController::class, 'verUsuario'])->name('usuario');
     Route::post('/usuario/{user}/toggle', [AdminController::class, 'toggleActivo'])->name('toggle');
 
-    // Planes
+    // Planes (Ahora generará automáticamente: admin.planes.index, admin.planes.create, etc.)
     Route::get('/planes', [PlanController::class, 'index'])->name('planes.index');
     Route::get('/planes/crear', [PlanController::class, 'create'])->name('planes.create');
     Route::post('/planes', [PlanController::class, 'store'])->name('planes.store');
@@ -277,49 +299,33 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::put('/planes/{plan}', [PlanController::class, 'update'])->name('planes.update');
     Route::delete('/planes/{plan}', [PlanController::class, 'destroy'])->name('planes.destroy');
 
-    // Suscripciones
+    // Suscripciones (Nombres resultantes: admin.suscripciones.store, etc.)
     Route::post('/suscripciones', [SuscripcionController::class, 'store'])->name('suscripciones.store');
     Route::post('/suscripciones/{suscripcion}/suspender', [SuscripcionController::class, 'suspender'])->name('suscripciones.suspender');
     Route::post('/suscripciones/{suscripcion}/activar', [SuscripcionController::class, 'activar'])->name('suscripciones.activar');
 
-    // Pagos
+    // Pagos (Nombres resultantes: admin.pagos.index, etc.)
     Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
     Route::post('/pagos/registrar', [PagoController::class, 'registrarPago'])->name('pagos.registrar');
     Route::post('/pagos/generar', [PagoController::class, 'generarPago'])->name('pagos.generar');
     Route::post('/pagos/{pago}/vencido', [PagoController::class, 'marcarVencido'])->name('pagos.vencido');
 });
 
-Route::get('/api/cursos/{curso}/alumnos', function(\App\Models\Curso $curso) {
-    abort_if($curso->user_id !== auth()->id(), 403);
-    return $curso->alumnos()
-        ->where('alumnos.user_id', auth()->id())
-        ->orderBy('apellido')
-        ->get()
-        ->map(fn($a) => [
-            'id'               => $a->id,
-            'nombre_completo'  => $a->nombre_completo,
-            'tipocursadalabel' => $a->tipocursadalabel,
-            'tipocursadabadge' => $a->tipocursadabadge,
-        ]);
-})->middleware(['web', 'auth'])->name('api.curso.alumnos');
-
-});
-
+// ==========================================
+// API ESTADÍSTICAS (PÚBLICO CON MIDDLEWARE)
+// ==========================================
 Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso $curso, \App\Models\Materia $materia) {
     abort_if($curso->user_id !== auth()->id(), 403);
     abort_if($materia->user_id !== auth()->id(), 403);
 
     $alumnos = $curso->alumnos()->where('alumnos.user_id', auth()->id())->get();
 
-    // Asignaciones activas para esta materia y curso
     $asignaciones = \App\Models\ActividadAsignacion::where('materia_id', $materia->id)
         ->where('curso_id', $curso->id)
         ->where('user_id', auth()->id())
         ->pluck('id');
 
     $stats = $alumnos->map(function($alumno) use ($materia, $asignaciones) {
-
-        // Asistencias
         $asistencias  = \App\Models\Asistencia::where('alumno_id', $alumno->id)
             ->where('materia_id', $materia->id)
             ->where('user_id', auth()->id())
@@ -329,7 +335,6 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
         $ausentes     = $asistencias->where('estado', 'ausente')->count();
         $justificados = $asistencias->where('estado', 'justificado')->count();
 
-        // Actividades
         $totalAsignadas = $asignaciones->count();
 
         $notas = \App\Models\ActividadNota::where('alumno_id', $alumno->id)
@@ -340,7 +345,6 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
         $entregadas       = $notas->where('estado', 'entregado')->count();
         $vencidas         = $notas->where('estado', 'vencido')->count();
 
-        // Última valoración y nota de cierre
         $ultimoCierre = \App\Models\CierreNota::where('alumno_id', $alumno->id)
             ->where('materia_id', $materia->id)
             ->where('user_id', auth()->id())
@@ -362,10 +366,8 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
         ];
     });
 
-    // Datos para gráficos del curso
     $totalAlumnos = $alumnos->count();
 
-    // Distribución aprobados/reprobados
     $cierres = \App\Models\CierreNota::where('materia_id', $materia->id)
         ->where('curso_id', $curso->id)
         ->where('user_id', auth()->id())
@@ -379,7 +381,6 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
     $reprobados  = $cierres->where('notanumerica', '<', 4)->count();
     $sinNota     = $totalAlumnos - $cierres->count();
 
-    // Tendencia de asistencias por fecha (últimas 10 clases)
     $tendenciaAsistencias = \App\Models\Asistencia::where('materia_id', $materia->id)
         ->where('curso_id', $curso->id)
         ->where('user_id', auth()->id())
@@ -396,7 +397,6 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
             'porcentaje' => $r->total > 0 ? round(($r->presentes / $r->total) * 100, 1) : 0,
         ]);
 
-    // Tendencia de notas promedio por tipo de cierre
     $tendenciaCierres = \App\Models\CierreNota::where('materia_id', $materia->id)
         ->where('curso_id', $curso->id)
         ->where('user_id', auth()->id())
