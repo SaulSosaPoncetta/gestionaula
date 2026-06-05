@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,20 +10,23 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasRoles;
 
-    protected $fillable = ['name', 'email', 'password', 'establecimiento_id'];
+    protected $fillable = ['name', 'email', 'password', 'activo'];
 
     protected $hidden = ['password', 'remember_token'];
 
-    public function establecimiento()
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password'          => 'hashed',
+        'activo'            => 'boolean',
+    ];
+
+    public function suscripcion()
     {
-        return $this->belongsTo(Establecimiento::class);
+        return $this->hasOne(Suscripcion::class)->latest();
     }
 
-    protected function casts(): array
+    public function pagos()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->hasMany(Pago::class);
     }
 }

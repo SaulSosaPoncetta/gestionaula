@@ -32,6 +32,11 @@ use App\Http\Controllers\AsignarActividadNuevoController;
 use App\Http\Controllers\PrenotaController;
 use App\Http\Controllers\ProyectoController;
 
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\PlanController;
+use App\Http\Controllers\Admin\SuscripcionController;
+use App\Http\Controllers\Admin\PagoController;
+
 require __DIR__.'/auth.php';
 
     Route::get('/', function () {
@@ -256,6 +261,33 @@ Route::delete('/proyectos/{proyecto}', [ProyectoController::class, 'destroy'])->
 Route::get('/carpetacampo/{carpeta}', [ProyectoController::class, 'carpeta'])->name('proyectos.carpeta');
 Route::post('/carpetacampo/{carpeta}/entrada', [ProyectoController::class, 'agregarEntrada'])->name('proyectos.entrada.store');
 Route::delete('/carpetacampo/entrada/{entrada}', [ProyectoController::class, 'eliminarEntrada'])->name('proyectos.entrada.destroy');
+
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->group(function () {
+
+    // Dashboard
+    Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/usuario/{user}', [AdminController::class, 'verUsuario'])->name('usuario');
+    Route::post('/usuario/{user}/toggle', [AdminController::class, 'toggleActivo'])->name('toggle');
+
+    // Planes
+    Route::get('/planes', [PlanController::class, 'index'])->name('planes.index');
+    Route::get('/planes/crear', [PlanController::class, 'create'])->name('planes.create');
+    Route::post('/planes', [PlanController::class, 'store'])->name('planes.store');
+    Route::get('/planes/{plan}/editar', [PlanController::class, 'edit'])->name('planes.edit');
+    Route::put('/planes/{plan}', [PlanController::class, 'update'])->name('planes.update');
+    Route::delete('/planes/{plan}', [PlanController::class, 'destroy'])->name('planes.destroy');
+
+    // Suscripciones
+    Route::post('/suscripciones', [SuscripcionController::class, 'store'])->name('suscripciones.store');
+    Route::post('/suscripciones/{suscripcion}/suspender', [SuscripcionController::class, 'suspender'])->name('suscripciones.suspender');
+    Route::post('/suscripciones/{suscripcion}/activar', [SuscripcionController::class, 'activar'])->name('suscripciones.activar');
+
+    // Pagos
+    Route::get('/pagos', [PagoController::class, 'index'])->name('pagos.index');
+    Route::post('/pagos/registrar', [PagoController::class, 'registrarPago'])->name('pagos.registrar');
+    Route::post('/pagos/generar', [PagoController::class, 'generarPago'])->name('pagos.generar');
+    Route::post('/pagos/{pago}/vencido', [PagoController::class, 'marcarVencido'])->name('pagos.vencido');
+});
 
 Route::get('/api/cursos/{curso}/alumnos', function(\App\Models\Curso $curso) {
     abort_if($curso->user_id !== auth()->id(), 403);
