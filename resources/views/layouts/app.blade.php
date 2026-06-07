@@ -299,6 +299,13 @@
                                 <i class="bi bi-chat-dots me-1"></i>Comunicación
                             </a>
                         </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('pagos.*') ? 'active' : '' }}"
+                                href="{{ route('pagos.index') }}">
+                                <i class="bi bi-credit-card me-2"></i>Suscripciones
+                            </a>
+                        </li>
                     @endauth
                 </ul>
 

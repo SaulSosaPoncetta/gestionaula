@@ -33,11 +33,13 @@ use App\Http\Controllers\AsignarActividadNuevoController;
 use App\Http\Controllers\PrenotaController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Middleware\SeguridadWeb;
+use App\Http\Controllers\PagoOnlineController;
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\SuscripcionController;
 use App\Http\Controllers\Admin\PagoController;
+
 
 require __DIR__.'/auth.php';
 
@@ -311,6 +313,26 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->as('admin.')->group(
     Route::post('/pagos/{pago}/vencido', [PagoController::class, 'marcarVencido'])->name('pagos.vencido');
 });
 
+// Pagos online del docente
+Route::middleware(['auth', 'role:docente'])->group(function () {
+    Route::get('/mis-pagos', [PagoOnlineController::class, 'index'])->name('pagos.index');
+    Route::post('/pagos/mp/iniciar', [PagoOnlineController::class, 'iniciarMP'])->name('pagos.mp.iniciar');
+    Route::get('/pagos/mp/success', [PagoOnlineController::class, 'mpSuccess'])->name('pagos.mp.success');
+    Route::get('/pagos/mp/failure', [PagoOnlineController::class, 'mpFailure'])->name('pagos.mp.failure');
+    Route::get('/pagos/mp/pending', [PagoOnlineController::class, 'mpPending'])->name('pagos.mp.pending');
+    Route::post('/pagos/paypal/iniciar', [PagoOnlineController::class, 'iniciarPaypal'])->name('pagos.paypal.iniciar');
+    Route::get('/pagos/paypal/success', [PagoOnlineController::class, 'paypalSuccess'])->name('pagos.paypal.success');
+    Route::get('/pagos/paypal/cancel', [PagoOnlineController::class, 'paypalCancel'])->name('pagos.paypal.cancel');
+});
+
+// Webhooks — sin auth (las plataformas los llaman directamente)
+Route::post('/webhooks/mercadopago', [PagoOnlineController::class, 'webhookMP'])
+    ->name('webhooks.mercadopago')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+Route::post('/webhooks/paypal', [PagoOnlineController::class, 'webhookPaypal'])
+    ->name('webhooks.paypal')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+    
 // ==========================================
 // API ESTADÍSTICAS (PÚBLICO CON MIDDLEWARE)
 // ==========================================
