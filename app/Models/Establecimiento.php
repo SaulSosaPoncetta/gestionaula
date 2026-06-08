@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Establecimiento extends Model
 {
     use HasFactory;
+    
     protected $table = 'establecimientos';
+    
     const MODALIDADES = ['comun', 'tecnico', 'especial', 'adultos', 'artistica'];
 
     protected $fillable = [

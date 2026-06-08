@@ -320,107 +320,106 @@
 
         </div>
 
-        {{-- Accesos rapidos --}}
-        <div class="row g-3 mb-4" id="accesoRapido">
-            <div class="col-sm-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
-                                <i class="bi bi-person-check fs-4 text-primary"></i>
-                            </div>
-                            <h6 class="card-title mb-0">Asistencia</h6>
-                        </div>
-                        <p class="card-text text-muted small">Registra la asistencia diaria de tus alumnos.</p>
-                        <button id="btnAsistencia" class="btn btn-sm btn-outline-primary"
-                            onclick="accesoRapidoModulo('asistencia')">
-                            Ir al modulo
-                        </button>
+{{-- Fila 3a: Accesos rapidos --}}
+<div class="row g-3 mb-3">
+    <div class="col-sm-6 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
+                        <i class="bi bi-person-check fs-4 text-primary"></i>
                     </div>
+                    <h6 class="card-title mb-0">Asistencia</h6>
                 </div>
-            </div>
-            <div class="col-sm-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-success bg-opacity-10 rounded p-2 me-3">
-                                <i class="bi bi-journal-text fs-4 text-success"></i>
-                            </div>
-                            <h6 class="card-title mb-0">Calificaciones</h6>
-                        </div>
-                        <p class="card-text text-muted small">Carga y consulta las notas de tus alumnos.</p>
-                        <button id="btnCalificaciones" class="btn btn-sm btn-outline-success"
-                            onclick="accesoRapidoModulo('calificaciones')">
-                            Ir al modulo
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
-                                <i class="bi bi-clipboard-check fs-4 text-warning"></i>
-                            </div>
-                            <h6 class="card-title mb-0">Practicos</h6>
-                        </div>
-                        <p class="card-text text-muted small">Asigna practicos y revisa las entregas.</p>
-                        <button id="btnPracticos" class="btn btn-sm btn-outline-warning"
-                            onclick="accesoRapidoModulo('practicos')">
-                            Ir al modulo
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-info bg-opacity-10 rounded p-2 me-3">
-                                <i class="bi bi-calendar3 fs-4 text-info"></i>
-                            </div>
-                            <h6 class="card-title mb-0">Horarios</h6>
-                        </div>
-                        <p class="card-text text-muted small">Planifica y consulta tu horario semanal.</p>
-                        <a href="{{ route('horarios.index') }}" class="btn btn-sm btn-outline-info">Ir al modulo</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-secondary bg-opacity-10 rounded p-2 me-3">
-                                <i class="bi bi-file-earmark-text fs-4 text-secondary"></i>
-                            </div>
-                            <h6 class="card-title mb-0">Declaracion jurada</h6>
-                        </div>
-                        <p class="card-text text-muted small">Completa y envia tu declaracion jurada de horarios.</p>
-                        <a href="{{ route('declaracion.index') }}" class="btn btn-sm btn-outline-secondary">Ir al
-                            modulo</a>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-6 col-lg-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="bg-danger bg-opacity-10 rounded p-2 me-3">
-                                <i class="bi bi-chat-dots fs-4 text-danger"></i>
-                            </div>
-                            <h6 class="card-title mb-0">Comunicacion</h6>
-                        </div>
-                        <p class="card-text text-muted small">Envia mensajes a alumnos y familias.</p>
-                        <a href="{{ route('comunicacion.index') }}" class="btn btn-sm btn-outline-danger">Ir al
-                            modulo</a>
-                    </div>
-                </div>
+                <p class="card-text text-muted small mb-2">Registra la asistencia diaria de tus alumnos.</p>
+                <button class="btn btn-sm btn-outline-primary" onclick="accesoRapidoModulo('asistencia')">
+                    Ir al modulo
+                </button>
             </div>
         </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-success bg-opacity-10 rounded p-2 me-3">
+                        <i class="bi bi-journal-text fs-4 text-success"></i>
+                    </div>
+                    <h6 class="card-title mb-0">Calificaciones</h6>
+                </div>
+                <p class="card-text text-muted small mb-2">Carga y consulta las notas de tus alumnos.</p>
+                <button class="btn btn-sm btn-outline-success" onclick="accesoRapidoModulo('calificaciones')">
+                    Ir al modulo
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
+                        <i class="bi bi-clipboard-check fs-4 text-warning"></i>
+                    </div>
+                    <h6 class="card-title mb-0">Practicos</h6>
+                </div>
+                <p class="card-text text-muted small mb-2">Asigna practicos y revisa las entregas.</p>
+                <button class="btn btn-sm btn-outline-warning" onclick="accesoRapidoModulo('practicos')">
+                    Ir al modulo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        {{-- Card clase actual --}}
-        <div id="claseActualContainer"></div>
+{{-- Fila 3b --}}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-info bg-opacity-10 rounded p-2 me-3">
+                        <i class="bi bi-calendar3 fs-4 text-info"></i>
+                    </div>
+                    <h6 class="card-title mb-0">Horarios</h6>
+                </div>
+                <p class="card-text text-muted small mb-2">Planifica y consulta tu horario semanal.</p>
+                <a href="{{ route('horarios.index') }}" class="btn btn-sm btn-outline-info">Ir al modulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-secondary bg-opacity-10 rounded p-2 me-3">
+                        <i class="bi bi-file-earmark-text fs-4 text-secondary"></i>
+                    </div>
+                    <h6 class="card-title mb-0">Declaracion jurada</h6>
+                </div>
+                <p class="card-text text-muted small mb-2">Completa y envia tu declaracion jurada de horarios.</p>
+                <a href="{{ route('declaracion.index') }}" class="btn btn-sm btn-outline-secondary">Ir al modulo</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-danger bg-opacity-10 rounded p-2 me-3">
+                        <i class="bi bi-chat-dots fs-4 text-danger"></i>
+                    </div>
+                    <h6 class="card-title mb-0">Comunicacion</h6>
+                </div>
+                <p class="card-text text-muted small mb-2">Envia mensajes a alumnos y familias.</p>
+                <a href="{{ route('comunicacion.index') }}" class="btn btn-sm btn-outline-danger">Ir al modulo</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Card clase actual con estadisticas --}}
+<div id="claseActualContainer"></div>
 
         {{-- Modal acceso rapido --}}
         <div class="modal fade" id="modalAcceso" tabindex="-1">
@@ -908,6 +907,6 @@
             }
 
             actualizarReloj();
-            setInterval(actualizarReloj, 1000);
+            setInterval(actualizarReloj, 60000);
         </script>
     @endpush

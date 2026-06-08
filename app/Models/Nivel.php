@@ -7,12 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Nivel extends Model
 {
-    const TIPOS = ['inicial', 'primario', 'secundario', 'terciario', 'universitario'];
+    protected $table = 'niveles';
+    
+    protected $fillable = ['user_id', 'nombre', 'tipo'];
     
     use HasFactory;
-    protected $table = 'niveles';
-    protected $fillable = ['user_id', 'nombre', 'tipo'];
-
+    
+    const TIPOS = ['inicial', 'primario', 'secundario', 'terciario', 'universitario'];
+    
     public function establecimientos()
     {
         return $this->hasMany(Establecimiento::class);

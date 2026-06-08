@@ -34,6 +34,7 @@ use App\Http\Controllers\PrenotaController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Middleware\SeguridadWeb;
 use App\Http\Controllers\PagoOnlineController;
+use App\Http\Controllers\LandingController;
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PlanController;
@@ -44,7 +45,7 @@ use App\Http\Controllers\Admin\PagoController;
 require __DIR__.'/auth.php';
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
+    return redirect()->route('landing.index');
 });
 
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
@@ -441,3 +442,11 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
         ],
     ]);
 })->middleware(['web', 'auth'])->name('api.dashboard.stats');
+
+// Landing publica
+Route::get('/landing', [LandingController::class, 'index'])->name('landing.index');
+Route::get('/landing/planes', [LandingController::class, 'planes'])->name('landing.planes');
+Route::get('/landing/registro', [LandingController::class, 'registroPlan'])->name('landing.registro');
+Route::post('/landing/contacto', [LandingController::class, 'contacto'])->name('landing.contacto');
+Route::post('/landing/registrar', [LandingController::class, 'registrarDocente'])->name('landing.registrar');
+Route::get('/activar/{token}', [LandingController::class, 'activar'])->name('landing.activar');
