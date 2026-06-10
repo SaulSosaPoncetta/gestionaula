@@ -80,29 +80,44 @@ class PayPalService
     }
 
     public function activarSuscripcion(PagoOnline $pago): void
-    {
-        $suscripcion = $pago->suscripcion;
-        if (!$suscripcion) return;
+{
+    $suscripcion = $pago->suscripcion;
+    if (!$suscripcion) return;
 
-        $proximoPago = Carbon::parse($pago->periodohasta)->addMonth();
+    $periodicidad = $suscripcion->plan?->periodicidad ?? 'mensual';
+    $diasAdicionales = match($periodicidad) {
+        'trimestral' => 90,
+        'anual'      => 365,
+        default      => 30,
+    };
 
-        $suscripcion->update([
-            'estado'      => 'activa',
-            'proximopago' => $proximoPago,
-        ]);
+    $proximoPago = \Carbon\Carbon::parse($pago->periodohasta)->addDays($diasAdicionales);
 
-        $pago->user->update(['activo' => true]);
+    $suscripcion->update([
+        'estado'      => 'activa',
+        'proximopago' => $proximoPago,
+    ]);
 
-        \App\Models\Pago::create([
-            'user_id'        => $pago->user_id,
-            'suscripcion_id' => $pago->suscripcion_id,
-            'monto'          => $pago->monto,
-            'fechapago'      => now()->toDateString(),
-            'periododesde'   => $pago->periododesde,
-            'periodohasta'   => $pago->periodohasta,
-            'estado'         => 'pagado',
-            'metodopago'     => 'tarjeta',
-            'observaciones'  => 'Pago online via PayPal — ID: ' . $pago->external_id,
-        ]);
-    }
+    $pago->user->update(['activo' => true]);
+
+    $pagoRegistro = \App\Models\Pago::create([
+        'user_id'        => $pago->user_id,
+        'suscripcion_id' => $pago->suscripcion_id,
+        'monto'          => $pago->monto,
+        'fechapago'      => now()->toDateString(),
+        'periododesde'   => $pago->periododesde,
+        'periodohasta'   => $pago->periodohasta,
+        'estado'         => 'pagado',
+        'metodopago'     => 'tarjeta',
+        'observaciones'  => 'Pago online via PayPal — ID: ' . $pago->external_id,
+    ]);
+
+    // Enviar mail de confirmacion
+    \Illuminate\Support\Facades\Mail::to($pago->user->email)
+        ->send(new \App\Mail\ConfirmacionPagoMail($pagoRegistro->load(['user', 'suscripcion'])));
+
+    // Enviar mail de renovacion automatica
+    \Illuminate\Support\Facades\Mail::to($pago->user->email)
+        ->send(new \App\Mail\RenovacionAutomaticaMail($pago->load(['user', 'suscripcion'])));
+}
 }

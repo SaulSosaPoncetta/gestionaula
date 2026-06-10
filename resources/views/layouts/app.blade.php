@@ -195,17 +195,18 @@
                                         <i class="bi bi-journal-bookmark me-2"></i>Planificación
                                     </a>
                                 </li>
-                                <li>
-                                    <a class="dropdown-item {{ request()->routeIs('ceses.*') ? 'active' : '' }}"
-                                        href="{{ route('ceses.index') }}">
-                                        <i class="bi bi-calendar-x me-2"></i>Ceses
-                                    </a>
-                                </li>
+
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
                                     <h6 class="dropdown-header">Horarios</h6>
+                                </li>
+                                                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('designaciones.*') ? 'active' : '' }}"
+                                        href="{{ route('designaciones.index') }}">
+                                        <i class="bi bi-file-earmark-person me-2"></i>Designaciones
+                                    </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('horarios.*') ? 'active' : '' }}"
@@ -217,6 +218,12 @@
                                     <a class="dropdown-item {{ request()->routeIs('declaracion.*') ? 'active' : '' }}"
                                         href="{{ route('declaracion.index') }}">
                                         <i class="bi bi-file-earmark-text me-2"></i>Declaración jurada
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('ceses.*') ? 'active' : '' }}"
+                                        href="{{ route('ceses.index') }}">
+                                        <i class="bi bi-calendar-x me-2"></i>Ceses
                                     </a>
                                 </li>
                                 <li>

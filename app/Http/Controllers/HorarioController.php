@@ -26,41 +26,23 @@ class HorarioController extends Controller
     }
 
     public function create()
-    {
-        $dias             = self::DIAS;
-        $establecimientos = Establecimiento::where('user_id', auth()->id())->orderBy('nombre')->get();
-        $cursos           = Curso::where('user_id', auth()->id())
-                                ->with(['establecimiento', 'materias'])
-                                ->orderBy('anio')->orderBy('division')->get();
-        $materias         = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+{
+    $establecimientos = \App\Models\Establecimiento::where('user_id', auth()->id())
+        ->orderBy('nombre')->get();
+    $cursos   = \App\Models\Curso::where('user_id', auth()->id())
+        ->with('materias')
+        ->orderBy('anio')->orderBy('division')->get();
+    $materias = \App\Models\Materia::where('user_id', auth()->id())
+        ->orderBy('nombre')->get();
+    $dias     = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
+    $designaciones = \App\Models\Designacion::where('user_id', auth()->id())
+        ->orderBy('nombreestablecimiento')
+        ->get();
 
-        return view('horarios.create', compact('cursos', 'materias', 'dias', 'establecimientos'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'establecimiento_id' => 'nullable|exists:establecimientos,id',
-            'curso_id'           => 'required|exists:cursos,id',
-            'materia_id'         => 'nullable|exists:materias,id',
-            'dia'                => 'required|in:' . implode(',', self::DIAS),
-            'horainicio'         => 'required|date_format:H:i',
-            'horafin'            => 'required|date_format:H:i|after:horainicio',
-        ]);
-
-        Horario::create([
-            'user_id'            => auth()->id(),
-            'establecimiento_id' => $request->establecimiento_id,
-            'curso_id'           => $request->curso_id,
-            'materia_id'         => $request->materia_id,
-            'dia'                => $request->dia,
-            'horainicio'         => $request->horainicio,
-            'horafin'            => $request->horafin,
-        ]);
-
-        return redirect()->route('horarios.index')
-                         ->with('success', 'Horario agregado correctamente.');
-    }
+    return view('horarios.create', compact(
+        'establecimientos', 'cursos', 'materias', 'dias', 'designaciones'
+    ));
+}
 
     public function destroy(Horario $horario)
     {

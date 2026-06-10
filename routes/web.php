@@ -35,6 +35,7 @@ use App\Http\Controllers\ProyectoController;
 use App\Http\Middleware\SeguridadWeb;
 use App\Http\Controllers\PagoOnlineController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\DesignacionController;
 
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PlanController;
@@ -227,6 +228,14 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::put('/calificaractividad/{estado}/update', [CalificarActividadController::class, 'updateCalificada'])->name('calificaractividad.update');
     Route::post('/calificaractividad/calificar', [CalificarActividadController::class, 'calificar'])->name('calificaractividad.calificar');
 
+Route::get('/designaciones', [DesignacionController::class, 'index'])->name('designaciones.index');
+Route::get('/designaciones/crear', [DesignacionController::class, 'create'])->name('designaciones.create');
+Route::post('/designaciones', [DesignacionController::class, 'store'])->name('designaciones.store');
+Route::get('/designaciones/{designacion}/editar', [DesignacionController::class, 'edit'])->name('designaciones.edit');
+Route::put('/designaciones/{designacion}', [DesignacionController::class, 'update'])->name('designaciones.update');
+Route::delete('/designaciones/{designacion}', [DesignacionController::class, 'destroy'])->name('designaciones.destroy');
+Route::get('/api/designaciones', [DesignacionController::class, 'listar'])->name('api.designaciones');
+
     Route::get('/ceses', [CeseController::class, 'index'])->name('ceses.index');
     Route::get('/ceses/crear', [CeseController::class, 'create'])->name('ceses.create');
     Route::post('/ceses', [CeseController::class, 'store'])->name('ceses.store');
@@ -334,15 +343,16 @@ Route::post('/webhooks/paypal', [PagoOnlineController::class, 'webhookPaypal'])
     ->name('webhooks.paypal')
     ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
     
-// ==========================================
-// API ESTADÍSTICAS (PÚBLICO CON MIDDLEWARE)
-// ==========================================
-Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso $curso, \App\Models\Materia $materia) {
-    abort_if($curso->user_id !== auth()->id(), 403);
-    abort_if($materia->user_id !== auth()->id(), 403);
+// API stats dashboard
+Route::get('/api/dashboard/stats/{cursoId}/{materiaId}', function(int $cursoId, int $materiaId) {
+    $curso   = \App\Models\Curso::where('id', $cursoId)->where('user_id', auth()->id())->first();
+    $materia = \App\Models\Materia::where('id', $materiaId)->where('user_id', auth()->id())->first();
+
+    if (!$curso || !$materia) {
+        return response()->json(['error' => 'No encontrado', 'cursoId' => $cursoId, 'materiaId' => $materiaId], 404);
+    }
 
     $alumnos = $curso->alumnos()->where('alumnos.user_id', auth()->id())->get();
-
     $asignaciones = \App\Models\ActividadAsignacion::where('materia_id', $materia->id)
         ->where('curso_id', $curso->id)
         ->where('user_id', auth()->id())
@@ -357,7 +367,6 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
         $presentes    = $asistencias->whereIn('estado', ['presente', 'tarde'])->count();
         $ausentes     = $asistencias->where('estado', 'ausente')->count();
         $justificados = $asistencias->where('estado', 'justificado')->count();
-
         $totalAsignadas = $asignaciones->count();
 
         $notas = \App\Models\ActividadNota::where('alumno_id', $alumno->id)
@@ -365,8 +374,8 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
             ->where('user_id', auth()->id())
             ->get();
 
-        $entregadas       = $notas->where('estado', 'entregado')->count();
-        $vencidas         = $notas->where('estado', 'vencido')->count();
+        $entregadas = $notas->where('estado', 'entregado')->count();
+        $vencidas   = $notas->where('estado', 'vencido')->count();
 
         $ultimoCierre = \App\Models\CierreNota::where('alumno_id', $alumno->id)
             ->where('materia_id', $materia->id)
@@ -383,9 +392,8 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
             'asignadas'       => $totalAsignadas,
             'entregadas'      => $entregadas,
             'vencidas'        => $vencidas,
-            'ultimaValoracion'=> $ultimoCierre?->notavalorativa ?? '—',
+            'ultimaValoracion'=> $ultimoCierre?->notavalorativa ?? '-',
             'ultimaNota'      => $ultimoCierre?->notanumerica ?? null,
-            'tipocierre'      => $ultimoCierre?->tipocierre ?? '—',
         ];
     });
 
@@ -399,10 +407,10 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
         ->groupBy('alumno_id')
         ->map(fn($g) => $g->first());
 
-    $aprobados   = $cierres->where('notanumerica', '>=', 7)->count();
-    $regulares   = $cierres->where('notanumerica', '>=', 4)->where('notanumerica', '<', 7)->count();
-    $reprobados  = $cierres->where('notanumerica', '<', 4)->count();
-    $sinNota     = $totalAlumnos - $cierres->count();
+    $aprobados  = $cierres->where('notanumerica', '>=', 7)->count();
+    $regulares  = $cierres->where('notanumerica', '>=', 4)->where('notanumerica', '<', 7)->count();
+    $reprobados = $cierres->where('notanumerica', '<', 4)->count();
+    $sinNota    = $totalAlumnos - $cierres->count();
 
     $tendenciaAsistencias = \App\Models\Asistencia::where('materia_id', $materia->id)
         ->where('curso_id', $curso->id)
@@ -434,7 +442,7 @@ Route::get('/api/dashboard/stats/{curso}/{materia}', function(\App\Models\Curso 
         ]);
 
     return response()->json([
-        'alumnos'              => $stats,
+        'alumnos'  => $stats,
         'graficos' => [
             'distribucion' => compact('aprobados', 'regulares', 'reprobados', 'sinNota'),
             'asistencias'  => $tendenciaAsistencias,
