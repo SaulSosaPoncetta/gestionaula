@@ -320,106 +320,108 @@
 
         </div>
 
-{{-- Fila 3a: Accesos rapidos --}}
-<div class="row g-3 mb-3">
-    <div class="col-sm-6 col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
-                        <i class="bi bi-person-check fs-4 text-primary"></i>
+        {{-- Fila 3a: Accesos rapidos --}}
+        <div class="row g-3 mb-3">
+            <div class="col-sm-6 col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
+                                <i class="bi bi-person-check fs-4 text-primary"></i>
+                            </div>
+                            <h6 class="card-title mb-0">Asistencia</h6>
+                        </div>
+                        <p class="card-text text-muted small mb-2">Registra la asistencia diaria de tus alumnos.</p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="accesoRapidoModulo('asistencia')">
+                            Ir al modulo
+                        </button>
                     </div>
-                    <h6 class="card-title mb-0">Asistencia</h6>
                 </div>
-                <p class="card-text text-muted small mb-2">Registra la asistencia diaria de tus alumnos.</p>
-                <button class="btn btn-sm btn-outline-primary" onclick="accesoRapidoModulo('asistencia')">
-                    Ir al modulo
-                </button>
+            </div>
+            <div class="col-sm-6 col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-success bg-opacity-10 rounded p-2 me-3">
+                                <i class="bi bi-journal-text fs-4 text-success"></i>
+                            </div>
+                            <h6 class="card-title mb-0">Calificaciones</h6>
+                        </div>
+                        <p class="card-text text-muted small mb-2">Carga y consulta las notas de tus alumnos.</p>
+                        <button class="btn btn-sm btn-outline-success" onclick="accesoRapidoModulo('calificaciones')">
+                            Ir al modulo
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
+                                <i class="bi bi-clipboard-check fs-4 text-warning"></i>
+                            </div>
+                            <h6 class="card-title mb-0">Practicos</h6>
+                        </div>
+                        <p class="card-text text-muted small mb-2">Asigna practicos y revisa las entregas.</p>
+                        <button class="btn btn-sm btn-outline-warning" onclick="accesoRapidoModulo('practicos')">
+                            Ir al modulo
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-sm-6 col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-success bg-opacity-10 rounded p-2 me-3">
-                        <i class="bi bi-journal-text fs-4 text-success"></i>
-                    </div>
-                    <h6 class="card-title mb-0">Calificaciones</h6>
-                </div>
-                <p class="card-text text-muted small mb-2">Carga y consulta las notas de tus alumnos.</p>
-                <button class="btn btn-sm btn-outline-success" onclick="accesoRapidoModulo('calificaciones')">
-                    Ir al modulo
-                </button>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-warning bg-opacity-10 rounded p-2 me-3">
-                        <i class="bi bi-clipboard-check fs-4 text-warning"></i>
-                    </div>
-                    <h6 class="card-title mb-0">Practicos</h6>
-                </div>
-                <p class="card-text text-muted small mb-2">Asigna practicos y revisa las entregas.</p>
-                <button class="btn btn-sm btn-outline-warning" onclick="accesoRapidoModulo('practicos')">
-                    Ir al modulo
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
-{{-- Fila 3b --}}
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-info bg-opacity-10 rounded p-2 me-3">
-                        <i class="bi bi-calendar3 fs-4 text-info"></i>
+        {{-- Fila 3b --}}
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-info bg-opacity-10 rounded p-2 me-3">
+                                <i class="bi bi-calendar3 fs-4 text-info"></i>
+                            </div>
+                            <h6 class="card-title mb-0">Horarios</h6>
+                        </div>
+                        <p class="card-text text-muted small mb-2">Planifica y consulta tu horario semanal.</p>
+                        <a href="{{ route('horarios.index') }}" class="btn btn-sm btn-outline-info">Ir al modulo</a>
                     </div>
-                    <h6 class="card-title mb-0">Horarios</h6>
                 </div>
-                <p class="card-text text-muted small mb-2">Planifica y consulta tu horario semanal.</p>
-                <a href="{{ route('horarios.index') }}" class="btn btn-sm btn-outline-info">Ir al modulo</a>
+            </div>
+            <div class="col-sm-6 col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-secondary bg-opacity-10 rounded p-2 me-3">
+                                <i class="bi bi-file-earmark-text fs-4 text-secondary"></i>
+                            </div>
+                            <h6 class="card-title mb-0">Declaracion jurada</h6>
+                        </div>
+                        <p class="card-text text-muted small mb-2">Completa y envia tu declaracion jurada de horarios.</p>
+                        <a href="{{ route('declaracion.index') }}" class="btn btn-sm btn-outline-secondary">Ir al
+                            modulo</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-danger bg-opacity-10 rounded p-2 me-3">
+                                <i class="bi bi-chat-dots fs-4 text-danger"></i>
+                            </div>
+                            <h6 class="card-title mb-0">Comunicacion</h6>
+                        </div>
+                        <p class="card-text text-muted small mb-2">Envia mensajes a alumnos y familias.</p>
+                        <a href="{{ route('comunicacion.index') }}" class="btn btn-sm btn-outline-danger">Ir al
+                            modulo</a>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="col-sm-6 col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-secondary bg-opacity-10 rounded p-2 me-3">
-                        <i class="bi bi-file-earmark-text fs-4 text-secondary"></i>
-                    </div>
-                    <h6 class="card-title mb-0">Declaracion jurada</h6>
-                </div>
-                <p class="card-text text-muted small mb-2">Completa y envia tu declaracion jurada de horarios.</p>
-                <a href="{{ route('declaracion.index') }}" class="btn btn-sm btn-outline-secondary">Ir al modulo</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-sm-6 col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-2">
-                    <div class="bg-danger bg-opacity-10 rounded p-2 me-3">
-                        <i class="bi bi-chat-dots fs-4 text-danger"></i>
-                    </div>
-                    <h6 class="card-title mb-0">Comunicacion</h6>
-                </div>
-                <p class="card-text text-muted small mb-2">Envia mensajes a alumnos y familias.</p>
-                <a href="{{ route('comunicacion.index') }}" class="btn btn-sm btn-outline-danger">Ir al modulo</a>
-            </div>
-        </div>
-    </div>
-</div>
 
-{{-- Card clase actual con estadisticas --}}
-<div id="claseActualContainer"></div>
+        {{-- Card clase actual con estadisticas --}}
+        <div id="claseActualContainer"></div>
 
         {{-- Modal acceso rapido --}}
         <div class="modal fade" id="modalAcceso" tabindex="-1">
@@ -572,6 +574,7 @@
             }
 
             let statsCache = {};
+            let graficosInstanciados = {};
 
             function renderClaseActual(clases) {
                 const container = document.getElementById('claseActualContainer');
@@ -604,15 +607,38 @@
                 </div>
             </div>`;
 
-                    fetch(`/api/dashboard/stats/${clase.curso_id}/${clase.materia_id}`)
-                        .then(r => r.json())
+                    fetch(`/api/dashboard/stats/${clase.curso_id}/${clase.materia_id}`, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                            },
+                            credentials: 'same-origin'
+                        })
+                        .then(r => r.text())
+                        .then(text => {
+                            // Eliminar cualquier output de PHP antes del JSON
+                            const jsonStart = text.indexOf('{');
+                            if (jsonStart === -1) {
+                                console.error('Respuesta invalida:', text.substring(0, 200));
+                                throw new Error('Sin JSON en respuesta');
+                            }
+                            return JSON.parse(text.substring(jsonStart));
+                        })
                         .then(data => {
                             statsCache[cacheKey] = data;
                             renderTablaConStats(container, clase, data);
+                            graficosInstanciados[cacheKey] = true;
                         })
-                        .catch(() => {
-                            container.innerHTML =
-                                `<div class="alert alert-warning">No se pudieron cargar las estadísticas.</div>`;
+                        .catch(err => {
+                            console.error('Error cargando estadisticas:', err);
+                            container.innerHTML = `
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body text-center py-3">
+                <button class="btn btn-outline-primary btn-sm" onclick="statsCache={}; graficosInstanciados={}; renderClaseActual(clasesActuales(diasSemana[new Date().getDay()], new Date().getHours()*60+new Date().getMinutes()))">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Reintentar cargar estadisticas
+                </button>
+            </div>
+        </div>`;
                         });
                 });
             }
@@ -885,6 +911,8 @@
                 new bootstrap.Modal(modalEl).show();
             }
 
+            let claseActivaAnterior = 'INICIAL';
+
             function actualizarReloj() {
                 const ahora = new Date();
                 const h = pad(ahora.getHours());
@@ -902,11 +930,20 @@
                 const clases = clasesActuales(dia, minutosActuales);
                 claseActivaActual = clases.length > 0 ? clases[0] : null;
 
-                actualizarLeyenda(clases);
-                renderClaseActual(clases);
+                const claveActual = claseActivaActual
+                    ? `${claseActivaActual.curso_id}_${claseActivaActual.materia_id}`
+                    : 'SIN_CLASE';
+
+                // Solo recalcular leyenda y estadisticas cuando cambia la clase activa
+                // (al ingresar, al tomar asistencia, o al cambiar de hora/curso)
+                if (claveActual !== claseActivaAnterior) {
+                    claseActivaAnterior = claveActual;
+                    actualizarLeyenda(clases);
+                    renderClaseActual(clases);
+                }
             }
 
             actualizarReloj();
-            setInterval(actualizarReloj, 60000);
+            setInterval(actualizarReloj, 1000);
         </script>
     @endpush

@@ -125,6 +125,16 @@
 </div>
 
 {{-- Detalle por alumno --}}
+<div class="d-flex justify-content-end gap-2 mb-2">
+    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTodos(true)">
+        <i class="bi bi-arrows-expand me-1"></i>Expandir todo
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTodos(false)">
+        <i class="bi bi-arrows-collapse me-1"></i>Contraer todo
+    </button>
+</div>
+
+<div class="accordion" id="acordeonAsistencias">
 @foreach($asistencias as $alumnoId => $registros)
 @php
     $alumno      = $registros->first()->alumno;
@@ -132,65 +142,84 @@
     $ausentes    = $registros->where('estado', 'ausente')->count();
     $justific    = $registros->where('estado', 'justificado')->count();
     $tardes      = $registros->where('estado', 'tarde');
+    $collapseId  = 'alumno' . $alumnoId;
 @endphp
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <div class="fw-bold">
-            <i class="bi bi-person me-1 text-primary"></i>
-            {{ $alumno->nombre_completo }}
-        </div>
-        <div class="d-flex gap-2">
-            <span class="badge bg-success">{{ $presentes }} presentes</span>
-            <span class="badge bg-danger">{{ $ausentes }} ausentes</span>
-            <span class="badge bg-info">{{ $justific }} justificados</span>
-            <span class="badge bg-warning text-dark">{{ $tardes->count() }} tardanzas</span>
-        </div>
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white p-0">
+        <button type="button"
+                class="btn w-100 text-start d-flex justify-content-between align-items-center py-3 px-3"
+                data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}"
+                aria-expanded="false" aria-controls="{{ $collapseId }}">
+            <span class="fw-bold">
+                <i class="bi bi-chevron-down acordeon-icono me-2"></i>
+                <i class="bi bi-person me-1 text-primary"></i>
+                {{ $alumno->nombre_completo }}
+            </span>
+            <span class="d-flex gap-2">
+                <span class="badge bg-success">{{ $presentes }} presentes</span>
+                <span class="badge bg-danger">{{ $ausentes }} ausentes</span>
+                <span class="badge bg-info">{{ $justific }} justificados</span>
+                <span class="badge bg-warning text-dark">{{ $tardes->count() }} tardanzas</span>
+            </span>
+        </button>
     </div>
-    <div class="card-body p-0">
-        <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th class="ps-4">Fecha</th>
-                    <th>Materia</th>
-                    <th class="text-center">Estado</th>
-                    <th>Hora llegada</th>
-                    <th>Observación</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($registros as $reg)
-                <tr>
-                    <td class="ps-4">{{ $reg->fecha->format('d/m/Y') }}</td>
-                    <td>{{ $reg->materia?->nombre ?? '—' }}</td>
-                    <td class="text-center">
-                        <span class="badge bg-{{ $reg->estadobadge }}">{{ $reg->estadolabel }}</span>
-                    </td>
-                    <td>
-                        @if($reg->estado === 'tarde' && $reg->horallegada)
-                            <span class="badge bg-warning text-dark">
-                                <i class="bi bi-clock me-1"></i>
-                                {{ \Carbon\Carbon::parse($reg->horallegada)->format('H:i') }}
-                            </span>
-                        @else
-                            <span class="text-muted">—</span>
-                        @endif
-                    </td>
-                    <td class="text-muted small">{{ $reg->observacion ?? '—' }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <div class="collapse" id="{{ $collapseId }}">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Fecha</th>
+                        <th>Materia</th>
+                        <th class="text-center">Estado</th>
+                        <th>Hora llegada</th>
+                        <th>Observación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($registros as $reg)
+                    <tr>
+                        <td class="ps-4">{{ $reg->fecha->format('d/m/Y') }}</td>
+                        <td>{{ $reg->materia?->nombre ?? '—' }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-{{ $reg->estadobadge }}">{{ $reg->estadolabel }}</span>
+                        </td>
+                        <td>
+                            @if($reg->estado === 'tarde' && $reg->horallegada)
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-clock me-1"></i>
+                                    {{ \Carbon\Carbon::parse($reg->horallegada)->format('H:i') }}
+                                </span>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
+                        <td class="text-muted small">{{ $reg->observacion ?? '—' }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endforeach
+</div>
 
 @endif
+
+<style>
+    .acordeon-icono {
+        transition: transform 0.2s ease;
+    }
+    button[aria-expanded="true"] .acordeon-icono {
+        transform: rotate(-180deg);
+    }
+</style>
 @endsection
 
 @push('scripts')
 <script>
 // Al cambiar curso recargar alumnos para el filtro
-document.getElementById('curso_id').addEventListener('change', function () {
+document.getElementById('curso_id')?.addEventListener('change', function () {
     const cursoId = this.value;
     if (cursoId) {
         // Mantener otros filtros y recargar
@@ -198,5 +227,17 @@ document.getElementById('curso_id').addEventListener('change', function () {
         form.submit();
     }
 });
+
+// Expandir/contraer todos los acordeones de alumnos
+function toggleTodos(expandir) {
+    document.querySelectorAll('#acordeonAsistencias .collapse').forEach(function (el) {
+        const instancia = bootstrap.Collapse.getOrCreateInstance(el, { toggle: false });
+        if (expandir) {
+            instancia.show();
+        } else {
+            instancia.hide();
+        }
+    });
+}
 </script>
 @endpush
