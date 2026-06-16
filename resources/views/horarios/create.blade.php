@@ -26,20 +26,23 @@
             <div class="col-md-8">
                 <select id="selectDesignacion" class="form-select">
                     <option value="">— Seleccioná una designación para autocompletar —</option>
-                    @foreach($designaciones as $d)
-                        <option value="{{ $d->id }}"
-                            data-nombreestablecimiento="{{ $d->nombreestablecimiento }}"
-                            data-numeroescuela="{{ $d->numeroescuela }}"
-                            data-nombremateria="{{ $d->nombremateria }}"
-                            data-anodesignado="{{ $d->anodesignado }}"
-                            data-divisiondesignada="{{ $d->divisiondesignada }}"
-                            data-turno="{{ $d->turnodesempeno }}"
-                            data-dia="{{ $d->diasemana }}"
-                            data-horaentrada="{{ substr($d->horaentrada, 0, 5) }}"
-                            data-horasalida="{{ substr($d->horasalida, 0, 5) }}">
-                            {{ $d->nombreestablecimiento }} — {{ $d->nombremateria }}
-                            ({{ \App\Models\Designacion::DIAS[$d->diasemana] ?? $d->diasemana }}
-                            {{ substr($d->horaentrada, 0, 5) }}-{{ substr($d->horasalida, 0, 5) }})
+                    @foreach($designacionesFilas as $i => $f)
+                        <option value="{{ $i }}"
+                            data-nombreestablecimiento="{{ $f['nombreestablecimiento'] }}"
+                            data-numeroescuela="{{ $f['numeroescuela'] ?? '' }}"
+                            data-nombremateria="{{ $f['nombremateria'] }}"
+                            data-anodesignado="{{ $f['anodesignado'] }}"
+                            data-divisiondesignada="{{ $f['divisiondesignada'] }}"
+                            data-turno="{{ $f['turno'] }}"
+                            data-dia="{{ $f['dia'] }}"
+                            data-horaentrada="{{ $f['horaentrada'] }}"
+                            data-horasalida="{{ $f['horasalida'] }}">
+                            {{ $f['nombreestablecimiento'] }} — {{ $f['nombremateria'] }}
+                            ({{ \App\Models\Designacion::DIAS[$f['dia']] ?? $f['dia'] }}
+                            {{ $f['horaentrada'] }}-{{ $f['horasalida'] }})
+                            @if($f['tipohorario'] === 'dividido')
+                                <span> · dividido</span>
+                            @endif
                         </option>
                     @endforeach
                 </select>
@@ -176,7 +179,15 @@
 
 @push('scripts')
 <script>
-const materiasPorCurso = @json($cursos->mapWithKeys(fn($c) => [$c->id => $c->materias->map(fn($m) => ['id' => $m->id, 'nombre' => $m->nombre])]));
+const materiasPorCurso = @json($cursos->mapWithKeys(function($c) use ($materias) {
+    $delCurso = $materias->filter(function($m) use ($c) {
+        return $m->anio == $c->anio
+            && (empty($c->especialidad_id) || $m->especialidad_id == $c->especialidad_id)
+            && (empty($c->establecimiento_id) || $m->establecimiento_id == $c->establecimiento_id);
+    })->values();
+
+    return [$c->id => $delCurso->map(fn($m) => ['id' => $m->id, 'nombre' => $m->nombre])];
+}));
 const todasLasMaterias = @json($materias->map(fn($m) => ['id' => $m->id, 'nombre' => $m->nombre]));
 
 document.getElementById('curso_id').addEventListener('change', function () {

@@ -24,7 +24,7 @@
         <form method="GET" action="{{ route('designaciones.index') }}" class="row g-3">
             <div class="col-md-6">
                 <input type="text" name="buscar" class="form-control"
-                       placeholder="Buscar por establecimiento, materia o número..."
+                       placeholder="Buscar por establecimiento, materia, IGE o número..."
                        value="{{ request('buscar') }}">
             </div>
             <div class="col-md-3">
@@ -55,11 +55,12 @@
                 <tr>
                     <th class="ps-4">Establecimiento</th>
                     <th>N° Escuela</th>
+                    <th>IGE</th>
+                    <th>Secuencia</th>
                     <th>Materia</th>
                     <th>Año/Div.</th>
-                    <th>Día</th>
-                    <th>Entrada</th>
-                    <th>Salida</th>
+                    <th>Cant. Mód/Hs</th>
+                    <th>Horario</th>
                     <th>Turno</th>
                     <th class="text-center">Tipo</th>
                     <th></th>
@@ -70,15 +71,38 @@
                 <tr>
                     <td class="ps-4 fw-semibold">{{ $d->nombreestablecimiento }}</td>
                     <td>{{ $d->numeroescuela }}</td>
+                    <td>{{ $d->ige ?? '—' }}</td>
+                    <td>{{ $d->secuencia ?? '—' }}</td>
                     <td>{{ $d->nombremateria }}</td>
                     <td>{{ $d->anodesignado }} {{ $d->divisiondesignada }}</td>
+                    <td>{{ $d->cantmodulos ?? '—' }}</td>
                     <td>
-                        <span class="badge bg-secondary">
-                            {{ \App\Models\Designacion::DIAS[$d->diasemana] ?? $d->diasemana }}
-                        </span>
+                        @if($d->tipohorario === 'dividido')
+                            <span class="badge bg-primary mb-1">
+                                <i class="bi bi-calendar-week me-1"></i>Dividido ({{ $d->horarios->count() }} días)
+                            </span>
+                            <div class="small text-muted">
+                                @foreach($d->horarios as $h)
+                                    <div>
+                                        {{ \App\Models\Designacion::DIAS[$h->dia] ?? $h->dia }}:
+                                        {{ substr($h->horaentrada, 0, 5) }}-{{ substr($h->horasalida, 0, 5) }}
+                                        @if($h->cantmodulos)
+                                            <span class="badge bg-light text-dark">{{ $h->cantmodulos }}</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="badge bg-secondary mb-1">
+                                {{ \App\Models\Designacion::DIAS[$d->diasemana] ?? $d->diasemana }}
+                            </span>
+                            <div class="small text-muted">
+                                {{ $d->horaentrada ? substr($d->horaentrada, 0, 5) : '—' }}
+                                -
+                                {{ $d->horasalida ? substr($d->horasalida, 0, 5) : '—' }}
+                            </div>
+                        @endif
                     </td>
-                    <td>{{ substr($d->horaentrada, 0, 5) }}</td>
-                    <td>{{ substr($d->horasalida, 0, 5) }}</td>
                     <td>{{ $d->turnodesempeno }}</td>
                     <td class="text-center">
                         <span class="badge bg-info">

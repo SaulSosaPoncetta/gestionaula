@@ -370,19 +370,9 @@
         </div>
     </footer>
 
+    @include('partials.modal-confirm')
+
     @stack('scripts')
-    <script>
-        // Interceptar botones de eliminar que tienen confirm()
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('form [type=submit][onclick*="confirm"]').forEach(function(btn) {
-                btn.addEventListener('click', function(e) {
-                    const confirmMsg = this.getAttribute('onclick');
-                    // El confirm ya fue manejado, si llega aquí es porque el usuario aceptó
-                    // El spinner se activará en el submit del form
-                });
-            });
-        });
-    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </body>
 

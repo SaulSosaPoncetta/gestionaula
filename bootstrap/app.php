@@ -13,7 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
 ->withMiddleware(function (Middleware $middleware) {
     $middleware->append(\App\Http\Middleware\SeguridadWeb::class);
-    $middleware->append(\App\Http\Middleware\CuentaActiva::class);
+
+    // CuentaActiva necesita sesion, va solo en el grupo web (no global)
+    $middleware->web(append: [
+        \App\Http\Middleware\CuentaActiva::class,
+    ]);
 
     $middleware->alias([
         'role'               => \Spatie\Permission\Middleware\RoleMiddleware::class,
