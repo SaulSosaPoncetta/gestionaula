@@ -4,6 +4,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Declaracion extends Model
 {
+    protected $table = 'declaraciones';
+
     protected $fillable = [
         'user_id', 'ciclo', 'fechadeclaracion', 'estado', 'observacion',
         'fechapresentacion', 'fecharesolucion', 'resueltopor'

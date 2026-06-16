@@ -28,7 +28,15 @@ class DeclaracionController extends Controller
 
         $horarios = Horario::with(['curso', 'materia', 'establecimiento'])
             ->where('user_id', $user->id)
-            ->orderByRaw("FIELD(dia, 'lunes','martes','miercoles','jueves','viernes','sabado','domingo')")
+            ->orderByRaw("CASE dia
+                WHEN 'lunes'     THEN 1
+                WHEN 'martes'    THEN 2
+                WHEN 'miercoles' THEN 3
+                WHEN 'jueves'    THEN 4
+                WHEN 'viernes'   THEN 5
+                WHEN 'sabado'    THEN 6
+                WHEN 'domingo'   THEN 7
+                ELSE 8 END")
             ->orderBy('horainicio')
             ->get();
 
@@ -48,8 +56,8 @@ class DeclaracionController extends Controller
             'fechadeclaracion'           => 'required|date',
             'items'                      => 'required|array|min:1',
             'items.*.dia'                => 'required|in:' . implode(',', self::DIAS),
-            'items.*.horainicio'         => 'required|date_format:H:i',
-            'items.*.horafin'            => 'required|date_format:H:i',
+            'items.*.horainicio'         => 'required|date_format:H:i,H:i:s',
+            'items.*.horafin'            => 'required|date_format:H:i,H:i:s',
             'items.*.establecimiento_id' => 'nullable|exists:establecimientos,id',
             'items.*.curso_id'           => 'nullable|exists:cursos,id',
             'items.*.materia_id'         => 'nullable|exists:materias,id',
@@ -71,8 +79,8 @@ class DeclaracionController extends Controller
                 'curso_id'           => $item['curso_id'] ?? null,
                 'materia_id'         => $item['materia_id'] ?? null,
                 'dia'                => $item['dia'],
-                'horainicio'         => $item['horainicio'],
-                'horafin'            => $item['horafin'],
+                'horainicio'         => substr($item['horainicio'], 0, 5),
+                'horafin'            => substr($item['horafin'], 0, 5),
             ]);
         }
 
