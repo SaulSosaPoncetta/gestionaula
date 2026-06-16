@@ -40,8 +40,9 @@
                             {{ $f['nombreestablecimiento'] }} — {{ $f['nombremateria'] }}
                             ({{ \App\Models\Designacion::DIAS[$f['dia']] ?? $f['dia'] }}
                             {{ $f['horaentrada'] }}-{{ $f['horasalida'] }})
+                            — {{ $f['anodesignado'] }}° {{ $f['divisiondesignada'] }} {{ $f['turno'] }}
                             @if($f['tipohorario'] === 'dividido')
-                                <span> · dividido</span>
+                                · dividido
                             @endif
                         </option>
                     @endforeach

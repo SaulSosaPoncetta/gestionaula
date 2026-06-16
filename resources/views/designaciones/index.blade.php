@@ -56,14 +56,14 @@
                     <th class="ps-4">Establecimiento</th>
                     <th>N° Escuela</th>
                     <th>IGE</th>
-                    <th>Secuencia</th>
+                    <th class="text-center">Secuencia</th>
                     <th>Materia</th>
-                    <th>Año/Div.</th>
-                    <th>Cant. Mód/Hs</th>
+                    <th class="text-center">Año/Div.</th>
+                    <th class="text-center">Cant. Mód/Hs</th>
                     <th>Horario</th>
-                    <th>Turno</th>
+                    <th class="text-center">Turno</th>
                     <th class="text-center">Tipo</th>
-                    <th></th>
+                    <th class="text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -72,10 +72,10 @@
                     <td class="ps-4 fw-semibold">{{ $d->nombreestablecimiento }}</td>
                     <td>{{ $d->numeroescuela }}</td>
                     <td>{{ $d->ige ?? '—' }}</td>
-                    <td>{{ $d->secuencia ?? '—' }}</td>
+                    <td class="text-center">{{ $d->secuencia ?? '—' }}</td>
                     <td>{{ $d->nombremateria }}</td>
-                    <td>{{ $d->anodesignado }} {{ $d->divisiondesignada }}</td>
-                    <td>{{ $d->cantmodulos ?? '—' }}</td>
+                    <td class="text-center">{{ $d->anodesignado }} {{ $d->divisiondesignada }}</td>
+                    <td class="text-center">{{ $d->cantmodulos ?? '—' }}</td>
                     <td>
                         @if($d->tipohorario === 'dividido')
                             <span class="badge bg-primary mb-1">
@@ -103,22 +103,22 @@
                             </div>
                         @endif
                     </td>
-                    <td>{{ $d->turnodesempeno }}</td>
+                    <td class="text-center">{{ $d->turnodesempeno }}</td>
                     <td class="text-center">
                         <span class="badge bg-info">
                             {{ \App\Models\Designacion::TIPOS_HORA[$d->tipohora] ?? $d->tipohora }}
                         </span>
                     </td>
-                    <td class="text-end pe-3">
+                    <td class="text-center" style="white-space:nowrap">
                         <a href="{{ route('designaciones.edit', $d) }}"
-                           class="btn btn-sm btn-outline-secondary me-1">
-                            <i class="bi bi-pencil"></i>
+                           class="btn btn-sm btn-secondary me-1">
+                            <i class="bi bi-pencil text-white"></i>
                         </a>
                         <form method="POST" action="{{ route('designaciones.destroy', $d) }}" class="d-inline">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                            <button type="submit" class="btn btn-sm btn-danger"
                                     onclick="return confirm('¿Eliminar esta designación?')">
-                                <i class="bi bi-trash"></i>
+                                <i class="bi bi-trash text-white"></i>
                             </button>
                         </form>
                     </td>
