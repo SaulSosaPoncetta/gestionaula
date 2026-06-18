@@ -48,9 +48,16 @@
                     <td>{{ $dec->fechapresentacion?->format('d/m/Y H:i') ?? '—' }}</td>
                     <td>{{ $dec->fecharesolucion?->format('d/m/Y H:i') ?? '—' }}</td>
                     <td>
+                        <div class="d-flex gap-1">
                         <a href="{{ route('declaracion.show', $dec) }}" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye"></i>
                         </a>
+                        @if($dec->estado === 'borrador')
+                        <a href="{{ route('declaracion.edit', $dec) }}" class="btn btn-sm btn-secondary">
+                            <i class="bi bi-pencil text-white"></i>
+                        </a>
+                        @endif
+                        </div>
                     </td>
                 </tr>
                 @endforeach

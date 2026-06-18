@@ -88,6 +88,8 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::get('/declaracion/crear', [DeclaracionController::class, 'create'])->name('declaracion.create');
     Route::post('/declaracion', [DeclaracionController::class, 'store'])->name('declaracion.store');
     Route::get('/declaracion/{declaracion}', [DeclaracionController::class, 'show'])->name('declaracion.show');
+    Route::get('/declaracion/{declaracion}/editar', [DeclaracionController::class, 'edit'])->name('declaracion.edit');
+    Route::put('/declaracion/{declaracion}', [DeclaracionController::class, 'update'])->name('declaracion.update');
     Route::post('/declaracion/{declaracion}/presentar', [DeclaracionController::class, 'presentar'])->name('declaracion.presentar');
 
     Route::get('/cursos', [CursoController::class, 'index'])->name('cursos.index');

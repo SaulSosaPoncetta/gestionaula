@@ -19,6 +19,9 @@
     </div>
     <div class="col-auto d-flex gap-2">
         @if($declaracion->estado === 'borrador')
+        <a href="{{ route('declaracion.edit', $declaracion) }}" class="btn btn-secondary">
+            <i class="bi bi-pencil text-white me-1"></i>Editar
+        </a>
         <form method="POST" action="{{ route('declaracion.presentar', $declaracion) }}">
             @csrf
             <button type="submit" class="btn btn-primary"

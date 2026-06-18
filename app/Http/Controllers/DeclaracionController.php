@@ -88,6 +88,80 @@ class DeclaracionController extends Controller
                          ->with('success', 'Declaración guardada como borrador.');
     }
 
+    public function edit(Declaracion $declaracion)
+    {
+        abort_if($declaracion->user_id !== auth()->id(), 403);
+        abort_if($declaracion->estado !== 'borrador', 403,
+            'Solo se pueden editar declaraciones en borrador.');
+
+        $user  = auth()->user();
+        $dias  = self::DIAS;
+
+        // Cargar items existentes como si fueran horarios para reutilizar el form
+        $horarios = $declaracion->items->map(function($item) {
+            return (object)[
+                'dia'                => $item->dia,
+                'horainicio'         => $item->horainicio,
+                'horafin'            => $item->horafin,
+                'establecimiento_id' => $item->establecimiento_id,
+                'curso_id'           => $item->curso_id,
+                'materia_id'         => $item->materia_id,
+            ];
+        });
+
+        $establecimientos = \App\Models\Establecimiento::where('user_id', auth()->id())
+            ->orderBy('nombre')->get();
+        $cicloactual = $declaracion->ciclo;
+
+        return view('declaracion.edit', compact(
+            'declaracion', 'horarios', 'dias', 'cicloactual', 'establecimientos'
+        ));
+    }
+
+    public function update(Request $request, Declaracion $declaracion)
+    {
+        abort_if($declaracion->user_id !== auth()->id(), 403);
+        abort_if($declaracion->estado !== 'borrador', 403,
+            'Solo se pueden editar declaraciones en borrador.');
+
+        $request->validate([
+            'ciclo'                      => 'required|string|max:20',
+            'fechadeclaracion'           => 'required|date',
+            'items'                      => 'required|array|min:1',
+            'items.*.dia'                => 'required|in:' . implode(',', self::DIAS),
+            'items.*.horainicio'         => 'required|date_format:H:i,H:i:s',
+            'items.*.horafin'            => 'required|date_format:H:i,H:i:s',
+            'items.*.establecimiento_id' => 'nullable|exists:establecimientos,id',
+            'items.*.curso_id'           => 'nullable|exists:cursos,id',
+            'items.*.materia_id'         => 'nullable|exists:materias,id',
+        ]);
+
+        $declaracion->update([
+            'ciclo'            => $request->ciclo,
+            'fechadeclaracion' => $request->fechadeclaracion,
+        ]);
+
+        // Reemplazar todos los items
+        $declaracion->items()->delete();
+
+        foreach ($request->items as $item) {
+            if (empty($item['dia'])) continue;
+
+            DeclaracionItem::create([
+                'declaracion_id'     => $declaracion->id,
+                'establecimiento_id' => $item['establecimiento_id'] ?? null,
+                'curso_id'           => $item['curso_id'] ?? null,
+                'materia_id'         => $item['materia_id'] ?? null,
+                'dia'                => $item['dia'],
+                'horainicio'         => substr($item['horainicio'], 0, 5),
+                'horafin'            => substr($item['horafin'], 0, 5),
+            ]);
+        }
+
+        return redirect()->route('declaracion.show', $declaracion)
+                         ->with('success', 'Declaración actualizada correctamente.');
+    }
+
     public function show(Declaracion $declaracion)
     {
         abort_if($declaracion->user_id !== auth()->id(), 403);
