@@ -10,7 +10,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $ahora      = Carbon::now();
+        $ahora      = Carbon::now('America/Argentina/Buenos_Aires');
         $horaActual = $ahora->format('H:i:s');
 
         $mapaDias = [

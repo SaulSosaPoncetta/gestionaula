@@ -9,34 +9,12 @@ use App\Models\TipoClase;
 use App\Models\Contenido;
 use App\Models\Actividad;
 use App\Models\Horario;
+use App\Http\Controllers\Concerns\DetectaHorarioActivo;
 use Illuminate\Http\Request;
 
 class LibroTemaController extends Controller
 {
-    private function detectarHorarioActivo()
-{
-    $ahora = \Carbon\Carbon::now();
-
-    $mapaDias = [
-        1 => 'lunes',
-        2 => 'martes',
-        3 => 'miercoles',
-        4 => 'jueves',
-        5 => 'viernes',
-        6 => 'sabado',
-        7 => 'domingo',
-    ];
-
-    $diaActual  = $mapaDias[$ahora->isoWeekday()];
-    $horaActual = $ahora->format('H:i:s');
-
-    return Horario::with(['materia', 'curso'])
-        ->where('user_id', auth()->id())
-        ->where('dia', $diaActual)
-        ->where('horainicio', '<=', $horaActual)
-        ->where('horafin', '>=', $horaActual)
-        ->first();
-}
+    use DetectaHorarioActivo;
 
     public function index(Request $request)
     {

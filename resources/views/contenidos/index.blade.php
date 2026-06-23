@@ -48,6 +48,18 @@
     </div>
 @else
 
+{{-- Encabezado de columnas --}}
+<div class="card border-0 shadow-sm mb-2">
+    <div class="card-body py-2 px-3">
+        <div class="row fw-semibold small text-muted">
+            <div class="col-2"><i class="bi bi-bookmark me-1"></i>Unidad</div>
+            <div class="col-4"><i class="bi bi-book me-1"></i>Materia</div>
+            <div class="col-4"><i class="bi bi-file-text me-1"></i>Temas</div>
+            <div class="col-2 text-end"><i class="bi bi-list me-1"></i>Subtemas</div>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex justify-content-end gap-2 mb-2">
     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleTodosContenidos(true)">
         <i class="bi bi-arrows-expand me-1"></i>Expandir todo
@@ -71,21 +83,33 @@
                     class="btn w-100 text-start d-flex justify-content-between align-items-center py-3 px-3"
                     data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}"
                     aria-expanded="false" aria-controls="{{ $collapseId }}">
-                <span class="fw-bold">
-                    <i class="bi bi-chevron-down acordeon-icono me-2"></i>
-                    @if($unidad === 'sin_unidad')
-                        <span class="badge bg-secondary me-2">Sin unidad</span>
-                    @else
-                        <span class="badge bg-primary me-2">Unidad {{ $unidad }}</span>
-                    @endif
-                    <span class="text-muted fw-normal">{{ $primeraMateria?->nombre }}</span>
-                </span>
-                <span class="d-flex gap-2 align-items-center">
-                    <span class="badge bg-success">{{ $totalTemas }} {{ $totalTemas == 1 ? 'tema' : 'temas' }}</span>
-                    @if($totalSubtemas > 0)
-                    <span class="badge bg-info">{{ $totalSubtemas }} subtemas</span>
-                    @endif
-                </span>
+                <div class="row w-100 align-items-center">
+                    <div class="col-2">
+                        <i class="bi bi-chevron-down acordeon-icono me-1"></i>
+                        @if($unidad === 'sin_unidad')
+                            <span class="badge bg-secondary">S/U</span>
+                        @else
+                            <span class="badge bg-primary">U{{ $unidad }}</span>
+                        @endif
+                    </div>
+                    <div class="col-4 text-muted small fw-semibold">
+                        {{ $primeraMateria?->nombre }}
+                    </div>
+                    <div class="col-4 small text-muted">
+                        @foreach($temas->take(2) as $t)
+                            <div class="text-truncate" style="max-width:220px">{{ $t->tema }}</div>
+                        @endforeach
+                        @if($temas->count() > 2)
+                            <div class="text-primary small">+ {{ $temas->count() - 2 }} más...</div>
+                        @endif
+                    </div>
+                    <div class="col-2 text-end">
+                        <span class="badge bg-success">{{ $totalTemas }} T</span>
+                        @if($totalSubtemas > 0)
+                        <span class="badge bg-info">{{ $totalSubtemas }} S</span>
+                        @endif
+                    </div>
+                </div>
             </button>
         </div>
         <div class="collapse" id="{{ $collapseId }}">

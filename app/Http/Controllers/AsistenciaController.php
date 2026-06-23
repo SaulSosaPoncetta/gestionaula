@@ -6,29 +6,39 @@ use App\Models\Asistencia;
 use App\Models\Curso;
 use App\Models\Materia;
 use App\Models\Alumno;
+use App\Models\CalendarioEscolar;
+use App\Http\Controllers\Concerns\DetectaHorarioActivo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class AsistenciaController extends Controller
 {
+    use DetectaHorarioActivo;
+
     public function index()
     {
         $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-        $cursos   = collect();
 
-        if (request()->filled('materia_id')) {
-            $cursos = Curso::where('user_id', auth()->id())
-                ->whereHas('materias', fn($q) =>
-                    $q->where('materias.id', request('materia_id'))
-                )->orderBy('anio')->orderBy('division')->get();
+        $horarioActivo = $this->detectarHorarioActivo();
 
-            if ($cursos->isEmpty()) {
-                $cursos = Curso::where('user_id', auth()->id())
-                    ->orderBy('anio')->orderBy('division')->get();
-            }
-        }
+        $materiaIdDefault = request('materia_id', $horarioActivo?->materia_id);
 
-        return view('asistencia.index', compact('materias', 'cursos'));
+        // El curso del horario activo solo aplica como default si la materia
+        // seleccionada sigue siendo la del horario activo (o no se eligió ninguna).
+        $usandoMateriaDelHorario = !request()->filled('materia_id')
+            || (string) request('materia_id') === (string) $horarioActivo?->materia_id;
+
+        $cursoIdDefault = request('curso_id', $usandoMateriaDelHorario ? $horarioActivo?->curso_id : null);
+
+        // Los cursos siempre deben estar disponibles en el select,
+        // haya o no una clase activa en este momento.
+        $cursos = Curso::where('user_id', auth()->id())
+            ->orderBy('anio')->orderBy('division')->get();
+
+        return view('asistencia.index', compact(
+            'materias', 'cursos', 'materiaIdDefault', 'cursoIdDefault', 'horarioActivo'
+        ));
     }
 
     public function accion(Request $request)
@@ -75,10 +85,31 @@ public function guardar(Request $request)
         'asistencias' => 'required|array',
     ]);
 
+    // Verificar si la fecha es feriado en el calendario escolar
+    $esFeriado = \App\Models\CalendarioEscolar::where('user_id', auth()->id())
+        ->where('esferiado', true)
+        ->where(function($q) use ($request) {
+            $q->where('fecha', $request->fecha)
+              ->orWhere(function($q2) use ($request) {
+                  $q2->where('fechainicio', '<=', $request->fecha)
+                     ->where('fechafin', '>=', $request->fecha);
+              });
+        })
+        ->first();
+
     foreach ($request->asistencias as $alumnoId => $datos) {
         $estado      = $datos['estado'] ?? 'presente';
         $horallegada = null;
         $fotoruta    = null;
+        $observacion = $datos['observacion'] ?? null;
+
+        // Si es feriado, agregar nota a la observacion
+        if ($esFeriado) {
+            $notaFeriado = 'Feriado: ' . $esFeriado->denominacion;
+            $observacion = $observacion
+                ? $notaFeriado . ' — ' . $observacion
+                : $notaFeriado;
+        }
 
         if ($estado === 'tarde' && !empty($datos['horallegada'])) {
             $horallegada = $datos['horallegada'];
@@ -102,19 +133,23 @@ public function guardar(Request $request)
                 'estado'            => $estado,
                 'horallegada'       => $horallegada,
                 'fotojustificacion' => $fotoruta,
-                'observacion'       => $datos['observacion'] ?? null,
+                'observacion'       => $observacion,
             ]
         );
 
-        // Actualizar porcentaje de asistencia del alumno
         \App\Services\AsistenciaService::actualizarPorcentaje($alumnoId, $request->materia_id);
     }
 
+    $msg = 'Asistencia guardada correctamente.';
+    if ($esFeriado) {
+        $msg .= ' (Fecha marcada como feriado: ' . $esFeriado->denominacion . ')';
+    }
+
     return redirect()->route('asistencia.registrar', [
-    'curso_id'   => $request->curso_id,
-    'materia_id' => $request->materia_id,
-    'fecha'      => $request->fecha,
-])->with('success', 'Asistencia guardada correctamente.');
+        'curso_id'   => $request->curso_id,
+        'materia_id' => $request->materia_id,
+        'fecha'      => $request->fecha,
+    ])->with('success', $msg);
 }
 
 public function listado(Request $request)
@@ -172,6 +207,20 @@ public function listado(Request $request)
     $resumen     = [];
     $alumnos     = collect();
 
+    // Detectar clase activa para preseleccionar
+    $horarioActivo = $this->detectarHorarioActivo();
+
+    $cursoIdDefault   = $request->get('curso_id',   $horarioActivo?->curso_id);
+    $materiaIdDefault = $request->get('materia_id', $horarioActivo?->materia_id);
+
+    // Si vienen del horario y no hay filtros explícitos, precargar datos
+    if (!$request->filled('curso_id') && $cursoIdDefault) {
+        $request->merge([
+            'curso_id'   => $cursoIdDefault,
+            'materia_id' => $materiaIdDefault,
+        ]);
+    }
+
     if ($request->filled('curso_id')) {
         $filtros = $request->only(['curso_id', 'materia_id', 'fechainicio', 'fechafin', 'alumno_id']);
 
@@ -186,7 +235,6 @@ public function listado(Request $request)
 
         $asistencias = $query->orderBy('alumno_id')->orderBy('fecha', 'desc')->get();
 
-        // Resumen
         $resumen = [
             'presente'    => $asistencias->where('estado', 'presente')->count(),
             'ausente'     => $asistencias->where('estado', 'ausente')->count(),
@@ -195,7 +243,6 @@ public function listado(Request $request)
             'total'       => $asistencias->count(),
         ];
 
-        // Agrupar por alumno
         $asistencias = $asistencias->groupBy('alumno_id');
 
         $alumnos = Alumno::where('user_id', auth()->id())
@@ -205,7 +252,7 @@ public function listado(Request $request)
 
     return view('asistencia.historial', compact(
         'materias', 'cursos', 'asistencias', 'filtros',
-        'resumen', 'alumnos'
+        'resumen', 'alumnos', 'cursoIdDefault', 'materiaIdDefault'
     ));
 }
 

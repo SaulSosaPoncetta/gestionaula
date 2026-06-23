@@ -5,13 +5,24 @@ namespace App\Http\Controllers;
 use App\Models\Contenido;
 use App\Models\ContenidoSubtema;
 use App\Models\Materia;
+use App\Http\Controllers\Concerns\DetectaHorarioActivo;
 use Illuminate\Http\Request;
 
 class ContenidoController extends Controller
 {
+    use DetectaHorarioActivo;
+
     public function index(Request $request)
     {
         $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+
+        // Preseleccionar materia del horario activo si no hay filtro
+        if (!$request->filled('materia_id')) {
+            $horario = $this->detectarHorarioActivo();
+            if ($horario?->materia_id) {
+                $request->merge(['materia_id' => $horario->materia_id]);
+            }
+        }
 
         $query = Contenido::with(['materia', 'subtemas'])
             ->where('user_id', auth()->id())
@@ -23,9 +34,7 @@ class ContenidoController extends Controller
         }
 
         $contenidos = $query->get();
-
-        // Agrupar por unidad para el acordeón
-        $porUnidad = $contenidos->groupBy(fn($c) => $c->numerounidad ?? 'sin_unidad');
+        $porUnidad  = $contenidos->groupBy(fn($c) => $c->numerounidad ?? 'sin_unidad');
 
         return view('contenidos.index', compact('contenidos', 'porUnidad', 'materias'));
     }

@@ -23,7 +23,7 @@
                         <option value="">— Selecciona —</option>
                         @foreach($cursos as $curso)
                             <option value="{{ $curso->id }}"
-                                {{ ($filtros['curso_id'] ?? '') == $curso->id ? 'selected' : '' }}>
+                                {{ ($filtros['curso_id'] ?? $cursoIdDefault) == $curso->id ? 'selected' : '' }}>
                                 {{ $curso->nombre_completo }}
                             </option>
                         @endforeach
@@ -35,7 +35,7 @@
                         <option value="">— Todas —</option>
                         @foreach($materias as $m)
                             <option value="{{ $m->id }}"
-                                {{ ($filtros['materia_id'] ?? '') == $m->id ? 'selected' : '' }}>
+                                {{ ($filtros['materia_id'] ?? $materiaIdDefault) == $m->id ? 'selected' : '' }}>
                                 {{ $m->nombre }}
                             </option>
                         @endforeach
