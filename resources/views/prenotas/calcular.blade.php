@@ -9,7 +9,7 @@
             &mdash;
             <strong>{{ $curso->nombre_completo }}</strong>
             &mdash;
-            Tipo: <strong>{{ session('tipocierre') ?? request('tipocierre') }}</strong>
+            Tipo: <strong>{{ $tipocierre }}</strong>
         </p>
     </div>
     <div class="col-auto">
@@ -23,7 +23,7 @@
     @csrf
     <input type="hidden" name="materia_id" value="{{ $materia->id }}">
     <input type="hidden" name="curso_id"   value="{{ $curso->id }}">
-    <input type="hidden" name="tipocierre" value="{{ session('tipocierre') }}">
+    <input type="hidden" name="tipocierre" value="{{ $tipocierre }}">
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-0">

@@ -9,32 +9,48 @@ use App\Models\ActividadGrupoAlumno;
 use App\Models\Curso;
 use App\Models\Materia;
 use App\Models\TipoActividad;
+use App\Http\Controllers\Concerns\DetectaHorarioActivo;
 use Illuminate\Http\Request;
 
 class ActividadController extends Controller
 {
+    use DetectaHorarioActivo;
+
     public function index(Request $request)
-{
-    $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+    {
+        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
 
-    $query = Actividad::with(['materia', 'tipoactividad', 'items'])
-        ->where('user_id', auth()->id())
-        ->orderBy('numerounidad')
-        ->orderBy('numeroactividad');
+        // Preseleccionar materia del horario activo si no hay filtro explícito
+        if (!$request->filled('materia_id')) {
+            $horario = $this->detectarHorarioActivo();
+            if ($horario?->materia_id) {
+                $request->merge(['materia_id' => $horario->materia_id]);
+            }
+        }
 
-    if ($request->filled('materia_id')) {
-        $query->where('materia_id', $request->materia_id);
+        $query = Actividad::with(['materia', 'tipoactividad', 'items'])
+            ->where('user_id', auth()->id())
+            ->orderBy('numerounidad')
+            ->orderBy('numeroactividad');
+
+        if ($request->filled('materia_id')) {
+            $query->where('materia_id', $request->materia_id);
+        }
+
+        $actividades     = $query->paginate(15);
+        $materiaActiva   = $request->get('materia_id');
+
+        return view('actividades.index', compact('actividades', 'materias', 'materiaActiva'));
     }
-
-    $actividades = $query->paginate(15);
-
-    return view('actividades.index', compact('actividades', 'materias'));
-}
 
     public function seleccionar()
     {
         $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-        return view('actividades.seleccionar', compact('materias'));
+
+        $horario         = $this->detectarHorarioActivo();
+        $materiaActiva   = $horario?->materia_id;
+
+        return view('actividades.seleccionar', compact('materias', 'materiaActiva'));
     }
 
     public function create(Request $request)
@@ -97,7 +113,7 @@ class ActividadController extends Controller
             }
         }
 
-        return redirect()->route('actividades.show', $actividad)
+        return redirect()->route('actividades.index', ['materia_id' => $actividad->materia_id])
                          ->with('success', 'Actividad creada correctamente.');
     }
 

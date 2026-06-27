@@ -7,7 +7,8 @@
         <p class="text-muted">Gestión de actividades pedagógicas.</p>
     </div>
     <div class="col-auto">
-        <a href="{{ route('actividades.seleccionar') }}" class="btn btn-primary">
+        <a href="{{ route('actividades.seleccionar', $materiaActiva ? ['materia_id' => $materiaActiva] : []) }}"
+           class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i>Nueva actividad
         </a>
     </div>
@@ -22,7 +23,7 @@
                     <option value="">— Todas las materias —</option>
                     @foreach($materias as $materia)
                         <option value="{{ $materia->id }}"
-                            {{ request('materia_id') == $materia->id ? 'selected' : '' }}>
+                            {{ $materiaActiva == $materia->id ? 'selected' : '' }}>
                             {{ $materia->nombre }}
                         </option>
                     @endforeach

@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Plan;
 use App\Models\Suscripcion;
+use App\Models\CicloLectivo;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -59,6 +60,9 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
         Auth::login($user);
+
+        // Crear ciclo lectivo para el año actual automáticamente
+        CicloLectivo::crearParaUsuario($user->id);
 
         return redirect(route('dashboard'));
     }

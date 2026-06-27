@@ -29,6 +29,8 @@ use App\Http\Controllers\CeseController;
 use App\Http\Controllers\TipoValoracionController;
 use App\Http\Controllers\CalendarioEscolarController;
 use App\Http\Controllers\AsignarActividadNuevoController;
+use App\Http\Controllers\CicloLectivoController;
+use App\Http\Controllers\CierreCuatriController;
 use App\Http\Controllers\PrenotaController;
 use App\Http\Controllers\ProyectoController;
 use App\Http\Middleware\SeguridadWeb;
@@ -88,8 +90,6 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::get('/declaracion/crear', [DeclaracionController::class, 'create'])->name('declaracion.create');
     Route::post('/declaracion', [DeclaracionController::class, 'store'])->name('declaracion.store');
     Route::get('/declaracion/{declaracion}', [DeclaracionController::class, 'show'])->name('declaracion.show');
-    Route::get('/declaracion/{declaracion}/editar', [DeclaracionController::class, 'edit'])->name('declaracion.edit');
-    Route::put('/declaracion/{declaracion}', [DeclaracionController::class, 'update'])->name('declaracion.update');
     Route::post('/declaracion/{declaracion}/presentar', [DeclaracionController::class, 'presentar'])->name('declaracion.presentar');
 
     Route::get('/cursos', [CursoController::class, 'index'])->name('cursos.index');
@@ -260,6 +260,14 @@ Route::get('/api/designaciones', [DesignacionController::class, 'listar'])->name
     Route::get('/asignarnuevo/ver', [AsignarActividadNuevoController::class, 'ver'])->name('asignarnuevo.ver');
     Route::post('/asignarnuevo/asignar', [AsignarActividadNuevoController::class, 'asignar'])->name('asignarnuevo.asignar');
 
+    Route::resource('ciclos-lectivos', CicloLectivoController::class)->names('ciclos_lectivos');
+    Route::post('/ciclos-lectivos/{ciclosLectivo}/activar', [CicloLectivoController::class, 'activar'])->name('ciclos_lectivos.activar');
+    Route::get('/ciclos-lectivos/{ciclosLectivo}/siguiente', [CicloLectivoController::class, 'generarSiguiente'])->name('ciclos_lectivos.siguiente');
+
+    Route::get('/cierre-cuatri', [CierreCuatriController::class, 'index'])->name('cierre_cuatri.index');
+    Route::post('/cierre-cuatri/calcular', [CierreCuatriController::class, 'calcular'])->name('cierre_cuatri.calcular');
+    Route::post('/cierre-cuatri/guardar', [CierreCuatriController::class, 'guardar'])->name('cierre_cuatri.guardar');
+    Route::get('/cierre-cuatri/historial', [CierreCuatriController::class, 'historial'])->name('cierre_cuatri.historial');
     Route::get('/prenotas', [PrenotaController::class, 'index'])->name('prenotas.index');
     Route::post('/prenotas/calcular', [PrenotaController::class, 'calcular'])->name('prenotas.calcular');
     Route::post('/prenotas/guardar', [PrenotaController::class, 'guardar'])->name('prenotas.guardar');

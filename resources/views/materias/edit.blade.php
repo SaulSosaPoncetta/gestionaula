@@ -37,25 +37,13 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold">Año</label>
                         <select name="anio" class="form-select">
                             <option value="">—</option>
                             @foreach (['1ro', '2do', '3ro', '4to', '5to', '6to', '7mo'] as $a)
                                 <option value="{{ $a }}"
                                     {{ old('anio', $materia->anio) == $a ? 'selected' : '' }}>{{ $a }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Establecimiento</label>
-                        <select name="establecimiento_id" class="form-select">
-                            <option value="">—</option>
-                            @foreach ($establecimientos as $est)
-                                <option value="{{ $est->id }}"
-                                    {{ old('establecimiento_id', $materia->establecimiento_id) == $est->id ? 'selected' : '' }}>
-                                    {{ $est->nombre }}
-                                </option>
                             @endforeach
                         </select>
                     </div>

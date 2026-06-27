@@ -67,6 +67,13 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a class="dropdown-item {{ request()->routeIs('cierre_cuatri.*') ? 'active' : '' }}"
+                                        href="{{ route('cierre_cuatri.index') }}">
+                                        <i class="bi bi-calculator me-2"></i>Cierre de notas
+                                    </a>
+                                </li>
+
+                                <li>
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
@@ -154,6 +161,14 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
+                                    <a class="dropdown-item" href="{{ route('ciclos_lectivos.index') }}">
+                                        <i class="bi bi-calendar2-range me-1"></i>Ciclos lectivos
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
                                     <a class="dropdown-item {{ request()->routeIs('calendarioescolar.*') ? 'active' : '' }}"
                                         href="{{ route('calendarioescolar.index') }}">
                                         <i class="bi bi-calendar3 me-2"></i>Calendario escolar
@@ -202,7 +217,7 @@
                                 <li>
                                     <h6 class="dropdown-header">Horarios</h6>
                                 </li>
-                                                                <li>
+                                <li>
                                     <a class="dropdown-item {{ request()->routeIs('designaciones.*') ? 'active' : '' }}"
                                         href="{{ route('designaciones.index') }}">
                                         <i class="bi bi-file-earmark-person me-2"></i>Designaciones

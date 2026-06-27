@@ -6,7 +6,7 @@ class Materia extends Model
 {
 protected $fillable = [
     'user_id', 'nombre', 'ciclo_id', 'area_formacion_id', 'especialidad_id',
-    'establecimiento_id', 'anio', 'tipomateria', 'tipohora',
+    'anio', 'tipomateria', 'tipohora',
     'cargahorariasemanal', 'cargahorariaanual', 'hsporclase',
     'cantidadclasesanuales', 'porcentajelimite'
 ];
@@ -33,11 +33,6 @@ protected $fillable = [
     public function cursos()
     {
         return $this->belongsToMany(Curso::class, 'curso_materia');
-    }
-
-    public function establecimiento()
-    {
-        return $this->belongsTo(Establecimiento::class);
     }
 
     public function asistencias()

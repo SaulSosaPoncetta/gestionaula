@@ -4,10 +4,18 @@
 <div class="row mb-4">
     <div class="col">
         <h4 class="fw-bold"><i class="bi bi-plus-circle me-2"></i>Nueva actividad</h4>
-        <p class="text-muted">Selecciona la materia para continuar.</p>
+        <p class="text-muted">Seleccioná la materia para continuar.</p>
+        @if($materiaActiva)
+        <div class="mt-1">
+            <span class="badge bg-success">
+                <i class="bi bi-play-circle me-1"></i>Clase activa detectada
+            </span>
+        </div>
+        @endif
     </div>
     <div class="col-auto">
-        <a href="{{ route('actividades.index') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('actividades.index', $materiaActiva ? ['materia_id' => $materiaActiva] : []) }}"
+           class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Volver
         </a>
     </div>
@@ -22,9 +30,10 @@
                         <span class="badge bg-primary me-1">1</span>Materia
                     </label>
                     <select name="materia_id" class="form-select" required>
-                        <option value="">Selecciona una materia...</option>
+                        <option value="">Seleccioná una materia...</option>
                         @foreach($materias as $materia)
-                            <option value="{{ $materia->id }}">
+                            <option value="{{ $materia->id }}"
+                                {{ ($materiaActiva ?? request('materia_id')) == $materia->id ? 'selected' : '' }}>
                                 {{ $materia->nombre }}
                             </option>
                         @endforeach

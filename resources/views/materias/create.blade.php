@@ -29,7 +29,7 @@
 
                 <h6 class="fw-bold text-muted mb-3">Datos generales</h6>
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-8">
                         <label class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
                         <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror"
                             value="{{ old('nombre') }}" required>
@@ -37,25 +37,13 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold">Año</label>
                         <select name="anio" class="form-select">
                             <option value="">—</option>
                             @foreach (['1ro', '2do', '3ro', '4to', '5to', '6to', '7mo'] as $a)
                                 <option value="{{ $a }}" {{ old('anio') == $a ? 'selected' : '' }}>
                                     {{ $a }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-semibold">Establecimiento</label>
-                        <select name="establecimiento_id" class="form-select">
-                            <option value="">—</option>
-                            @foreach ($establecimientos as $est)
-                                <option value="{{ $est->id }}"
-                                    {{ old('establecimiento_id') == $est->id ? 'selected' : '' }}>
-                                    {{ $est->nombre }}
-                                </option>
                             @endforeach
                         </select>
                     </div>
