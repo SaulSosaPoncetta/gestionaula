@@ -29,6 +29,7 @@ use App\Http\Controllers\CeseController;
 use App\Http\Controllers\TipoValoracionController;
 use App\Http\Controllers\CalendarioEscolarController;
 use App\Http\Controllers\AsignarActividadNuevoController;
+use App\Http\Controllers\PdfController;
 use App\Http\Controllers\CicloLectivoController;
 use App\Http\Controllers\CierreCuatriController;
 use App\Http\Controllers\PrenotaController;
@@ -229,13 +230,13 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::put('/calificaractividad/{estado}/update', [CalificarActividadController::class, 'updateCalificada'])->name('calificaractividad.update');
     Route::post('/calificaractividad/calificar', [CalificarActividadController::class, 'calificar'])->name('calificaractividad.calificar');
 
-Route::get('/designaciones', [DesignacionController::class, 'index'])->name('designaciones.index');
-Route::get('/designaciones/crear', [DesignacionController::class, 'create'])->name('designaciones.create');
-Route::post('/designaciones', [DesignacionController::class, 'store'])->name('designaciones.store');
-Route::get('/designaciones/{designacion}/editar', [DesignacionController::class, 'edit'])->name('designaciones.edit');
-Route::put('/designaciones/{designacion}', [DesignacionController::class, 'update'])->name('designaciones.update');
-Route::delete('/designaciones/{designacion}', [DesignacionController::class, 'destroy'])->name('designaciones.destroy');
-Route::get('/api/designaciones', [DesignacionController::class, 'listar'])->name('api.designaciones');
+    Route::get('/designaciones', [DesignacionController::class, 'index'])->name('designaciones.index');
+    Route::get('/designaciones/crear', [DesignacionController::class, 'create'])->name('designaciones.create');
+    Route::post('/designaciones', [DesignacionController::class, 'store'])->name('designaciones.store');
+    Route::get('/designaciones/{designacion}/editar', [DesignacionController::class, 'edit'])->name('designaciones.edit');
+    Route::put('/designaciones/{designacion}', [DesignacionController::class, 'update'])->name('designaciones.update');
+    Route::delete('/designaciones/{designacion}', [DesignacionController::class, 'destroy'])->name('designaciones.destroy');
+    Route::get('/api/designaciones', [DesignacionController::class, 'listar'])->name('api.designaciones');
 
     Route::get('/ceses', [CeseController::class, 'index'])->name('ceses.index');
     Route::get('/ceses/crear', [CeseController::class, 'create'])->name('ceses.create');
@@ -259,6 +260,19 @@ Route::get('/api/designaciones', [DesignacionController::class, 'listar'])->name
     Route::get('/asignarnuevo', [AsignarActividadNuevoController::class, 'index'])->name('asignarnuevo.index');
     Route::get('/asignarnuevo/ver', [AsignarActividadNuevoController::class, 'ver'])->name('asignarnuevo.ver');
     Route::post('/asignarnuevo/asignar', [AsignarActividadNuevoController::class, 'asignar'])->name('asignarnuevo.asignar');
+
+    // ── Impresiones PDF ────────────────────────────────────────────────
+    Route::get('/pdf', [PdfController::class, 'index'])->name('pdf.index');
+    Route::get('/pdf/alumnos',        [PdfController::class, 'alumnos'])->name('pdf.alumnos');
+    Route::get('/pdf/asistencia',     [PdfController::class, 'asistencia'])->name('pdf.asistencia');
+    Route::get('/pdf/calificaciones', [PdfController::class, 'calificaciones'])->name('pdf.calificaciones');
+    Route::get('/pdf/boletin',        [PdfController::class, 'boletin'])->name('pdf.boletin');
+    Route::get('/pdf/cierre',         [PdfController::class, 'cierre'])->name('pdf.cierre');
+    Route::get('/pdf/declaracion',    [PdfController::class, 'declaracion'])->name('pdf.declaracion');
+    Route::get('/pdf/planilla',       [PdfController::class, 'planilla'])->name('pdf.planilla');
+    Route::get('/pdf/contenidos',     [PdfController::class, 'contenidos'])->name('pdf.contenidos');
+    Route::get('/pdf/librotemas',     [PdfController::class, 'librotemas'])->name('pdf.librotemas');
+    Route::get('/pdf/docente',        [PdfController::class, 'docente'])->name('pdf.docente');
 
     Route::resource('ciclos-lectivos', CicloLectivoController::class)->names('ciclos_lectivos');
     Route::post('/ciclos-lectivos/{ciclosLectivo}/activar', [CicloLectivoController::class, 'activar'])->name('ciclos_lectivos.activar');
@@ -298,6 +312,8 @@ Route::get('/api/designaciones', [DesignacionController::class, 'listar'])->name
             ]);
     })->middleware(['web', 'auth'])->name('api.curso.alumnos');
 });
+
+
 
 // ==========================================
 // GRUPO DE ADMINISTRACIÓN (CORREGIDO)

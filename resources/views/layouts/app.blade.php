@@ -73,6 +73,7 @@
                                     </a>
                                 </li>
 
+
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
@@ -80,6 +81,15 @@
                                     <a class="dropdown-item {{ request()->routeIs('librotemas.*') ? 'active' : '' }}"
                                         href="{{ route('librotemas.index') }}">
                                         <i class="bi bi-journal-bookmark-fill me-2"></i>Libro de temas
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('pdf.*') ? 'active' : '' }}"
+                                        href="{{ route('pdf.index') }}">
+                                        <i class="bi bi-calculator me-2"></i>Informes
                                     </a>
                                 </li>
                             </ul>
