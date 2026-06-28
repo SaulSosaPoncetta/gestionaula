@@ -594,6 +594,42 @@
             }
 
             let statsCache = {};
+            let graficosInstanciados = {};
+            let claseActivaActual = null;
+            let claveClaseAnterior = 'INICIAL';
+
+            function actualizarReloj() {
+                const ahora = new Date();
+                const h = pad(ahora.getHours());
+                const m = pad(ahora.getMinutes());
+                const s = pad(ahora.getSeconds());
+                const diaNum = ahora.getDay();
+                const dia = diasSemana[diaNum];
+
+                document.getElementById('reloj').textContent = `${h}:${m}:${s}`;
+                document.getElementById('diaSemana').textContent = diasLabel[diaNum];
+                document.getElementById('fechaCompleta').textContent =
+                    `${ahora.getDate()} de ${meses[ahora.getMonth()]} de ${ahora.getFullYear()}`;
+
+                const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
+                const clases = clasesActuales(dia, minutosActuales);
+                claseActivaActual = clases.length > 0 ? clases[0] : null;
+
+                // Solo actualizar leyenda y stats si cambió la clase activa
+                const claveActual = claseActivaActual
+                    ? `${claseActivaActual.curso_id}_${claseActivaActual.materia_id}`
+                    : 'ninguna';
+
+                actualizarLeyenda(clases);
+
+                if (claveActual !== claveClaseAnterior) {
+                    claveClaseAnterior = claveActual;
+                    renderClaseActual(clases);
+                }
+            }
+
+            actualizarReloj();
+            setInterval(actualizarReloj, 1000);
 
             function renderClaseActual(clases) {
                 const container = document.getElementById('claseActualContainer');
@@ -653,14 +689,14 @@
                             container.innerHTML = `
         <div class="card border-0 shadow-sm mb-3">
             <div class="card-body text-center py-3">
-                <button class="btn btn-outline-primary btn-sm" onclick="statsCache={}; graficosInstanciados={}; renderClaseActual(clasesActuales(diasSemana[new Date().getDay()], new Date().getHours()*60+new Date().getMinutes()))">
+                <button class="btn btn-outline-primary btn-sm" onclick="statsCache={}; graficosInstanciados={}; claveClaseAnterior='INICIAL'; renderClaseActual(clasesActuales(diasSemana[new Date().getDay()], new Date().getHours()*60+new Date().getMinutes()))">
                     <i class="bi bi-arrow-clockwise me-1"></i>Reintentar cargar estadisticas
                 </button>
             </div>
         </div>`;
-                        
-                });
-            }
+                        });
+                }); // fin clases.forEach
+            } // fin renderClaseActual
 
             function renderTablaConStats(container, clase, data) {
                 const alumnos = data.alumnos;
@@ -889,8 +925,6 @@
                 }, 100);
             }
 
-            let claseActivaActual = null;
-
             function accesoRapidoModulo(modulo) {
                 if (modulo === 'asistencia') {
                     if (claseActivaActual) {
@@ -930,28 +964,5 @@
                 new bootstrap.Modal(modalEl).show();
             }
 
-            function actualizarReloj() {
-                const ahora = new Date();
-                const h = pad(ahora.getHours());
-                const m = pad(ahora.getMinutes());
-                const s = pad(ahora.getSeconds());
-                const diaNum = ahora.getDay();
-                const dia = diasSemana[diaNum];
-
-                document.getElementById('reloj').textContent = `${h}:${m}:${s}`;
-                document.getElementById('diaSemana').textContent = diasLabel[diaNum];
-                document.getElementById('fechaCompleta').textContent =
-                    `${ahora.getDate()} de ${meses[ahora.getMonth()]} de ${ahora.getFullYear()}`;
-
-                const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
-                const clases = clasesActuales(dia, minutosActuales);
-                claseActivaActual = clases.length > 0 ? clases[0] : null;
-
-                actualizarLeyenda(clases);
-                renderClaseActual(clases);
-            }
-
-            actualizarReloj();
-            setInterval(actualizarReloj, 60000);
         </script>
     @endpush

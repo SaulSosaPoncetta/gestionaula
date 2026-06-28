@@ -31,18 +31,18 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle text-center">
-                    <thead class="table-dark">
+                    <thead style="background-color:#0dcaf0">
                         <tr>
-                            <th class="text-start ps-3">Alumno</th>
-                            <th>Prom.<br>Calificaciones<br><small class="fw-normal text-muted">(cant.)</small></th>
-                            <th>Prom.<br>Actividades<br><small class="fw-normal text-muted">(cant.)</small></th>
-                            <th>Asistencia<br><small class="fw-normal text-muted">(%)</small></th>
-                            <th>Nota<br>Asistencia</th>
-                            <th class="bg-primary text-white">Nota<br>Final</th>
-                            <th colspan="{{ $resultados->max(fn($r) => $r['valoraciones']->count()) ?: 2 }}">
+                            <th class="text-start ps-3 text-dark">Alumno</th>
+                            <th class="text-dark">Prom.<br>Calificaciones<br><small class="fw-normal">( cant. )</small></th>
+                            <th class="text-dark">Prom.<br>Actividades<br><small class="fw-normal">( cant. )</small></th>
+                            <th class="text-dark">Asistencia<br><small class="fw-normal">(%)</small></th>
+                            <th class="text-dark">Nota<br>Asistencia</th>
+                            <th class="text-white" style="background-color:#0a9cc1">Nota<br>Final</th>
+                            <th class="text-dark" colspan="{{ $resultados->max(fn($r) => $r['valoraciones']->count()) ?: 2 }}">
                                 Valoraciones
                             </th>
-                            <th>Nota<br>Manual</th>
+                            <th class="text-dark">Nota<br>Manual</th>
                         </tr>
                     </thead>
                     <tbody>
