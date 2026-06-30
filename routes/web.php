@@ -30,6 +30,7 @@ use App\Http\Controllers\TipoValoracionController;
 use App\Http\Controllers\CalendarioEscolarController;
 use App\Http\Controllers\AsignarActividadNuevoController;
 use App\Http\Controllers\PdfController;
+use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\CicloLectivoController;
 use App\Http\Controllers\CierreCuatriController;
 use App\Http\Controllers\PrenotaController;
@@ -273,6 +274,17 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::get('/pdf/contenidos',     [PdfController::class, 'contenidos'])->name('pdf.contenidos');
     Route::get('/pdf/librotemas',     [PdfController::class, 'librotemas'])->name('pdf.librotemas');
     Route::get('/pdf/docente',        [PdfController::class, 'docente'])->name('pdf.docente');
+
+    // ── Excel ──────────────────────────────────────────────────────────
+    Route::get('/excel',                [ExcelController::class, 'index'])->name('excel.index');
+    Route::get('/excel/alumnos',        [ExcelController::class, 'alumnos'])->name('excel.alumnos');
+    Route::get('/excel/asistencia',     [ExcelController::class, 'asistencia'])->name('excel.asistencia');
+    Route::get('/excel/calificaciones', [ExcelController::class, 'calificaciones'])->name('excel.calificaciones');
+    Route::get('/excel/cierre',         [ExcelController::class, 'cierre'])->name('excel.cierre');
+    Route::get('/excel/declaracion',    [ExcelController::class, 'declaracion'])->name('excel.declaracion');
+    Route::get('/excel/contenidos',     [ExcelController::class, 'contenidos'])->name('excel.contenidos');
+    Route::get('/excel/librotemas',     [ExcelController::class, 'librotemas'])->name('excel.librotemas');
+    Route::get('/excel/docente',        [ExcelController::class, 'docente'])->name('excel.docente');
 
     Route::resource('ciclos-lectivos', CicloLectivoController::class)->names('ciclos_lectivos');
     Route::post('/ciclos-lectivos/{ciclosLectivo}/activar', [CicloLectivoController::class, 'activar'])->name('ciclos_lectivos.activar');

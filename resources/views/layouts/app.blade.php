@@ -87,9 +87,11 @@
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('pdf.*') ? 'active' : '' }}"
-                                        href="{{ route('pdf.index') }}">
-                                        <i class="bi bi-calculator me-2"></i>Informes
+                                    <a class="dropdown-item" href="{{ route('pdf.index') }}">
+                                        <i class="bi bi-printer me-1"></i>Informes
+                                    </a>
+                                    <a class="dropdown-item" href="{{ route('excel.index') }}">
+                                        <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar Excel
                                     </a>
                                 </li>
                             </ul>
