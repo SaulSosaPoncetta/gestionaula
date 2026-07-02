@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GestiónAula — Sistema de gestión para docentes</title>
+    {{-- PWA --}}
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="GestiónAula">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" href="/icons/icon-192x192.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -149,6 +157,11 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link fw-semibold" href="#contacto">Contacto</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link fw-semibold text-primary" href="#descargar">
+                        <i class="bi bi-download me-1"></i>Instalar app
+                    </a>
                 </li>
             </ul>
             <div class="d-flex gap-2">
@@ -398,6 +411,73 @@
 </section>
 
 {{-- Footer --}}
+<section id="descargar" class="py-5" style="background:linear-gradient(135deg,#1565c0 0%,#0d47a1 100%);padding:80px 0!important">
+    <div class="container text-center text-white">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="mb-3">
+                    <img src="/icons/icon-192x192.png" width="80" height="80" class="rounded-3 shadow mb-3" alt="GestiónAula">
+                </div>
+                <h2 class="fw-bold mb-3" style="font-size:2rem">
+                    Llevá GestiónAula siempre con vos
+                </h2>
+                <p class="fs-5 mb-5" style="opacity:.9">
+                    Instalá la app en tu celular, tablet o computadora.<br>
+                    Funciona como una app nativa, sin ocupar espacio y siempre actualizada.
+                </p>
+
+                <div class="row g-4 mb-5">
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.12);backdrop-filter:blur(4px)">
+                            <div style="font-size:2.5rem" class="mb-3">📱</div>
+                            <h5 class="fw-bold">Android</h5>
+                            <p class="small" style="opacity:.85">Abrí el sitio en Chrome → Menú (⋮) → <strong>"Agregar a pantalla de inicio"</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.12);backdrop-filter:blur(4px)">
+                            <div style="font-size:2.5rem" class="mb-3">🍎</div>
+                            <h5 class="fw-bold">iPhone / iPad</h5>
+                            <p class="small" style="opacity:.85">Abrí en Safari → Botón compartir <strong>⬆</strong> → <strong>"Agregar a inicio"</strong></p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.12);backdrop-filter:blur(4px)">
+                            <div style="font-size:2.5rem" class="mb-3">🖥️</div>
+                            <h5 class="fw-bold">PC / Mac</h5>
+                            <p class="small" style="opacity:.85">En Chrome/Edge → ícono de instalación <strong>⊕</strong> en la barra de dirección</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="{{ route('register') }}"
+                       class="btn btn-light btn-lg px-5 fw-bold" style="color:#0d47a1">
+                        <i class="bi bi-person-plus me-2"></i>Crear cuenta gratis
+                    </a>
+                    <button type="button" id="landing-install-btn"
+                            class="btn btn-outline-light btn-lg px-5 fw-bold" style="display:none">
+                        <i class="bi bi-download me-2"></i>Instalar app ahora
+                    </button>
+                    <a href="{{ route('login') }}"
+                       class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar sesión
+                    </a>
+                </div>
+
+                <div class="mt-4 small" style="opacity:.7">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Sin descarga desde tiendas &nbsp;·&nbsp;
+                    <i class="bi bi-arrow-repeat me-1"></i>
+                    Siempre actualizada &nbsp;·&nbsp;
+                    <i class="bi bi-wifi-off me-1"></i>
+                    Funciona sin conexión
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <footer class="py-4">
     <div class="container">
         <div class="row align-items-center">
@@ -593,6 +673,40 @@ function procesarRegistro() {
     })
     .catch(() => alert('Error de conexion. Intentá de nuevo.'));
 }
+</script>
+
+<script>
+// PWA: Registrar Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('[PWA] SW registrado en landing'))
+        .catch(err => console.warn('[PWA] SW error:', err));
+}
+
+// PWA: Botón instalar en sección descargar
+let deferredPrompt = null;
+const landingBtn   = document.getElementById('landing-install-btn');
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (landingBtn) landingBtn.style.display = 'inline-flex';
+});
+
+if (landingBtn) {
+    landingBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            if (outcome === 'accepted') landingBtn.textContent = '✅ ¡App instalada!';
+        }
+    });
+}
+
+window.addEventListener('appinstalled', () => {
+    if (landingBtn) { landingBtn.textContent = '✅ App instalada'; landingBtn.disabled = true; }
+});
 </script>
 </body>
 </html>

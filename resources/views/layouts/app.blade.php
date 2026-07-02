@@ -6,6 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Gestión Aula') }}</title>
+
+    {{-- PWA --}}
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="GestiónAula">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
@@ -87,11 +98,9 @@
                                     <hr class="dropdown-divider">
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('pdf.index') }}">
-                                        <i class="bi bi-printer me-1"></i>Informes
-                                    </a>
-                                    <a class="dropdown-item" href="{{ route('excel.index') }}">
-                                        <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar Excel
+                                    <a class="dropdown-item {{ request()->routeIs('pdf.*') ? 'active' : '' }}"
+                                        href="{{ route('pdf.index') }}">
+                                        <i class="bi bi-calculator me-2"></i>Informes
                                     </a>
                                 </li>
                             </ul>
@@ -401,6 +410,81 @@
 
     @stack('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+    {{-- PWA: Banner de instalación --}}
+    <div id="pwa-banner" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;max-width:320px">
+        <div class="card border-0 shadow-lg" style="border-left:4px solid #0d6efd !important">
+            <div class="card-body py-3 px-3">
+                <div class="d-flex align-items-start gap-2">
+                    <img src="/icons/icon-72x72.png" width="40" height="40" class="rounded-2 flex-shrink-0" alt="GestiónAula">
+                    <div>
+                        <div class="fw-bold" style="font-size:13px">Instalar GestiónAula</div>
+                        <div class="text-muted" style="font-size:11px">Instalala como app en tu dispositivo para acceso rápido sin navegador.</div>
+                        <div class="d-flex gap-2 mt-2">
+                            <button id="pwa-install-btn" class="btn btn-primary btn-sm">
+                                <i class="bi bi-download me-1"></i>Instalar
+                            </button>
+                            <button id="pwa-dismiss-btn" class="btn btn-outline-secondary btn-sm">Ahora no</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- PWA: Scripts --}}
+    <script>
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('[PWA] Service Worker registrado:', reg.scope))
+                .catch(err => console.log('[PWA] Error SW:', err));
+        });
+    }
+
+    // Banner de instalación
+    let deferredPrompt = null;
+    const banner       = document.getElementById('pwa-banner');
+    const installBtn   = document.getElementById('pwa-install-btn');
+    const dismissBtn   = document.getElementById('pwa-dismiss-btn');
+
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // No mostrar si ya lo descartó esta sesión
+        if (!sessionStorage.getItem('pwa-dismissed')) {
+            setTimeout(() => { banner.style.display = 'block'; }, 3000);
+        }
+    });
+
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            banner.style.display = 'none';
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('[PWA] Resultado instalación:', outcome);
+                deferredPrompt = null;
+            }
+        });
+    }
+
+    if (dismissBtn) {
+        dismissBtn.addEventListener('click', () => {
+            banner.style.display = 'none';
+            sessionStorage.setItem('pwa-dismissed', '1');
+        });
+    }
+
+    // Ocultar banner si ya está instalada
+    window.addEventListener('appinstalled', () => {
+        banner.style.display = 'none';
+        deferredPrompt = null;
+        console.log('[PWA] App instalada correctamente');
+    });
+    </script>
 </body>
 
 </html>

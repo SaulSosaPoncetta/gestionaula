@@ -46,6 +46,9 @@ use App\Http\Controllers\Admin\SuscripcionController;
 use App\Http\Controllers\Admin\PagoController;
 
 
+// Página offline para PWA (no requiere auth)
+Route::get('/offline', fn() => view('pwa.offline'))->name('pwa.offline');
+
 require __DIR__.'/auth.php';
 
 Route::get('/', function () {
@@ -277,6 +280,8 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
 
     // ── Excel ──────────────────────────────────────────────────────────
     Route::get('/excel',                [ExcelController::class, 'index'])->name('excel.index');
+    Route::get('/excel/opciones',       [ExcelController::class, 'opciones'])->name('excel.opciones');
+    Route::get('/excel/descargar',      [ExcelController::class, 'descargar'])->name('excel.descargar');
     Route::get('/excel/alumnos',        [ExcelController::class, 'alumnos'])->name('excel.alumnos');
     Route::get('/excel/asistencia',     [ExcelController::class, 'asistencia'])->name('excel.asistencia');
     Route::get('/excel/calificaciones', [ExcelController::class, 'calificaciones'])->name('excel.calificaciones');
