@@ -414,40 +414,72 @@
 <section id="descargar" class="py-5" style="background:linear-gradient(135deg,#1565c0 0%,#0d47a1 100%);padding:80px 0!important">
     <div class="container text-center text-white">
         <div class="row justify-content-center">
-            <div class="col-lg-8">
+            <div class="col-lg-9">
                 <div class="mb-3">
                     <img src="/icons/icon-192x192.png" width="80" height="80" class="rounded-3 shadow mb-3" alt="GestiónAula">
                 </div>
                 <h2 class="fw-bold mb-3" style="font-size:2rem">
                     Llevá GestiónAula siempre con vos
                 </h2>
-                <p class="fs-5 mb-5" style="opacity:.9">
-                    Instalá la app en tu celular, tablet o computadora.<br>
-                    Funciona como una app nativa, sin ocupar espacio y siempre actualizada.
+                <p class="fs-5 mb-4" style="opacity:.9">
+                    Instalala como app en tu dispositivo. Sin tiendas, sin descargas enormes,<br>
+                    siempre actualizada y funciona sin conexión.
                 </p>
 
-                <div class="row g-4 mb-5">
-                    <div class="col-md-4">
-                        <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.12);backdrop-filter:blur(4px)">
-                            <div style="font-size:2.5rem" class="mb-3">📱</div>
-                            <h5 class="fw-bold">Android</h5>
-                            <p class="small" style="opacity:.85">Abrí el sitio en Chrome → Menú (⋮) → <strong>"Agregar a pantalla de inicio"</strong></p>
+                {{-- Botón instalar dinámico --}}
+                <div class="mb-5" id="bloque-instalar">
+
+                    {{-- Estado: browser soporta PWA y tiene prompt listo --}}
+                    <div id="estado-prompt" style="display:none">
+                        <button type="button" id="landing-install-btn"
+                                class="btn btn-light btn-lg px-5 fw-bold shadow me-3" style="color:#0d47a1;font-size:1.1rem">
+                            <i class="bi bi-download me-2"></i>Instalar en este dispositivo
+                        </button>
+                        <p class="mt-3 small" style="opacity:.75">Chrome / Edge detectó que podés instalar la app ahora mismo.</p>
+                    </div>
+
+                    {{-- Estado: ya está instalada --}}
+                    <div id="estado-instalada" style="display:none">
+                        <div class="alert alert-success d-inline-flex align-items-center gap-2 px-4 py-3" style="font-size:1rem">
+                            <i class="bi bi-check-circle-fill fs-4"></i>
+                            <span><strong>GestiónAula ya está instalada</strong> en este dispositivo.</span>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.12);backdrop-filter:blur(4px)">
-                            <div style="font-size:2.5rem" class="mb-3">🍎</div>
-                            <h5 class="fw-bold">iPhone / iPad</h5>
-                            <p class="small" style="opacity:.85">Abrí en Safari → Botón compartir <strong>⬆</strong> → <strong>"Agregar a inicio"</strong></p>
+
+                    {{-- Estado: instrucciones manuales (iOS / Firefox / etc.) --}}
+                    <div id="estado-manual">
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.13)">
+                                    <div style="font-size:2.2rem" class="mb-2">🤖</div>
+                                    <h6 class="fw-bold">Android (Chrome)</h6>
+                                    <p class="small mb-2" style="opacity:.85">Menú <strong>⋮</strong> → <strong>"Agregar a pantalla de inicio"</strong></p>
+                                    <span class="badge bg-success">Automático disponible</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.13)">
+                                    <div style="font-size:2.2rem" class="mb-2">🍎</div>
+                                    <h6 class="fw-bold">iPhone / iPad (Safari)</h6>
+                                    <p class="small mb-2" style="opacity:.85">Toque <strong>⬆ Compartir</strong> → <strong>"Agregar a inicio"</strong></p>
+                                    <span class="badge bg-warning text-dark">Manual</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.13)">
+                                    <div style="font-size:2.2rem" class="mb-2">🖥️</div>
+                                    <h6 class="fw-bold">PC Windows / Mac</h6>
+                                    <p class="small mb-2" style="opacity:.85">Chrome/Edge → ícono <strong>⊕</strong> en la barra de dirección</p>
+                                    <span class="badge bg-success">Automático disponible</span>
+                                </div>
+                            </div>
                         </div>
+                        <p class="small mt-2" style="opacity:.7">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Para instalación automática usá <strong>Google Chrome</strong> o <strong>Microsoft Edge</strong>.
+                        </p>
                     </div>
-                    <div class="col-md-4">
-                        <div class="p-4 rounded-4 h-100" style="background:rgba(255,255,255,.12);backdrop-filter:blur(4px)">
-                            <div style="font-size:2.5rem" class="mb-3">🖥️</div>
-                            <h5 class="fw-bold">PC / Mac</h5>
-                            <p class="small" style="opacity:.85">En Chrome/Edge → ícono de instalación <strong>⊕</strong> en la barra de dirección</p>
-                        </div>
-                    </div>
+
                 </div>
 
                 <div class="d-flex flex-wrap justify-content-center gap-3">
@@ -455,23 +487,71 @@
                        class="btn btn-light btn-lg px-5 fw-bold" style="color:#0d47a1">
                         <i class="bi bi-person-plus me-2"></i>Crear cuenta gratis
                     </a>
-                    <button type="button" id="landing-install-btn"
-                            class="btn btn-outline-light btn-lg px-5 fw-bold" style="display:none">
-                        <i class="bi bi-download me-2"></i>Instalar app ahora
-                    </button>
                     <a href="{{ route('login') }}"
                        class="btn btn-outline-light btn-lg px-4">
                         <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar sesión
                     </a>
+                    {{-- Link a descarga Electron --}}
+                    <a href="#descarga-desktop"
+                       class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-display me-2"></i>App de escritorio (.exe)
+                    </a>
                 </div>
 
                 <div class="mt-4 small" style="opacity:.7">
-                    <i class="bi bi-shield-check me-1"></i>
-                    Sin descarga desde tiendas &nbsp;·&nbsp;
-                    <i class="bi bi-arrow-repeat me-1"></i>
-                    Siempre actualizada &nbsp;·&nbsp;
-                    <i class="bi bi-wifi-off me-1"></i>
-                    Funciona sin conexión
+                    <i class="bi bi-shield-check me-1"></i>Sin descarga desde tiendas &nbsp;·&nbsp;
+                    <i class="bi bi-arrow-repeat me-1"></i>Siempre actualizada &nbsp;·&nbsp;
+                    <i class="bi bi-wifi-off me-1"></i>Funciona sin conexión
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- Sección descarga escritorio --}}
+<section id="descarga-desktop" class="py-5" style="background:#f8f9fa;padding:60px 0!important">
+    <div class="container">
+        <div class="row justify-content-center align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="badge bg-primary mb-3">Versión de escritorio</span>
+                <h2 class="fw-bold mb-3">GestiónAula para Windows</h2>
+                <p class="text-muted mb-4">
+                    Instalá la versión nativa para PC. Funciona <strong>sin navegador</strong>,
+                    guarda datos localmente cuando no tenés internet y los sincroniza
+                    automáticamente cuando recuperás la conexión.
+                </p>
+                <ul class="list-unstyled mb-4">
+                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Sin navegador requerido</li>
+                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Funciona 100% offline</li>
+                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Sincronización automática al recuperar conexión</li>
+                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Actualizaciones automáticas</li>
+                    <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Acceso directo desde el escritorio</li>
+                </ul>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="/descarga/GestionAula-Setup.exe" id="btn-descarga-exe"
+                       class="btn btn-primary btn-lg px-4">
+                        <i class="bi bi-windows me-2"></i>Descargar para Windows
+                        <span class="badge bg-light text-primary ms-2">v1.0</span>
+                    </a>
+                    <a href="#" class="btn btn-outline-secondary btn-lg px-4" disabled style="opacity:.5;pointer-events:none">
+                        <i class="bi bi-apple me-2"></i>Mac — Próximamente
+                    </a>
+                </div>
+                <p class="text-muted small mt-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Requiere Windows 10 o superior. Tamaño: ~90 MB.
+                </p>
+            </div>
+            <div class="col-lg-5 text-center">
+                <div class="p-5 rounded-4 shadow-sm" style="background:linear-gradient(135deg,#e8f4fd,#f0f7ff)">
+                    <div style="font-size:5rem">🖥️</div>
+                    <div class="mt-3 fw-bold fs-5">GestiónAula Desktop</div>
+                    <div class="text-muted small">Versión 1.0 — Windows 10+</div>
+                    <div class="mt-3 d-flex justify-content-center gap-2 flex-wrap">
+                        <span class="badge bg-success">Offline</span>
+                        <span class="badge bg-primary">Auto-sincronización</span>
+                        <span class="badge bg-info">Auto-update</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -679,33 +759,63 @@ function procesarRegistro() {
 // PWA: Registrar Service Worker
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('[PWA] SW registrado en landing'))
+        .then(reg => console.log('[PWA] SW registrado'))
         .catch(err => console.warn('[PWA] SW error:', err));
 }
 
-// PWA: Botón instalar en sección descargar
-let deferredPrompt = null;
-const landingBtn   = document.getElementById('landing-install-btn');
+// ── Estados de instalación PWA ────────────────────────────────────
+const elPrompt   = document.getElementById('estado-prompt');
+const elManual   = document.getElementById('estado-manual');
+const elInstal   = document.getElementById('estado-instalada');
+const installBtn = document.getElementById('landing-install-btn');
+let   deferred   = null;
 
+function mostrar(estado) {
+    elPrompt && (elPrompt.style.display = 'none');
+    elManual && (elManual.style.display = 'none');
+    elInstal && (elInstal.style.display = 'none');
+    if (estado === 'prompt')   elPrompt && (elPrompt.style.display = 'block');
+    if (estado === 'manual')   elManual && (elManual.style.display = 'block');
+    if (estado === 'instalada') elInstal && (elInstal.style.display = 'block');
+}
+
+// Detectar si ya está instalada como PWA
+if (window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true) {
+    mostrar('instalada');
+} else {
+    // Por defecto mostramos instrucciones manuales
+    mostrar('manual');
+}
+
+// Chrome/Edge detectan que se puede instalar
 window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
-    deferredPrompt = e;
-    if (landingBtn) landingBtn.style.display = 'inline-flex';
+    deferred = e;
+    mostrar('prompt'); // Mostrar botón de 1 click
 });
 
-if (landingBtn) {
-    landingBtn.addEventListener('click', async () => {
-        if (deferredPrompt) {
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            deferredPrompt = null;
-            if (outcome === 'accepted') landingBtn.textContent = '✅ ¡App instalada!';
+// Click en botón de instalación directa
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (!deferred) return;
+        installBtn.disabled = true;
+        installBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Instalando...';
+        deferred.prompt();
+        const { outcome } = await deferred.userChoice;
+        deferred = null;
+        if (outcome === 'accepted') {
+            mostrar('instalada');
+        } else {
+            installBtn.disabled = false;
+            installBtn.innerHTML = '<i class="bi bi-download me-2"></i>Instalar en este dispositivo';
         }
     });
 }
 
+// App instalada con éxito
 window.addEventListener('appinstalled', () => {
-    if (landingBtn) { landingBtn.textContent = '✅ App instalada'; landingBtn.disabled = true; }
+    mostrar('instalada');
 });
 </script>
 </body>

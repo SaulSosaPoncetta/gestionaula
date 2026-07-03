@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sin conexión — GestiónAula</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f5f5f5 100%);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-app-region: drag;
+  }
+  .card {
+    background: white; border-radius: 16px; padding: 48px 40px;
+    text-align: center; max-width: 460px; width: 90%;
+    box-shadow: 0 8px 40px rgba(0,0,0,.12);
+    -webkit-app-region: no-drag;
+  }
+  .icono { font-size: 72px; margin-bottom: 20px; }
+  h1 { font-size: 24px; color: #1565c0; margin-bottom: 10px; font-weight: 700; }
+  p  { color: #666; font-size: 14px; margin-bottom: 28px; line-height: 1.7; }
+  .btn {
+    display: inline-block; padding: 14px 36px; border-radius: 10px;
+    background: #0d6efd; color: white; font-size: 15px; font-weight: 600;
+    border: none; cursor: pointer; transition: background .2s;
+  }
+  .btn:hover { background: #0b5ed7; }
+  .btn-outline {
+    background: transparent; border: 2px solid #0d6efd; color: #0d6efd;
+    margin-left: 10px;
+  }
+  .btn-outline:hover { background: #e8f0fe; }
+  .status {
+    margin-top: 24px; padding: 14px; background: #f0f7ff;
+    border-radius: 10px; font-size: 12px; color: #555; line-height: 1.7;
+    border-left: 3px solid #0d6efd;
+  }
+  .dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; background: #dc3545; margin-right: 6px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .dot.online { background: #28a745; animation: none; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+  }
+  .version { margin-top: 20px; font-size: 11px; color: #aaa; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icono">📡</div>
+  <h1>Sin conexión a internet</h1>
+  <p>
+    GestiónAula necesita conexión para funcionar.<br>
+    Revisá tu red Wi-Fi o conexión de datos y volvé a intentarlo.<br><br>
+    La app se reconectará <strong>automáticamente</strong> cuando detecte internet.
+  </p>
+
+  <div>
+    <button class="btn" onclick="reintentar()">🔄 Reintentar ahora</button>
+    <button class="btn btn-outline" onclick="abrirConfigRed()">⚙ Red</button>
+  </div>
+
+  <div class="status">
+    <span class="dot" id="dot"></span>
+    <span id="estado-texto">Sin conexión — verificando cada 30 segundos...</span>
+  </div>
+
+  <div class="version" id="version-info">GestiónAula Desktop</div>
+</div>
+
+<script>
+let intentos = 0;
+
+async function reintentar() {
+    document.getElementById('estado-texto').textContent = 'Verificando conexión...';
+    intentos++;
+
+    if (window.electronApp) {
+        const online = await window.electronApp.retryConnection();
+        if (online) {
+            document.getElementById('dot').classList.add('online');
+            document.getElementById('estado-texto').textContent = '✅ Conexión recuperada. Cargando...';
+        } else {
+            document.getElementById('estado-texto').textContent =
+                `Sin conexión. Intento ${intentos} — Revisá tu red.`;
+        }
+    } else {
+        // Fallback si no está en Electron
+        if (navigator.onLine) {
+            location.reload();
+        }
+    }
+}
+
+function abrirConfigRed() {
+    if (window.electronApp) {
+        window.electronApp.openExternal('ms-settings:network');
+    }
+}
+
+// Mostrar info de versión
+async function init() {
+    if (window.electronApp) {
+        const info = await window.electronApp.getInfo();
+        document.getElementById('version-info').textContent =
+            `GestiónAula Desktop v${info.version} — ${info.platform}`;
+
+        // Escuchar cambios de conectividad desde main
+        window.electronApp.onConnectivity(({ online }) => {
+            if (online) {
+                document.getElementById('dot').classList.add('online');
+                document.getElementById('estado-texto').textContent = '✅ Conexión recuperada. Cargando...';
+                setTimeout(() => location.href = info.appUrl + '/dashboard', 1500);
+            }
+        });
+    }
+}
+
+// Reintento automático cada 30 segundos
+setInterval(reintentar, 30000);
+init();
+</script>
+</body>
+</html>

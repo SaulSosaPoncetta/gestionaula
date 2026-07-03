@@ -46,6 +46,17 @@ use App\Http\Controllers\Admin\SuscripcionController;
 use App\Http\Controllers\Admin\PagoController;
 
 
+// Descarga del instalador de escritorio (público, sin auth)
+Route::get('/descarga/GestionAula-Setup.exe', function () {
+    $path = public_path('descarga/GestionAula-Setup.exe');
+    if (!file_exists($path)) {
+        abort(404, 'El instalador aún no está disponible. Volvé pronto.');
+    }
+    return response()->download($path, 'GestionAula-Setup.exe', [
+        'Content-Type' => 'application/octet-stream',
+    ]);
+})->name('descarga.desktop');
+
 // Página offline para PWA (no requiere auth)
 Route::get('/offline', fn() => view('pwa.offline'))->name('pwa.offline');
 
