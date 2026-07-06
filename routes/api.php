@@ -6,6 +6,10 @@ use App\Http\Controllers\Api\CursoController;
 use App\Http\Controllers\Api\MateriaController;
 use App\Http\Controllers\Api\AsistenciaController;
 use App\Http\Controllers\Api\ContenidoController;
+use App\Http\Controllers\Api\PrenotaController;
+use App\Http\Controllers\Api\ActividadController;
+use App\Http\Controllers\Api\LibroTemaController;
+use App\Http\Controllers\Api\CalendarioEscolarController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('app')->group(function () {
@@ -26,11 +30,20 @@ Route::prefix('app')->group(function () {
 
         Route::get('/contenidos', [ContenidoController::class, 'index']);
 
+        Route::get('/librotemas', [LibroTemaController::class, 'index']);
+
+        Route::get('/calendarioescolar', [CalendarioEscolarController::class, 'index']);
+
         Route::get('/asistencias', [AsistenciaController::class, 'index']);
         Route::post('/asistencias', [AsistenciaController::class, 'guardar']);
         Route::get('/asistencias/resumen', [AsistenciaController::class, 'resumen']);
         Route::get('/asistencias/alumno/{alumnoId}', [AsistenciaController::class, 'historialAlumno']);
 
+        Route::get('/prenotas/calcular', [PrenotaController::class, 'calcular']);
+        Route::post('/prenotas/guardar', [PrenotaController::class, 'guardar']);
+        Route::get('/prenotas/historial', [PrenotaController::class, 'historial']);
+
+        Route::get('/actividades', [ActividadController::class, 'index']);
 
     });
 
