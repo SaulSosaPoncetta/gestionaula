@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\PrenotaController;
 use App\Http\Controllers\Api\ActividadController;
 use App\Http\Controllers\Api\LibroTemaController;
 use App\Http\Controllers\Api\CalendarioEscolarController;
+use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('app')->group(function () {
@@ -19,6 +20,9 @@ Route::prefix('app')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/user', [AuthController::class, 'user']);
+
+        Route::get('/dashboard/resumen', [DashboardController::class, 'resumen']);
+        Route::get('/dashboard/stats/{cursoId}/{materiaId}', [DashboardController::class, 'stats']);
 
         Route::get('/designaciones', [DesignacionController::class, 'index']);
         Route::get('/designaciones/{designacion}', [DesignacionController::class, 'show']);

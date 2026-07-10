@@ -16,7 +16,8 @@ class AsistenciaService
         $alumno  = Alumno::find($alumnoId);
         $materia = Materia::find($materiaId);
 
-        if (!$alumno || !$materia || !$materia->cantidadclasesanuales) return;
+        if (!$alumno || !$materia || !$materia->cantidadclasesanuales) 
+            return;
 
         // Total de clases dictadas (registros de asistencia para este alumno y materia)
         $totalClases = Asistencia::where('alumno_id', $alumnoId)
@@ -45,7 +46,8 @@ class AsistenciaService
      */
     public static function colorAlerta(float $porcentaje, float $limite, int $totalClases, int $cantidadClasesAnuales): string
     {
-        if ($totalClases === 0 || $cantidadClasesAnuales === 0) return 'white';
+        if ($totalClases === 0 || $cantidadClasesAnuales === 0) 
+            return 'white';
 
         // Faltas actuales
         $faltasPorcentaje   = 100 - $porcentaje;

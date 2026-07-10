@@ -59,7 +59,6 @@ Route::get('/descarga/GestionAula-Setup.exe', function () {
 
 // Página offline para PWA (no requiere auth)
 Route::get('/offline', fn() => view('pwa.offline'))->name('pwa.offline');
-
 require __DIR__.'/auth.php';
 
 Route::get('/', function () {
