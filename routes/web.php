@@ -30,7 +30,6 @@ use App\Http\Controllers\TipoValoracionController;
 use App\Http\Controllers\CalendarioEscolarController;
 use App\Http\Controllers\AsignarActividadNuevoController;
 use App\Http\Controllers\PdfController;
-use App\Http\Controllers\ExcelController;
 use App\Http\Controllers\CicloLectivoController;
 use App\Http\Controllers\CierreCuatriController;
 use App\Http\Controllers\PrenotaController;
@@ -46,20 +45,11 @@ use App\Http\Controllers\Admin\SuscripcionController;
 use App\Http\Controllers\Admin\PagoController;
 
 
-// Descarga del instalador de escritorio (público, sin auth)
-Route::get('/descarga/GestionAula-Setup.exe', function () {
-    $path = public_path('descarga/GestionAula-Setup.exe');
-    if (!file_exists($path)) {
-        abort(404, 'El instalador aún no está disponible. Volvé pronto.');
-    }
-    return response()->download($path, 'GestionAula-Setup.exe', [
-        'Content-Type' => 'application/octet-stream',
-    ]);
-})->name('descarga.desktop');
-
-// Página offline para PWA (no requiere auth)
-Route::get('/offline', fn() => view('pwa.offline'))->name('pwa.offline');
 require __DIR__.'/auth.php';
+
+// ── Rutas públicas PWA ─────────────────────────────────────────────
+Route::get('/offline', fn() => view('pwa.offline'))->name('pwa.offline');
+Route::get('/ping', fn() => response()->json(['ok' => true, 'ts' => time()]));
 
 Route::get('/', function () {
     return redirect()->route('landing.index');
@@ -287,19 +277,6 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::get('/pdf/contenidos',     [PdfController::class, 'contenidos'])->name('pdf.contenidos');
     Route::get('/pdf/librotemas',     [PdfController::class, 'librotemas'])->name('pdf.librotemas');
     Route::get('/pdf/docente',        [PdfController::class, 'docente'])->name('pdf.docente');
-
-    // ── Excel ──────────────────────────────────────────────────────────
-    Route::get('/excel',                [ExcelController::class, 'index'])->name('excel.index');
-    Route::get('/excel/opciones',       [ExcelController::class, 'opciones'])->name('excel.opciones');
-    Route::get('/excel/descargar',      [ExcelController::class, 'descargar'])->name('excel.descargar');
-    Route::get('/excel/alumnos',        [ExcelController::class, 'alumnos'])->name('excel.alumnos');
-    Route::get('/excel/asistencia',     [ExcelController::class, 'asistencia'])->name('excel.asistencia');
-    Route::get('/excel/calificaciones', [ExcelController::class, 'calificaciones'])->name('excel.calificaciones');
-    Route::get('/excel/cierre',         [ExcelController::class, 'cierre'])->name('excel.cierre');
-    Route::get('/excel/declaracion',    [ExcelController::class, 'declaracion'])->name('excel.declaracion');
-    Route::get('/excel/contenidos',     [ExcelController::class, 'contenidos'])->name('excel.contenidos');
-    Route::get('/excel/librotemas',     [ExcelController::class, 'librotemas'])->name('excel.librotemas');
-    Route::get('/excel/docente',        [ExcelController::class, 'docente'])->name('excel.docente');
 
     Route::resource('ciclos-lectivos', CicloLectivoController::class)->names('ciclos_lectivos');
     Route::post('/ciclos-lectivos/{ciclosLectivo}/activar', [CicloLectivoController::class, 'activar'])->name('ciclos_lectivos.activar');

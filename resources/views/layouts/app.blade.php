@@ -6,18 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Gestión Aula') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- PWA --}}
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0d6efd">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="GestiónAula">
-    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="icon" type="image/png" href="/icons/icon-192.png">
 </head>
 
 <body class="bg-light">
@@ -411,20 +409,26 @@
     @stack('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
-    {{-- PWA: Banner de instalación --}}
-    <div id="pwa-banner" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;max-width:320px">
-        <div class="card border-0 shadow-lg" style="border-left:4px solid #0d6efd !important">
+    {{-- ═══════════════════════════════════════════
+         PWA — Banner de instalación
+    ═══════════════════════════════════════════ --}}
+    <div id="pwa-banner" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;max-width:310px">
+        <div class="card border-0 shadow-lg" style="border-left:4px solid #0d6efd!important">
             <div class="card-body py-3 px-3">
                 <div class="d-flex align-items-start gap-2">
-                    <img src="/icons/icon-72x72.png" width="40" height="40" class="rounded-2 flex-shrink-0" alt="GestiónAula">
+                    <img src="/icons/icon-192.png" width="42" height="42" class="rounded-2 flex-shrink-0" alt="GA">
                     <div>
                         <div class="fw-bold" style="font-size:13px">Instalar GestiónAula</div>
-                        <div class="text-muted" style="font-size:11px">Instalala como app en tu dispositivo para acceso rápido sin navegador.</div>
+                        <div class="text-muted" style="font-size:11px;line-height:1.4">
+                            Instalala como app para acceso rápido sin abrir el navegador.
+                        </div>
                         <div class="d-flex gap-2 mt-2">
                             <button id="pwa-install-btn" class="btn btn-primary btn-sm">
                                 <i class="bi bi-download me-1"></i>Instalar
                             </button>
-                            <button id="pwa-dismiss-btn" class="btn btn-outline-secondary btn-sm">Ahora no</button>
+                            <button id="pwa-dismiss-btn" class="btn btn-outline-secondary btn-sm">
+                                Ahora no
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -432,59 +436,107 @@
         </div>
     </div>
 
-    {{-- PWA: Scripts --}}
+    {{-- PWA — Service Worker + Lógica de instalación --}}
     <script>
-    // Registrar Service Worker
+    // ── Registrar Service Worker ──────────────────────────
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
-                .then(reg => console.log('[PWA] Service Worker registrado:', reg.scope))
-                .catch(err => console.log('[PWA] Error SW:', err));
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then(reg => {
+                    console.log('[PWA] SW registrado:', reg.scope);
+
+                    // Detectar nueva versión disponible
+                    reg.addEventListener('updatefound', () => {
+                        const sw = reg.installing;
+                        sw.addEventListener('statechange', () => {
+                            if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+                                mostrarToast('🔄 Nueva versión disponible — <button class="btn btn-sm btn-light ms-1" onclick="location.reload()">Actualizar</button>', 'bg-info');
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.warn('[PWA] Error SW:', err));
+
+            // Recargar cuando tome control la nueva versión
+            navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
         });
-    }
 
-    // Banner de instalación
-    let deferredPrompt = null;
-    const banner       = document.getElementById('pwa-banner');
-    const installBtn   = document.getElementById('pwa-install-btn');
-    const dismissBtn   = document.getElementById('pwa-dismiss-btn');
-
-    window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault();
-        deferredPrompt = e;
-
-        // No mostrar si ya lo descartó esta sesión
-        if (!sessionStorage.getItem('pwa-dismissed')) {
-            setTimeout(() => { banner.style.display = 'block'; }, 3000);
-        }
-    });
-
-    if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            banner.style.display = 'none';
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log('[PWA] Resultado instalación:', outcome);
-                deferredPrompt = null;
+        // Escuchar mensaje de reconexión del SW
+        navigator.serviceWorker.addEventListener('message', e => {
+            if (e.data?.tipo === 'CONEXION_RECUPERADA') {
+                mostrarToast('✅ Conexión recuperada — datos sincronizados', 'bg-success');
             }
         });
     }
 
-    if (dismissBtn) {
-        dismissBtn.addEventListener('click', () => {
+    // ── Online / Offline ─────────────────────────────────
+    window.addEventListener('online', () => {
+        mostrarToast('✅ Conexión recuperada', 'bg-success');
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            navigator.serviceWorker.ready.then(sw => sw.sync.register('sync-pendientes'));
+        }
+    });
+    window.addEventListener('offline', () => {
+        mostrarToast('⚠️ Sin conexión — modo offline', 'bg-warning text-dark');
+    });
+
+    // ── Banner de instalación ────────────────────────────
+    let promptPWA    = null;
+    const banner     = document.getElementById('pwa-banner');
+    const btnInstall = document.getElementById('pwa-install-btn');
+    const btnDismiss = document.getElementById('pwa-dismiss-btn');
+
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        promptPWA = e;
+        if (!sessionStorage.getItem('pwa-dismissed')) {
+            setTimeout(() => { if (banner) banner.style.display = 'block'; }, 4000);
+        }
+    });
+
+    if (btnInstall) {
+        btnInstall.addEventListener('click', async () => {
+            banner.style.display = 'none';
+            if (promptPWA) {
+                promptPWA.prompt();
+                const { outcome } = await promptPWA.userChoice;
+                promptPWA = null;
+                if (outcome === 'accepted') {
+                    mostrarToast('✅ ¡GestiónAula instalada!', 'bg-success');
+                }
+            }
+        });
+    }
+    if (btnDismiss) {
+        btnDismiss.addEventListener('click', () => {
             banner.style.display = 'none';
             sessionStorage.setItem('pwa-dismissed', '1');
         });
     }
-
-    // Ocultar banner si ya está instalada
     window.addEventListener('appinstalled', () => {
-        banner.style.display = 'none';
-        deferredPrompt = null;
-        console.log('[PWA] App instalada correctamente');
+        if (banner) banner.style.display = 'none';
+        promptPWA = null;
     });
+
+    // ── Toast helper ─────────────────────────────────────
+    function mostrarToast(msg, cls = 'bg-primary') {
+        let tc = document.getElementById('_toasts');
+        if (!tc) {
+            tc = document.createElement('div');
+            tc.id = '_toasts';
+            tc.style.cssText = 'position:fixed;bottom:80px;right:20px;z-index:99999;min-width:260px';
+            document.body.appendChild(tc);
+        }
+        const t = document.createElement('div');
+        t.className = `toast align-items-center text-white border-0 ${cls} show mb-2`;
+        t.innerHTML = `<div class="d-flex"><div class="toast-body fw-semibold">${msg}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    onclick="this.closest('.toast').remove()"></button></div>`;
+        tc.appendChild(t);
+        setTimeout(() => t.remove && t.remove(), 6000);
+    }
     </script>
 </body>
-
 </html>
+
+</html
