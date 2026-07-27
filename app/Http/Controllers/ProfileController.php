@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -16,9 +21,17 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        try {
+            return view('profile.edit', [
+                'user' => $request->user(),
+            ]);
+
+        } catch (ModelNotFoundException $e) {
+            return back()->with('error', 'El registro solicitado no existe.');
+        } catch (\Throwable $e) {
+            Log::error('ProfileController@edit: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error inesperado.');
+        }
     }
 
     /**
@@ -26,33 +39,57 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        try {
+            $request->user()->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+            if ($request->user()->isDirty('email')) {
+                $request->user()->email_verified_at = null;
+            }
+
+            $request->user()->save();
+
+            return Redirect::route('profile.edit')->with('status', 'profile-updated');
+
+        } catch (QueryException $e) {
+            Log::error('ProfileController@update BD: ' . $e->getMessage());
+            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
+        } catch (ModelNotFoundException $e) {
+            return back()->with('error', 'El registro solicitado no existe.');
+        } catch (\Throwable $e) {
+            Log::error('ProfileController@update: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error inesperado.');
         }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
 
     public function destroy(Request $request): RedirectResponse
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
+        try {
+            $request->validateWithBag('userDeletion', [
+                'password' => ['required', 'current_password'],
+            ]);
 
-        $user = $request->user();
+            $user = $request->user();
 
-        Auth::logout();
+            Auth::logout();
 
-        $user->delete();
+            $user->delete();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+            return Redirect::to('/');
+
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        } catch (QueryException $e) {
+            Log::error('ProfileController@destroy BD: ' . $e->getMessage());
+            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
+        } catch (ModelNotFoundException $e) {
+            return back()->with('error', 'El registro solicitado no existe.');
+        } catch (\Throwable $e) {
+            Log::error('ProfileController@destroy: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error inesperado.');
+        }
     }
 }
