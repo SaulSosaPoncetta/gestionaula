@@ -29,6 +29,7 @@ class LandingController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('LandingController@index: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -43,6 +44,7 @@ class LandingController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('LandingController@planes: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -74,6 +76,7 @@ class LandingController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('LandingController@contacto: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -88,6 +91,7 @@ class LandingController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('LandingController@registroPlan: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -96,6 +100,7 @@ class LandingController extends Controller
     public function registrarDocente(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'name'      => 'required|string|max:255',
                 'email'     => 'required|email|unique:users,email',
@@ -146,6 +151,7 @@ class LandingController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('LandingController@registrarDocente: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -181,11 +187,13 @@ class LandingController extends Controller
                 ->with('success', 'Cuenta activada correctamente. Ya podes iniciar sesion.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('LandingController@activar BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('LandingController@activar: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }

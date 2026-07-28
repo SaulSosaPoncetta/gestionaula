@@ -26,6 +26,7 @@ class TareaController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('TareaController@index: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -43,6 +44,7 @@ class TareaController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('TareaController@create: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -51,6 +53,7 @@ class TareaController extends Controller
     public function store(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'curso_id'         => 'required|exists:cursos,id',
                 'materia_id'       => 'nullable|exists:materias,id',
@@ -78,6 +81,7 @@ class TareaController extends Controller
                 ]);
             }
 
+            DB::commit();
             return redirect()->route('tareas.index')
                              ->with('success', 'Práctico creado correctamente.');
 
@@ -86,6 +90,7 @@ class TareaController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('TareaController@store: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -102,6 +107,7 @@ class TareaController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('TareaController@show: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -124,11 +130,13 @@ class TareaController extends Controller
                              ->with('success', 'Entregas actualizadas correctamente.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('TareaController@actualizarentregas BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('TareaController@actualizarentregas: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -143,11 +151,13 @@ class TareaController extends Controller
                              ->with('success', 'Práctico cerrado correctamente.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('TareaController@cerrar BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('TareaController@cerrar: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }

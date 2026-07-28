@@ -6,6 +6,7 @@ use App\Models\Curso;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -128,6 +129,7 @@ class AlumnoController extends Controller
     public function update(Request $request, Alumno $alumno)
     {
         try {
+            DB::beginTransaction();
             abort_if($alumno->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -154,9 +156,11 @@ class AlumnoController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('AlumnoController@update - BD: ' . $e->getMessage());
             return back()->with('error', 'Error al actualizar el alumno.')->withInput();
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('AlumnoController@update: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado al actualizar.')->withInput();
         }
@@ -165,15 +169,18 @@ class AlumnoController extends Controller
     public function destroy(Alumno $alumno)
     {
         try {
+            DB::beginTransaction();
             abort_if($alumno->user_id !== auth()->id(), 403);
             $cursoId = $alumno->curso_id;
             $alumno->delete();
             return redirect()->route('alumnos.index', ['curso_id' => $cursoId])
                              ->with('success', 'Alumno eliminado correctamente.');
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('AlumnoController@destroy - BD: ' . $e->getMessage());
             return back()->with('error', 'No se puede eliminar el alumno porque tiene registros asociados.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('AlumnoController@destroy: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado al eliminar.');
         }

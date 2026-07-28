@@ -51,6 +51,7 @@ class ActividadController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.index: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -69,6 +70,7 @@ class ActividadController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.seleccionar: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -77,6 +79,7 @@ class ActividadController extends Controller
     public function create(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'materia_id' => 'required|exists:materias,id',
             ]);
@@ -98,6 +101,7 @@ class ActividadController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.create: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -145,6 +149,7 @@ class ActividadController extends Controller
                 }
             }
 
+            DB::commit();
             return redirect()->route('actividades.index', ['materia_id' => $actividad->materia_id])
                              ->with('success', 'Actividad creada correctamente.');
 
@@ -153,6 +158,7 @@ class ActividadController extends Controller
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.store: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
@@ -168,6 +174,7 @@ class ActividadController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.show: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }

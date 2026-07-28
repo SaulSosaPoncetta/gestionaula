@@ -170,6 +170,7 @@ class ContenidoController extends Controller
     public function update(Request $request, Contenido $contenido)
     {
         try {
+            DB::beginTransaction();
             abort_if($contenido->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -206,11 +207,13 @@ class ContenidoController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.update - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.update: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
@@ -219,6 +222,7 @@ class ContenidoController extends Controller
     public function destroy(Contenido $contenido)
     {
         try {
+            DB::beginTransaction();
             abort_if($contenido->user_id !== auth()->id(), 403);
             $contenido->subtemas()->delete();
             $contenido->delete();
@@ -226,11 +230,13 @@ class ContenidoController extends Controller
                      ->with('success', 'Contenido eliminado correctamente.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.destroy - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.destroy: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }

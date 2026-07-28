@@ -59,6 +59,7 @@ class CicloLectivoController extends Controller
     public function store(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'anio'        => 'required|digits:4|min:2000|max:2100',
                 'fechainicio' => 'required|date',
@@ -86,11 +87,13 @@ class CicloLectivoController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.store - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.store: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
@@ -113,6 +116,7 @@ class CicloLectivoController extends Controller
     public function update(Request $request, CicloLectivo $ciclosLectivo)
     {
         try {
+            DB::beginTransaction();
             abort_if($ciclosLectivo->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -141,11 +145,13 @@ class CicloLectivoController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.update - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.update: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
@@ -154,6 +160,7 @@ class CicloLectivoController extends Controller
     public function destroy(CicloLectivo $ciclosLectivo)
     {
         try {
+            DB::beginTransaction();
             abort_if($ciclosLectivo->user_id !== auth()->id(), 403);
 
             if ($ciclosLectivo->activo) {
@@ -166,11 +173,13 @@ class CicloLectivoController extends Controller
                              ->with('success', 'Ciclo lectivo eliminado correctamente.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.destroy - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.destroy: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
@@ -211,6 +220,7 @@ class CicloLectivoController extends Controller
     public function activar(CicloLectivo $ciclosLectivo)
     {
         try {
+            DB::beginTransaction();
             abort_if($ciclosLectivo->user_id !== auth()->id(), 403);
 
             CicloLectivo::where('user_id', auth()->id())
@@ -223,11 +233,13 @@ class CicloLectivoController extends Controller
                              ->with('success', "Ciclo lectivo {$ciclosLectivo->anio} activado.");
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.activar - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.activar: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }

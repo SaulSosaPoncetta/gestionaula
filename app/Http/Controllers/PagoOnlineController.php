@@ -32,6 +32,7 @@ class PagoOnlineController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@index: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -42,6 +43,7 @@ class PagoOnlineController extends Controller
     public function iniciarMP(Request $request)
     {
         try {
+            DB::beginTransaction();
             $suscripcion = Suscripcion::where('user_id', auth()->id())
                 ->where('estado', 'activa')
                 ->latest()->firstOrFail();
@@ -86,11 +88,13 @@ class PagoOnlineController extends Controller
             return redirect($url);
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@iniciarMP BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@iniciarMP: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -121,11 +125,13 @@ class PagoOnlineController extends Controller
                 ->with('success', '¡Pago aprobado correctamente! Tu suscripción fue renovada.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@mpSuccess BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@mpSuccess: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -142,11 +148,13 @@ class PagoOnlineController extends Controller
                 ->with('error', 'El pago fue rechazado. Intentá nuevamente.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@mpFailure BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@mpFailure: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -161,6 +169,7 @@ class PagoOnlineController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@mpPending: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -210,11 +219,13 @@ class PagoOnlineController extends Controller
             return redirect($result['approve_url']);
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@iniciarPaypal BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@iniciarPaypal: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -250,11 +261,13 @@ class PagoOnlineController extends Controller
                 ->with('error', 'El pago no fue completado.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@paypalSuccess BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@paypalSuccess: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -270,11 +283,13 @@ class PagoOnlineController extends Controller
                 ->with('info', 'Cancelaste el pago con PayPal.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@paypalCancel BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@paypalCancel: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -307,6 +322,7 @@ class PagoOnlineController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@webhookMP: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -337,11 +353,13 @@ class PagoOnlineController extends Controller
             return response()->json(['status' => 'ok']);
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@webhookPaypal BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PagoOnlineController@webhookPaypal: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }

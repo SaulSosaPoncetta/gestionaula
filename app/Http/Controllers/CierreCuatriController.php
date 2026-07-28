@@ -74,6 +74,7 @@ class CierreCuatriController extends Controller
     public function guardar(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'materia_id' => 'required|exists:materias,id',
                 'curso_id'   => 'required|exists:cursos,id',
@@ -112,6 +113,7 @@ class CierreCuatriController extends Controller
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.guardar: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }

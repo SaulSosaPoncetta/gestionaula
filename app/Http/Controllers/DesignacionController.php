@@ -181,6 +181,7 @@ class DesignacionController extends Controller
     public function update(Request $request, Designacion $designacion)
     {
         try {
+            DB::beginTransaction();
             abort_if($designacion->user_id !== auth()->id(), 403);
 
             $request->validate(array_merge($this->reglasBase(), $this->reglasHorario($request)));
@@ -212,11 +213,13 @@ class DesignacionController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.update - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.update: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
@@ -225,17 +228,20 @@ class DesignacionController extends Controller
     public function destroy(Designacion $designacion)
     {
         try {
+            DB::beginTransaction();
             abort_if($designacion->user_id !== auth()->id(), 403);
             $designacion->delete();
             return redirect()->route('designaciones.index')
                              ->with('success', 'Designación eliminada correctamente.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.destroy - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.destroy: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
