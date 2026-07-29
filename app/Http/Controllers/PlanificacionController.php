@@ -58,6 +58,7 @@ class PlanificacionController extends Controller
     public function store(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'materia_id'  => 'required|exists:materias,id',
                 'ciclo'       => 'required|string|max:20',
@@ -79,7 +80,7 @@ class PlanificacionController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            Log::error('PlanificacionController@store: ' . $e->getMessage());
+            DB::rollBack();            Log::error('PlanificacionController@store: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }
@@ -132,6 +133,7 @@ class PlanificacionController extends Controller
     public function update(Request $request, Planificacion $planificacion)
     {
         try {
+            DB::beginTransaction();
             abort_if($planificacion->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -152,11 +154,13 @@ class PlanificacionController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PlanificacionController@update BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PlanificacionController@update: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -165,6 +169,7 @@ class PlanificacionController extends Controller
     public function destroy(Planificacion $planificacion)
     {
         try {
+            DB::beginTransaction();
             abort_if($planificacion->user_id !== auth()->id(), 403);
 
             foreach ($planificacion->unidades as $unidad) {
@@ -178,11 +183,13 @@ class PlanificacionController extends Controller
                              ->with('success', 'Planificación eliminada correctamente.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('PlanificacionController@destroy BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('PlanificacionController@destroy: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -191,6 +198,7 @@ class PlanificacionController extends Controller
     public function storeUnidad(Request $request, Planificacion $planificacion)
     {
         try {
+            DB::beginTransaction();
             abort_if($planificacion->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -272,7 +280,7 @@ class PlanificacionController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            Log::error('PlanificacionController@storeUnidad: ' . $e->getMessage());
+            DB::rollBack();            Log::error('PlanificacionController@storeUnidad: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }
@@ -280,6 +288,7 @@ class PlanificacionController extends Controller
     public function destroyUnidad(Planificacion $planificacion, Unidad $unidad)
     {
         try {
+            DB::beginTransaction();
             abort_if($planificacion->user_id !== auth()->id(), 403);
 
             foreach ($unidad->archivos as $archivo) {
@@ -291,12 +300,12 @@ class PlanificacionController extends Controller
                              ->with('success', 'Unidad eliminada correctamente.');
 
         } catch (QueryException $e) {
-            Log::error('PlanificacionController@destroyUnidad BD: ' . $e->getMessage());
+            DB::rollBack();            Log::error('PlanificacionController@destroyUnidad BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            Log::error('PlanificacionController@destroyUnidad: ' . $e->getMessage());
+            DB::rollBack();            Log::error('PlanificacionController@destroyUnidad: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }

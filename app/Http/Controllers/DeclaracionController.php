@@ -73,6 +73,7 @@ class DeclaracionController extends Controller
     public function store(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'ciclo'                      => 'required|string|max:20',
                 'fechadeclaracion'           => 'required|date',
@@ -114,7 +115,7 @@ class DeclaracionController extends Controller
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
-            Log::error('Controllers.store: ' . $e->getMessage());
+            DB::rollBack();            Log::error('Controllers.store: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
     }
@@ -160,6 +161,7 @@ class DeclaracionController extends Controller
     public function update(Request $request, Declaracion $declaracion)
     {
         try {
+            DB::beginTransaction();
             abort_if($declaracion->user_id !== auth()->id(), 403);
             abort_if($declaracion->estado !== 'borrador', 403,
                 'Solo se pueden editar declaraciones en borrador.');
@@ -204,11 +206,13 @@ class DeclaracionController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('Controllers.update - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('Controllers.update: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
@@ -239,6 +243,7 @@ class DeclaracionController extends Controller
     public function presentar(Declaracion $declaracion)
     {
         try {
+            DB::beginTransaction();
             abort_if($declaracion->user_id !== auth()->id(), 403);
 
             if ($declaracion->estado !== 'borrador') {
@@ -254,12 +259,12 @@ class DeclaracionController extends Controller
                              ->with('success', 'Declaración presentada correctamente.');
 
         } catch (QueryException $e) {
-            Log::error('Controllers.presentar - BD: ' . $e->getMessage());
+            DB::rollBack();            Log::error('Controllers.presentar - BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
         } catch (\Throwable $e) {
-            Log::error('Controllers.presentar: ' . $e->getMessage());
+            DB::rollBack();            Log::error('Controllers.presentar: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
     }

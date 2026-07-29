@@ -116,6 +116,7 @@ class TareaController extends Controller
     public function actualizarentregas(Request $request, Tarea $tarea)
     {
         try {
+            DB::beginTransaction();
             abort_if($tarea->user_id !== auth()->id(), 403);
 
             foreach ($request->entregas ?? [] as $entregaId => $datos) {
@@ -145,6 +146,7 @@ class TareaController extends Controller
     public function cerrar(Tarea $tarea)
     {
         try {
+            DB::beginTransaction();
             abort_if($tarea->user_id !== auth()->id(), 403);
             $tarea->update(['estado' => 'cerrada']);
             return redirect()->route('tareas.index')

@@ -68,6 +68,7 @@ class ProyectoController extends Controller
     public function store(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'titulo'             => 'required|string|max:300',
                 'materia_id'         => 'required|exists:materias,id',
@@ -139,7 +140,7 @@ class ProyectoController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            Log::error('ProyectoController@store: ' . $e->getMessage());
+            DB::rollBack();            Log::error('ProyectoController@store: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }
@@ -183,6 +184,7 @@ class ProyectoController extends Controller
     public function update(Request $request, Proyecto $proyecto)
     {
         try {
+            DB::beginTransaction();
             abort_if($proyecto->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -207,11 +209,13 @@ class ProyectoController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('ProyectoController@update BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('ProyectoController@update: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -220,17 +224,20 @@ class ProyectoController extends Controller
     public function destroy(Proyecto $proyecto)
     {
         try {
+            DB::beginTransaction();
             abort_if($proyecto->user_id !== auth()->id(), 403);
             $proyecto->delete();
             return redirect()->route('proyectos.index')
                              ->with('success', 'Proyecto eliminado correctamente.');
 
         } catch (QueryException $e) {
+            DB::rollBack();
             Log::error('ProyectoController@destroy BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('ProyectoController@destroy: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -256,6 +263,7 @@ class ProyectoController extends Controller
     public function agregarEntrada(Request $request, CarpetaCampo $carpeta)
     {
         try {
+            DB::beginTransaction();
             abort_if($carpeta->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -293,7 +301,7 @@ class ProyectoController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            Log::error('ProyectoController@agregarEntrada: ' . $e->getMessage());
+            DB::rollBack();            Log::error('ProyectoController@agregarEntrada: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }
@@ -301,20 +309,22 @@ class ProyectoController extends Controller
     public function eliminarEntrada(CarpetaCampoEntrada $entrada)
     {
         try {
+            DB::beginTransaction();
             abort_if($entrada->user_id !== auth()->id(), 403);
             if ($entrada->archivo) {
                 Storage::disk('public')->delete($entrada->archivo);
             }
             $entrada->delete();
+            DB::commit();
             return redirect()->back()->with('success', 'Entrada eliminada correctamente.');
 
         } catch (QueryException $e) {
-            Log::error('ProyectoController@eliminarEntrada BD: ' . $e->getMessage());
+            DB::rollBack();            Log::error('ProyectoController@eliminarEntrada BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            Log::error('ProyectoController@eliminarEntrada: ' . $e->getMessage());
+            DB::rollBack();            Log::error('ProyectoController@eliminarEntrada: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }

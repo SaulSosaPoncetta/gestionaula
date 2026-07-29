@@ -110,6 +110,7 @@ class ActividadController extends Controller
     public function store(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'materia_id'       => 'required|exists:materias,id',
                 'tipoactividad_id' => 'required|exists:tiposactividad,id',
@@ -181,11 +182,23 @@ class ActividadController extends Controller
     }
 
 public function destroy(Actividad $actividad)
-{
-    abort_if($actividad->user_id !== auth()->id(), 403);
-    $materiaId = $actividad->materia_id;
-    $actividad->delete();
-    return redirect()->route('actividades.index', ['materia_id' => $materiaId])
-                     ->with('success', 'Actividad eliminada correctamente.');
-}
+    {
+        try {
+            abort_if($actividad->user_id !== auth()->id(), 403);
+            DB::beginTransaction();
+            $materiaId = $actividad->materia_id;
+            $actividad->delete();
+            DB::commit();
+            return redirect()->route('actividades.index', ['materia_id' => $materiaId])
+                             ->with('success', 'Actividad eliminada correctamente.');
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error('ActividadController@destroy BD: ' . $e->getMessage());
+            return back()->with('error', 'No se puede eliminar la actividad porque tiene registros asociados.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('ActividadController@destroy: ' . $e->getMessage());
+            return back()->with('error', 'Ocurrió un error inesperado al eliminar.');
+        }
+    }
 }

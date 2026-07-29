@@ -160,6 +160,7 @@ class LandingController extends Controller
     public function activar(string $token)
     {
         try {
+            DB::beginTransaction();
             $user = User::where('activation_token', $token)->first();
 
             if (!$user) {

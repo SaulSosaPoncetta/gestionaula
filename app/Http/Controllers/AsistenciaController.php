@@ -319,6 +319,7 @@ class AsistenciaController extends Controller
     public function actualizarRegistro(Request $request, Asistencia $asistencia)
     {
         try {
+            DB::beginTransaction();
             abort_if($asistencia->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -364,10 +365,10 @@ class AsistenciaController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
-            Log::error('AsistenciaController@actualizarRegistro - BD: ' . $e->getMessage());
+            DB::rollBack();            Log::error('AsistenciaController@actualizarRegistro - BD: ' . $e->getMessage());
             return back()->with('error', 'Error al actualizar el registro.')->withInput();
         } catch (\Throwable $e) {
-            Log::error('AsistenciaController@actualizarRegistro: ' . $e->getMessage());
+            DB::rollBack();            Log::error('AsistenciaController@actualizarRegistro: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
         }
     }

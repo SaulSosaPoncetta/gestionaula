@@ -108,6 +108,7 @@ class CalificarActividadController extends Controller
     public function calificar(Request $request)
     {
         try {
+            DB::beginTransaction();
             $request->validate([
                 'asignacion_id'  => 'required|exists:actividadasignaciones,id',
                 'alumno_id'      => 'required|exists:alumnos,id',
@@ -139,6 +140,7 @@ class CalificarActividadController extends Controller
                 ]
             );
 
+            DB::commit();
             return redirect()->back()->with('success', 'Calificación guardada correctamente.');
 
         } catch (ValidationException $e) {
@@ -146,6 +148,7 @@ class CalificarActividadController extends Controller
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error('CalificarActividadController@calificar: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
@@ -228,6 +231,7 @@ class CalificarActividadController extends Controller
     public function pasarAVencida(Request $request, ActividadAlumnoEstado $estado)
     {
         try {
+            DB::beginTransaction();
             abort_if($estado->user_id !== auth()->id(), 403);
             abort_if($estado->estado !== 'incompleta', 403);
 
@@ -236,15 +240,16 @@ class CalificarActividadController extends Controller
                 'fechaestado' => now()->toDateString(),
             ]);
 
+            DB::commit();
             return redirect()->back()->with('success', 'Estado actualizado a entrega vencida.');
 
         } catch (QueryException $e) {
-            Log::error('CalificarActividadController@pasarAVencida BD: ' . $e->getMessage());
+            DB::rollBack();            Log::error('CalificarActividadController@pasarAVencida BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@pasarAVencida: ' . $e->getMessage());
+            DB::rollBack();            Log::error('CalificarActividadController@pasarAVencida: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }
@@ -319,6 +324,7 @@ class CalificarActividadController extends Controller
     public function updateCalificada(Request $request, ActividadAlumnoEstado $estado)
     {
         try {
+            DB::beginTransaction();
             abort_if($estado->user_id !== auth()->id(), 403);
 
             $request->validate([
@@ -343,12 +349,12 @@ class CalificarActividadController extends Controller
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
-            Log::error('CalificarActividadController@updateCalificada BD: ' . $e->getMessage());
+            DB::rollBack();            Log::error('CalificarActividadController@updateCalificada BD: ' . $e->getMessage());
             return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
         } catch (ModelNotFoundException $e) {
             return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@updateCalificada: ' . $e->getMessage());
+            DB::rollBack();            Log::error('CalificarActividadController@updateCalificada: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }

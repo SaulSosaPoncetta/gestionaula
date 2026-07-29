@@ -103,6 +103,7 @@ class PagoOnlineController extends Controller
     public function mpSuccess(Request $request)
     {
         try {
+            DB::beginTransaction();
             $pagoOnline = PagoOnline::where('preference_id', $request->preference_id)
                 ->where('user_id', auth()->id())
                 ->first();
@@ -140,6 +141,7 @@ class PagoOnlineController extends Controller
     public function mpFailure(Request $request)
     {
         try {
+            DB::beginTransaction();
             PagoOnline::where('preference_id', $request->preference_id)
                 ->where('user_id', auth()->id())
                 ->update(['estado' => 'rechazado']);
@@ -180,6 +182,7 @@ class PagoOnlineController extends Controller
     public function iniciarPaypal(Request $request)
     {
         try {
+            DB::beginTransaction();
             $suscripcion = Suscripcion::where('user_id', auth()->id())
                 ->where('estado', 'activa')
                 ->latest()->firstOrFail();
@@ -234,6 +237,7 @@ class PagoOnlineController extends Controller
     public function paypalSuccess(Request $request)
     {
         try {
+            DB::beginTransaction();
             $orderId    = $request->token;
             $pagoOnline = PagoOnline::find(session('paypal_pago_id'));
 
@@ -276,6 +280,7 @@ class PagoOnlineController extends Controller
     public function paypalCancel(Request $request)
     {
         try {
+            DB::beginTransaction();
             if ($id = session('paypal_pago_id')) {
                 PagoOnline::find($id)?->update(['estado' => 'cancelado']);
             }
@@ -331,6 +336,7 @@ class PagoOnlineController extends Controller
     public function webhookPaypal(Request $request)
     {
         try {
+            DB::beginTransaction();
             $payload = $request->all();
             $eventType = $payload['event_type'] ?? '';
 
