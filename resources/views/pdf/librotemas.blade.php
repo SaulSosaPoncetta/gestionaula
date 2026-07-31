@@ -12,7 +12,6 @@
         <div class="dato"><label>Total registros</label><span>{{ $temas->count() }}</span></div>
     </div>
 </div>
-
 @if($temas->isEmpty())
 <div class="alerta">No hay registros de libro de temas para el período seleccionado.</div>
 @else

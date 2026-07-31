@@ -1,0 +1,92 @@
+Necesito desarrollar un sistema de gestión de aula para docentes utilizando PHP, Laravel, Blade, Bootstrap, MySQL y Vite.
+El sistema tiene un único rol llamado "docente" gestionado con el paquete spatie/laravel-permission versión 7. La autenticación se implementa con Laravel Breeze usando Blade. El modelo User usa el trait HasRoles de Spatie. Al registrarse un nuevo usuario se le asigna automáticamente el rol docente sobreescribiendo el método store del RegisteredUserController.
+Stack técnico: PHP 8.2 o superior, Laravel 13, Blade, Bootstrap 5 con Bootstrap Icons, MySQL 8, Vite 8.
+Convenciones de nombres: Sin guiones ni guiones bajos en nombres de carpetas, archivos, rutas ni tablas. Nombres simples en minúsculas sin separadores. Ejemplo: areasformacion, cursodocente, declaracionitems.
+
+ESTRUCTURA DE BASE DE DATOS
+Tablas principales:
+
+users — id, name, email, password, establecimiento_id (nullable FK)
+cursos — id, nombre, anio, division, turno, nivel_id (FK niveles), especialidad_id (FK especialidades), establecimiento_id (FK establecimientos)
+alumnos — id, nombre, apellido, dni, fechanacimiento, curso_id (FK cursos)
+materias — id, nombre, anio, ciclo_id, area_formacion_id, especialidad_id, establecimiento_id, tipomateria (enum: aula, taller), tipohora (enum: catedra, modulo), cargahorariasemanal, cargahorariaanual
+asistencias — id, alumno_id, curso_id, materia_id, user_id, fecha, estado (enum: presente, ausente, tarde, justificado), horallegada (time nullable), fotojustificacion (string nullable), observacion
+calificaciones — id, alumno_id, curso_id, materia_id, user_id, periodo (enum: primero, segundo, tercero), tipoevaluacion (enum: tp, examen, oral, proyecto, concepto), nota (decimal 0-10 paso 0.25), observacion
+tareas — id, user_id, curso_id, titulo, descripcion, fechavencimiento, cerrada (boolean)
+entregas — id, tarea_id, alumno_id, estado (enum: pendiente, entregado, aprobado, desaprobado)
+horarios — id, user_id, establecimiento_id, curso_id, materia_id, dia (enum: lunes, martes, miercoles, jueves, viernes, sabado), horainicio, horafin
+declaraciones — id, user_id, ciclo, fechadeclaracion, estado (enum: borrador, presentada, aprobada, rechazada), observacion, fechapresentacion, fecharesolucion, resueltopor
+declaracionitems — id, declaracion_id, establecimiento_id, curso_id, materia_id, dia, horainicio, horafin
+mensajes — id, user_id, asunto, cuerpo, tipo (enum: general, curso, alumno), curso_id nullable, alumno_id nullable
+establecimientos — id, nombre, cue, modalidad, nivel_id, direccion, localidad, provincia, telefono, email
+niveles — id, nombre, tipo (enum: inicial, primario, secundario, terciario)
+ciclos — id, nombre, tipo (enum: basico, superior), descripcion
+areasformacion — id, nombre, descripcion
+especialidades — id, nombre, descripcion
+cursodocente — id, curso_id, user_id, materia_id
+curso_materia — curso_id, materia_id
+contenidos — id, user_id, materia_id, tema, fecha, observacion
+contenidosubtemas — id, contenido_id, subtema, orden
+planificaciones — id, user_id, materia_id, ciclo, descripcion
+unidades — id, planificacion_id, nombre, numeroclases, orden
+unidadobjetivosaprendizaje — id, unidad_id, objetivo, orden
+unidadobjetivosensenianza — id, unidad_id, objetivo, orden
+unidadactividades — id, unidad_id, actividad, orden
+unidadrecursos — id, unidad_id, recurso, orden
+unidadarchivos — id, unidad_id, nombre, ruta, orden
+unidadcontenidos — id, unidad_id, contenido_id
+materialteoricoarchivos — id, user_id, tarea_id nullable, titulo, descripcion, ruta, orden
+
+
+MÓDULOS Y FUNCIONALIDADES
+Dashboard:
+Card con reloj en tiempo real, día de la semana, fecha completa. Si la hora actual coincide con un horario de clase del docente, muestra la materia actual, el curso y la lista de alumnos como botones clicables. Al hacer click en un alumno se accede a su ficha completa. Debajo del reloj están los accesos rápidos a todos los módulos.
+Módulo de asistencia:
+Selección de curso (de los cargados en BD), materia y fecha. Muestra la lista de alumnos del curso. Estados: presente, ausente, tarde, justificado. Si es tarde, captura automáticamente la hora del sistema operativo. Si es ausente, permite subir foto del justificante (si hay foto se marca como justificado, si no queda como ausente). Vista de historial con filtros. Vista de búsqueda por alumno que muestra resumen de presentes, ausentes, tardanzas y justificadas con detalle cronológico.
+Módulo de calificaciones:
+Carga de notas por curso, materia, período y tipo de evaluación. Períodos: primero, segundo, tercero. Tipos: tp, examen, oral, proyecto, concepto. Notas de 0 a 10 con paso de 0.25. Historial con filtros.
+Módulo de contenidos:
+Registro de temas dictados por materia. Cada contenido tiene tema (obligatorio), hasta 3 subtemas (opcionales), fecha y observación. Filtro por materia.
+Módulo de planificaciones:
+Una planificación por materia con ciclo lectivo y descripción general. Cada planificación tiene varias unidades. Cada unidad tiene: nombre, número de clases, contenidos (seleccionados de los ya cargados), objetivos de aprendizaje (múltiples), objetivos de enseñanza (múltiples), tipos de actividades (múltiples), recursos (múltiples), archivos PDF de material teórico (máximo 3). Los campos múltiples se agregan dinámicamente con un botón +.
+Material pedagógico — Prácticos (antes Tareas):
+Crear prácticos asignados a un curso con título, descripción y fecha de vencimiento. Al crear se generan automáticamente registros de entrega para cada alumno con estado pendiente. Desde la vista de detalle se actualiza el estado de cada entrega: pendiente, entregado, aprobado, desaprobado. Los prácticos pueden cerrarse.
+Material pedagógico — Material teórico:
+Subida de archivos PDF de marco teórico asociados opcionalmente a un práctico. Máximo 3 archivos PDF por práctico. Cada archivo tiene título, descripción opcional y archivo PDF (máximo 10MB).
+Módulo de horarios (en Administración):
+Carga del horario semanal. Curso tomado de los cursos cargados en BD. Materia tomada de las materias cargadas en BD. Al cambiar el curso se filtran las materias relacionadas. Campos: establecimiento, curso, materia, día, hora inicio, hora fin. Vista agrupada por día en cards mostrando establecimiento, materia, curso y horario.
+Declaración jurada (en Administración):
+Se genera en base a los horarios cargados del docente. Campos de cabecera: ciclo lectivo, fecha de declaración, docente. Ítems pre-cargados desde la tabla horarios, editables antes de guardar. Cada ítem tiene: día, hora inicio, hora fin, establecimiento, curso, materia. Sin campo actividad. Estados: borrador y presentada.
+Módulo de comunicación:
+Mensajes con asunto, cuerpo y destinatario. Tipos: general, por curso, por alumno. Al seleccionar por curso se habilita selector de curso. Al seleccionar por alumno se habilita además selector de alumno cargado dinámicamente según el curso.
+
+CRUDs administrativos
+Cursos: nombre (generado como anio+division), anio (1ro a 7mo), division, turno (Mañana/Tarde/Noche/Vespertino), nivel_id (FK niveles), especialidad_id (FK especialidades), establecimiento_id. El listado muestra año, división, turno, nivel, especialidad, establecimiento, cantidad de alumnos y materias.
+Alumnos: apellido, nombre, DNI, fecha de nacimiento, curso_id. El listado muestra año y división separados tomados del curso relacionado. Buscador por nombre, apellido o DNI. Filtro por curso. Vista de ficha individual con datos personales, datos académicos (año, división, turno, nivel, especialidad, establecimiento) y historial de asistencias con resumen de estados. Botón para registrar asistencia desde la ficha.
+Materias: nombre, año, establecimiento, ciclo, área de formación, especialidad, tipo de espacio (aula/taller), tipo de hora (cátedra/módulo), carga horaria semanal, carga horaria anual. Sin campo cantidad de horas.
+Ciclos: nombre, tipo (básico/superior), descripción. El listado muestra el total de materias asignadas a ciclos básicos y el total en ciclos superiores como cards de resumen arriba de la tabla.
+Niveles educativos: nombre, tipo (inicial/primario/secundario/terciario).
+Establecimientos: nombre, CUE, modalidad (común/técnico), nivel_id, dirección, localidad, provincia, teléfono, email. La vista de detalle muestra los cursos y docentes asociados.
+Áreas de formación: nombre, descripción.
+Especialidades: nombre, descripción. La tabla en BD se llama especialidades (no especialidads). El modelo define protected $table = 'especialidades'.
+
+LAYOUT Y NAVEGACIÓN
+Navbar Bootstrap navbar-dark bg-primary. Menú organizado así:
+
+Actividad áulica (dropdown): Asistencia, Calificaciones
+Contenidos (link directo)
+Material pedagógico (dropdown): Prácticos, Material teórico
+Administración (dropdown con secciones):
+
+Sección Académico: Cursos, Materias, Alumnos, Planificación
+Sección Horarios: Horarios, Declaración jurada
+Sección Institucional: Niveles educativos, Establecimientos
+Sección Clasificación: Ciclos, Áreas de formación, Especialidades
+
+
+Comunicación (link directo)
+Dropdown de usuario a la derecha con email y cerrar sesión
+
+Flash messages de éxito y error. Soporte para @stack('scripts').
+Middleware: En bootstrap/app.php registrar alias role, permission y roleorpermission usando las clases de Spatie. Todas las rutas del sistema protegidas con middleware role:docente.
+Storage: Ejecutar php artisan storage:link para acceso público a justificaciones, planificaciones y material teórico.

@@ -1,6 +1,6 @@
 @extends('pdf._layout')
 @section('titulo', 'Declaración Jurada de Horarios')
-@section('subtitulo', 'Ciclo ' . $declaracion->ciclo . ' — ' . $declaracion->fechadeclaracion?->format('d/m/Y'))
+@section('subtitulo', 'Ciclo ' . $declaracion->ciclo . ' — ' . ($declaracion->fechadeclaracion?->format('d/m/Y') ?? ''))
 
 @section('content')
 <div class="grid2">
@@ -13,7 +13,6 @@
         <div class="dato"><label>Estado</label><span>{{ ucfirst($declaracion->estado) }}</span></div>
     </div>
 </div>
-
 <table>
     <thead>
         <tr>
@@ -40,14 +39,12 @@
         @endforelse
     </tbody>
 </table>
-
 <div style="margin-top:40px;display:flex;justify-content:space-between;font-size:9px">
     <div style="text-align:center;width:40%">
-        <div style="border-top:1px solid #000;margin-bottom:5px;padding-top:3px">Firma del Docente</div>
-        <div>{{ $docente->name }}</div>
+        <div style="border-top:1px solid #000;padding-top:3px">Firma del Docente — {{ $docente->name }}</div>
     </div>
     <div style="text-align:center;width:40%">
-        <div style="border-top:1px solid #000;margin-bottom:5px;padding-top:3px">Sello y firma del Directivo</div>
+        <div style="border-top:1px solid #000;padding-top:3px">Sello y firma del Directivo</div>
     </div>
 </div>
 @endsection

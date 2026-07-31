@@ -47,10 +47,6 @@ use App\Http\Controllers\Admin\PagoController;
 
 require __DIR__.'/auth.php';
 
-// ── Rutas públicas PWA ─────────────────────────────────────────────
-Route::get('/offline', fn() => view('pwa.offline'))->name('pwa.offline');
-Route::get('/ping', fn() => response()->json(['ok' => true, 'ts' => time()]));
-
 Route::get('/', function () {
     return redirect()->route('landing.index');
 });
@@ -487,3 +483,27 @@ Route::get('/landing/registro', [LandingController::class, 'registroPlan'])->nam
 Route::post('/landing/contacto', [LandingController::class, 'contacto'])->name('landing.contacto');
 Route::post('/landing/registrar', [LandingController::class, 'registrarDocente'])->name('landing.registrar');
 Route::get('/activar/{token}', [LandingController::class, 'activar'])->name('landing.activar');
+// ── Excel ─────────────────────────────────────────────────────────────
+use App\Http\Controllers\ExcelController;
+Route::middleware(['web','auth'])->group(function () {
+    Route::get('/excel',                [ExcelController::class, 'index'])->name('excel.index');
+    Route::get('/excel/opciones',       [ExcelController::class, 'opciones'])->name('excel.opciones');
+    Route::get('/excel/descargar',      [ExcelController::class, 'descargar'])->name('excel.descargar');
+    Route::get('/excel/alumnos',        [ExcelController::class, 'alumnos'])->name('excel.alumnos');
+    Route::get('/excel/asistencia',     [ExcelController::class, 'asistencia'])->name('excel.asistencia');
+    Route::get('/excel/calificaciones', [ExcelController::class, 'calificaciones'])->name('excel.calificaciones');
+    Route::get('/excel/cierre',         [ExcelController::class, 'cierre'])->name('excel.cierre');
+    Route::get('/excel/declaracion',    [ExcelController::class, 'declaracion'])->name('excel.declaracion');
+    Route::get('/excel/contenidos',     [ExcelController::class, 'contenidos'])->name('excel.contenidos');
+    Route::get('/excel/librotemas',     [ExcelController::class, 'librotemas'])->name('excel.librotemas');
+    Route::get('/excel/docente',        [ExcelController::class, 'docente'])->name('excel.docente');
+});
+
+// ── PWA ───────────────────────────────────────────────────────────────
+Route::get('/offline', fn() => view('pwa.offline'))->name('pwa.offline');
+Route::get('/ping',    fn() => response()->json(['ok' => true]));
+Route::get('/descarga/GestionAula-Setup.exe', function () {
+    $path = public_path('descarga/GestionAula-Setup.exe');
+    if (!file_exists($path)) abort(404, 'Instalador no disponible aún.');
+    return response()->download($path, 'GestionAula-Setup.exe');
+})->name('descarga.desktop');

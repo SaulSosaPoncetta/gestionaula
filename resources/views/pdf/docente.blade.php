@@ -36,12 +36,12 @@
     <table>
         <thead>
             <tr>
-                <th width="40%">Nombre</th>
+                <th width="42%">Nombre</th>
                 <th width="12%">Año</th>
                 <th width="16%">Tipo hora</th>
-                <th width="12%" class="text-center">Hs/sem</th>
-                <th width="12%" class="text-center">Hs/anual</th>
-                <th width="8%" class="text-center">% límite</th>
+                <th width="10%" class="text-center">Hs/sem</th>
+                <th width="10%" class="text-center">Hs/anual</th>
+                <th width="10%" class="text-center">% límite</th>
             </tr>
         </thead>
         <tbody>
@@ -64,11 +64,11 @@
     <table>
         <thead>
             <tr>
-                <th width="32%">Curso</th>
+                <th width="34%">Curso</th>
                 <th width="12%">Año</th>
                 <th width="12%">División</th>
-                <th width="16%">Turno</th>
-                <th width="14%" class="text-center">Alumnos</th>
+                <th width="18%">Turno</th>
+                <th width="12%" class="text-center">Alumnos</th>
             </tr>
         </thead>
         <tbody>
