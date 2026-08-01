@@ -24,7 +24,7 @@
         <i class="bi bi-exclamation-triangle me-2"></i>Este curso no tiene alumnos registrados.
     </div>
 @else
-<form method="POST" action="{{ route('calificaciones.guardar') }}">
+<form method="POST" action="{{ route('calificaciones.guardar') }}" id="form-calificaciones">
     @csrf
     <input type="hidden" name="curso_id"          value="{{ $curso->id }}">
     <input type="hidden" name="materia_id"         value="{{ $materia->id }}">
@@ -78,3 +78,48 @@
 </form>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('form-calificaciones')?.addEventListener('submit', async function(e) {
+    if (navigator.onLine) return;
+    e.preventDefault();
+
+    const form      = e.target;
+    const cursoId   = form.querySelector('[name=curso_id]').value;
+    const materiaId = form.querySelector('[name=materia_id]').value;
+    const periodoId = form.querySelector('[name=periodo_id]').value;
+    const tipoId    = form.querySelector('[name=tipoevaluacion_id]').value;
+    const fecha     = form.querySelector('[name=fecha]').value;
+
+    const ops = [];
+    form.querySelectorAll('input[name*="[nota]"]').forEach(input => {
+        const m = input.name.match(/calificaciones\[(\d+)\]\[nota\]/);
+        if (!m || !input.value) return;
+        const alumnoId = m[1];
+        const obs = form.querySelector(`input[name="calificaciones[${alumnoId}][observacion]"]`)?.value || null;
+        ops.push(OfflineManager.guardar('calificaciones', 'insert', {
+            alumno_id:         parseInt(alumnoId),
+            curso_id:          parseInt(cursoId),
+            materia_id:        parseInt(materiaId),
+            periodo_id:        parseInt(periodoId),
+            tipoevaluacion_id: parseInt(tipoId),
+            nota:              parseFloat(input.value),
+            observacion:       obs,
+        }));
+    });
+
+    await Promise.all(ops);
+
+    const btn = form.querySelector('[type=submit]');
+    btn.disabled    = true;
+    btn.textContent = '✅ Guardado localmente';
+    btn.className   = 'btn btn-warning';
+
+    const alerta = document.createElement('div');
+    alerta.className = 'alert alert-warning mt-3';
+    alerta.innerHTML = '⚠️ <strong>Sin conexión</strong> — Calificaciones guardadas localmente. Se sincronizarán cuando vuelva internet.';
+    form.insertAdjacentElement('afterend', alerta);
+});
+</script>
+@endpush

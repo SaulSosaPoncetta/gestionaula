@@ -221,5 +221,31 @@ function quitarItem(id) {
             </tr>`;
     }
 }
+
+document.getElementById('formActividad')?.addEventListener('submit', async function(e) {
+    if (navigator.onLine) return;
+    e.preventDefault();
+
+    const form = e.target;
+    const datos = {
+        materia_id:  parseInt(form.querySelector('[name=materia_id]')?.value),
+        curso_id:    parseInt(form.querySelector('[name=curso_id]')?.value),
+        titulo:      form.querySelector('[name=titulo]')?.value,
+        descripcion: form.querySelector('[name=descripcion]')?.value || null,
+        fecha:       form.querySelector('[name=fecha]')?.value || new Date().toISOString().split('T')[0],
+    };
+
+    await OfflineManager.guardar('actividades', 'insert', datos);
+
+    const btn = form.querySelector('[type=submit]');
+    btn.disabled    = true;
+    btn.textContent = '✅ Guardado localmente';
+    btn.className   = 'btn btn-warning';
+
+    const alerta = document.createElement('div');
+    alerta.className = 'alert alert-warning mt-3';
+    alerta.innerHTML = '⚠️ <strong>Sin conexión</strong> — Actividad guardada localmente. Se sincronizará cuando vuelva internet.';
+    form.insertAdjacentElement('afterend', alerta);
+});
 </script>
 @endpush

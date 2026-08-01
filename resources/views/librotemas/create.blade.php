@@ -143,7 +143,6 @@
 
 @push('scripts')
 <script>
-// Al cambiar materia o curso, recargar para actualizar contenidos y actividades
 document.getElementById('materia_id').addEventListener('change', function () {
     const cursoId = document.getElementById('curso_id').value;
     window.location.href = `/librotemas/crear?materia_id=${this.value}&curso_id=${cursoId}`;
@@ -152,6 +151,32 @@ document.getElementById('materia_id').addEventListener('change', function () {
 document.getElementById('curso_id').addEventListener('change', function () {
     const materiaId = document.getElementById('materia_id').value;
     window.location.href = `/librotemas/crear?materia_id=${materiaId}&curso_id=${this.value}`;
+});
+
+document.getElementById('formLibro')?.addEventListener('submit', async function(e) {
+    if (navigator.onLine) return;
+    e.preventDefault();
+
+    const form = e.target;
+    const datos = {
+        curso_id:    parseInt(form.querySelector('[name=curso_id]')?.value),
+        materia_id:  parseInt(form.querySelector('[name=materia_id]')?.value),
+        fecha:       form.querySelector('[name=fecha]')?.value,
+        tema:        form.querySelector('[name=tema]')?.value,
+        observacion: form.querySelector('[name=observacion]')?.value || null,
+    };
+
+    await OfflineManager.guardar('librotemas', 'insert', datos);
+
+    const btn = form.querySelector('[type=submit]');
+    btn.disabled    = true;
+    btn.textContent = '✅ Guardado localmente';
+    btn.className   = 'btn btn-warning';
+
+    const alerta = document.createElement('div');
+    alerta.className = 'alert alert-warning mt-3';
+    alerta.innerHTML = '⚠️ <strong>Sin conexión</strong> — Tema guardado localmente. Se sincronizará cuando vuelva internet.';
+    form.insertAdjacentElement('afterend', alerta);
 });
 </script>
 @endpush

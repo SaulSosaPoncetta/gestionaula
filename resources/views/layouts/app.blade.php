@@ -15,6 +15,10 @@
     <meta name="apple-mobile-web-app-title" content="GestiónAula">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <link rel="icon" type="image/png" href="/icons/icon-192.png">
+    <style>
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.25} }
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -381,6 +385,30 @@
                             </ul>
                         </li>
                     @endauth
+
+                    {{-- ── Badges de estado ──────────────────────── --}}
+                    @auth
+                    <li class="nav-item d-flex align-items-center gap-2 ms-2">
+
+                        {{-- Badge 1: Conexión --}}
+                        <span id="badge-conexion"
+                              title="Estado de conexión a internet"
+                              style="cursor:default;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;transition:all .3s;background:#198754;color:white">
+                            <span id="badge-conexion-dot" style="width:8px;height:8px;border-radius:50%;background:white;display:inline-block"></span>
+                            <span id="badge-conexion-texto">Conectado</span>
+                        </span>
+
+                        {{-- Badge 2: Sincronización --}}
+                        <span id="badge-sync"
+                              title="Estado de sincronización de datos"
+                              style="cursor:pointer;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;transition:all .3s;background:#198754;color:white"
+                              onclick="if(typeof OfflineManager!=='undefined') OfflineManager.sincronizar()">
+                            <i id="badge-sync-icono" class="bi bi-check-circle-fill" style="font-size:10px"></i>
+                            <span id="badge-sync-texto">Sincronizado</span>
+                        </span>
+
+                    </li>
+                    @endauth
                 </ul>
             </div>
         </div>
@@ -471,6 +499,84 @@
         _banner.style.display = 'none'; sessionStorage.setItem('pwa-dismissed','1');
     });
     window.addEventListener('appinstalled', () => { _banner.style.display = 'none'; _pwaPrompt = null; });
+
+    // ── Badges de estado en navbar ──────────────────────────────────
+    function actualizarBadgeConexion(online) {
+        const badge  = document.getElementById('badge-conexion');
+        const texto  = document.getElementById('badge-conexion-texto');
+        const dot    = document.getElementById('badge-conexion-dot');
+        if (!badge) return;
+        if (online) {
+            badge.style.background = '#198754'; // verde
+            texto.textContent      = 'Conectado';
+            dot.style.animation    = 'none';
+        } else {
+            badge.style.background = '#dc3545'; // rojo
+            texto.textContent      = 'Sin conexión';
+            dot.style.animation    = 'pulse-dot 1.2s ease-in-out infinite';
+        }
+    }
+
+    function actualizarBadgeSync(estado, pendientes) {
+        const badge = document.getElementById('badge-sync');
+        const icono = document.getElementById('badge-sync-icono');
+        const texto = document.getElementById('badge-sync-texto');
+        if (!badge) return;
+
+        if (estado === 'ok') {
+            badge.style.background = '#198754'; // verde
+            icono.className        = 'bi bi-check-circle-fill';
+            icono.style.animation  = 'none';
+            texto.textContent      = 'Sincronizado';
+            badge.title            = 'Todos los datos están sincronizados';
+        } else if (estado === 'sincronizando') {
+            badge.style.background = '#ffc107'; // amarillo
+            badge.style.color      = '#212529';
+            icono.className        = 'bi bi-arrow-repeat';
+            icono.style.animation  = 'spin 1s linear infinite';
+            texto.textContent      = 'Sincronizando...';
+            badge.title            = 'Sincronizando datos con el servidor';
+        } else {
+            badge.style.background = '#dc3545'; // rojo
+            badge.style.color      = 'white';
+            icono.className        = 'bi bi-exclamation-circle-fill';
+            icono.style.animation  = 'none';
+            texto.textContent      = `${pendientes} sin sync`;
+            badge.title            = `${pendientes} registro${pendientes > 1 ? 's' : ''} pendiente${pendientes > 1 ? 's' : ''} — Click para sincronizar`;
+        }
+    }
+
+    // Estado inicial
+    actualizarBadgeConexion(navigator.onLine);
+
+    // Cuando cambia la conexión
+    window.addEventListener('online',  () => actualizarBadgeConexion(true));
+    window.addEventListener('offline', () => {
+        actualizarBadgeConexion(false);
+        actualizarBadgeSync('pendiente', '?');
+    });
+
+    // Escuchar eventos del OfflineManager
+    window.addEventListener('gestionaula:sync:inicio', () => {
+        actualizarBadgeSync('sincronizando', 0);
+    });
+    window.addEventListener('gestionaula:sync:fin', (e) => {
+        const p = e.detail?.pendientes ?? 0;
+        actualizarBadgeSync(p > 0 ? 'pendiente' : 'ok', p);
+    });
+    window.addEventListener('gestionaula:sync:nada', () => {
+        actualizarBadgeSync('ok', 0);
+    });
+
+    // Revisar pendientes al cargar (cuando OfflineManager esté listo)
+    window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(async () => {
+            if (typeof OfflineManager !== 'undefined') {
+                const n = await OfflineManager.contarPendientes();
+                actualizarBadgeSync(n > 0 ? 'pendiente' : 'ok', n);
+            }
+        }, 1500);
+    });
 
     function pwaToast(msg, cls='bg-primary') {
         let tc = document.getElementById('_pwa_toasts');
