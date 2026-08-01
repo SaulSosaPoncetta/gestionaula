@@ -415,6 +415,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 
     {{-- ═══════════ PWA ═══════════ --}}
+    <script src="/js/offline-manager.js"></script>
     <div id="pwa-banner" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;max-width:310px">
         <div class="card border-0 shadow-lg" style="border-left:4px solid #0d6efd!important">
             <div class="card-body py-3 px-3">

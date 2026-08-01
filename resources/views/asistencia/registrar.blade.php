@@ -68,7 +68,7 @@
     </div>
 </div>
 
-<form method="POST" action="{{ route('asistencia.guardar') }}" enctype="multipart/form-data">
+<form method="POST" action="{{ route('asistencia.guardar') }}" enctype="multipart/form-data" id="form-asistencia">
     @csrf
     <input type="hidden" name="curso_id"   value="{{ $curso->id }}">
     <input type="hidden" name="materia_id" value="{{ $materia?->id }}">
@@ -208,6 +208,49 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     });
+});
+</script>
+
+<script>
+// ── Soporte offline para asistencia ─────────────────────────────────
+document.getElementById('form-asistencia')?.addEventListener('submit', async function(e) {
+    if (navigator.onLine) return; // Si hay internet, envío normal al server
+
+    e.preventDefault();
+
+    const form     = e.target;
+    const formData = new FormData(form);
+    const cursoId  = formData.get('curso_id');
+    const materiaId= formData.get('materia_id');
+    const fecha    = formData.get('fecha');
+
+    // Recolectar asistencias del formulario
+    const ops = [];
+    for (const [key, valor] of formData.entries()) {
+        const m = key.match(/^asistencias\[(\d+)\]\[estado\]$/);
+        if (m) {
+            const alumnoId = m[1];
+            ops.push(OfflineManager.guardar('asistencias', 'insert', {
+                alumno_id:   parseInt(alumnoId),
+                curso_id:    parseInt(cursoId),
+                materia_id:  parseInt(materiaId),
+                fecha:       fecha,
+                estado:      valor,
+                horallegada: formData.get(`asistencias[${alumnoId}][horallegada]`) || null,
+                observacion: formData.get(`asistencias[${alumnoId}][observacion]`) || null,
+            }));
+        }
+    }
+
+    await Promise.all(ops);
+
+    // Mostrar confirmación
+    const alerta = document.createElement('div');
+    alerta.className = 'alert alert-warning mt-3';
+    alerta.innerHTML = '⚠️ <strong>Sin conexión</strong> — Asistencias guardadas localmente. Se sincronizarán automáticamente cuando vuelva internet.';
+    form.insertAdjacentElement('afterend', alerta);
+    form.querySelector('[type=submit]').disabled = true;
+    form.querySelector('[type=submit]').textContent = '✅ Guardado localmente';
 });
 </script>
 @endpush

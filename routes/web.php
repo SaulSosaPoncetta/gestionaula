@@ -507,3 +507,10 @@ Route::get('/descarga/GestionAula-Setup.exe', function () {
     if (!file_exists($path)) abort(404, 'Instalador no disponible aún.');
     return response()->download($path, 'GestionAula-Setup.exe');
 })->name('descarga.desktop');
+
+// ── Sync Offline ──────────────────────────────────────────────────────
+use App\Http\Controllers\SyncController;
+Route::middleware(['web','auth'])->group(function () {
+    Route::post('/api/sync',        [SyncController::class, 'sync'])->name('sync.push');
+    Route::get('/api/sync/estado',  [SyncController::class, 'estado'])->name('sync.estado');
+});
