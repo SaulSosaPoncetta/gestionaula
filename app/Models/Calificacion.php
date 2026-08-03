@@ -10,7 +10,7 @@ class Calificacion extends Model
 
     protected $fillable = [
         'alumno_id', 'curso_id', 'materia_id', 'user_id',
-        'periodo_id', 'tipoevaluacion_id', 'nota', 'observacion'
+        'periodo_id', 'tipoevaluacion_id', 'uuid', 'nota', 'observacion'
     ];
 
     public function alumno()

@@ -39,7 +39,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ request()->routeIs('asistencia.*') || request()->routeIs('calificaciones.*') ? 'active' : '' }}"
                                 href="#" data-bs-toggle="dropdown">
-                                <i class="bi bi-calendar2-check me-1"></i>Actividad áulica
+                                <i class="bi bi-calendar2-check me-1"></i>Act. áulica
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
@@ -120,7 +120,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ request()->routeIs('tareas.*') || request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
                                 href="#" data-bs-toggle="dropdown">
-                                <i class="bi bi-folder2-open me-1"></i>Material pedagógico
+                                <i class="bi bi-folder2-open me-1"></i>Mat. pedagógico
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
@@ -353,7 +353,7 @@
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('pagos.*') ? 'active' : '' }}"
                                 href="{{ route('pagos.index') }}">
-                                <i class="bi bi-credit-card me-2"></i>Suscripciones
+                                <i class="bi bi-credit-card me-2"></i>Susc.
                             </a>
                         </li>
                     @endauth
@@ -395,7 +395,7 @@
                               title="Estado de conexión a internet"
                               style="cursor:default;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;transition:all .3s;background:#198754;color:white">
                             <span id="badge-conexion-dot" style="width:8px;height:8px;border-radius:50%;background:white;display:inline-block"></span>
-                            <span id="badge-conexion-texto">Conectado</span>
+                            <span id="badge-conexion-texto">Conecc.</span>
                         </span>
 
                         {{-- Badge 2: Sincronización --}}
@@ -404,7 +404,7 @@
                               style="cursor:pointer;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;transition:all .3s;background:#198754;color:white"
                               onclick="if(typeof OfflineManager!=='undefined') OfflineManager.sincronizar()">
                             <i id="badge-sync-icono" class="bi bi-check-circle-fill" style="font-size:10px"></i>
-                            <span id="badge-sync-texto">Sincronizado</span>
+                            <span id="badge-sync-texto">Sincro.</span>
                         </span>
 
                     </li>

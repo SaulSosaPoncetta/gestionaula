@@ -21,7 +21,7 @@ class SyncController extends Controller
         $request->validate([
             'operaciones'   => 'required|array|max:100',
             'operaciones.*.uuid'   => 'required|uuid',
-            'operaciones.*.tabla'  => 'required|string|in:asistencias,calificaciones,librotemas',
+            'operaciones.*.tabla'  => 'required|string|in:asistencias,calificaciones,librotemas,actividades',
             'operaciones.*.accion' => 'required|string|in:insert,update,delete',
             'operaciones.*.datos'  => 'required|array',
         ]);
@@ -92,6 +92,7 @@ class SyncController extends Controller
             'asistencias'    => $this->syncAsistencia($userId, $accion, $datos, $uuid),
             'calificaciones' => $this->syncCalificacion($userId, $accion, $datos, $uuid),
             'librotemas'     => $this->syncLibroTema($userId, $accion, $datos, $uuid),
+            'actividades'    => $this->syncActividad($userId, $accion, $datos, $uuid),
         };
     }
 
@@ -162,9 +163,29 @@ class SyncController extends Controller
         );
     }
 
+    // ── Actividades ───────────────────────────────────────────────────
+    private function syncActividad(int $userId, string $accion, array $d, string $uuid): void
+    {
+        if ($accion === 'delete') {
+            \App\Models\Actividad::where('uuid', $uuid)->where('user_id', $userId)->delete();
+            return;
+        }
+
+        \App\Models\Actividad::updateOrCreate(
+            ['uuid' => $uuid, 'user_id' => $userId],
+            [
+                'materia_id'  => $d['materia_id'],
+                'curso_id'    => $d['curso_id'],
+                'titulo'      => $d['titulo'],
+                'descripcion' => $d['descripcion'] ?? null,
+                'fecha'       => $d['fecha'] ?? now()->toDateString(),
+                'user_id'     => $userId,
+            ]
+        );
+    }
+
     /**
-     * Devuelve cuántas operaciones pendientes tiene el usuario en el log.
-     * Útil para mostrar badges en el menú.
+     * Devuelve estado del servidor — útil para verificar conectividad
      */
     public function estado()
     {

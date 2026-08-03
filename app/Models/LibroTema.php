@@ -9,7 +9,7 @@ class LibroTema extends Model
     protected $table = 'librotemas';
 
     protected $fillable = [
-        'user_id', 'materia_id', 'curso_id', 'tipoclase_id',
+        'uuid', 'user_id', 'materia_id', 'curso_id', 'tipoclase_id',
         'contenido_id', 'actividad_id', 'fecha', 'numeroclase',
         'numerounidad', 'observacion'
     ];

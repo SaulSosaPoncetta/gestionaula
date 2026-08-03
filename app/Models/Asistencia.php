@@ -8,7 +8,7 @@ class Asistencia extends Model
 {
     protected $fillable = [
         'alumno_id', 'curso_id', 'materia_id', 'user_id',
-        'fecha', 'estado', 'horallegada', 'fotojustificacion', 'observacion'
+        'fecha', 'uuid', 'estado', 'horallegada', 'fotojustificacion', 'observacion'
     ];
 
     protected $casts = [
