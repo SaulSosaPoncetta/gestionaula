@@ -4,7 +4,13 @@
 <div class="row mb-4">
     <div class="col">
         <h4 class="fw-bold"><i class="bi bi-plus-circle me-2"></i>Registrar clase</h4>
-        <p class="text-muted">Fecha: <strong>{{ now()->format('d/m/Y') }}</strong></p>
+        <p class="text-muted">Completá los datos de la clase de hoy.</p>
+        @if($materiaActiva)
+        <span class="badge bg-success mt-1">
+            <i class="bi bi-play-circle me-1"></i>Clase activa: {{ $materiaActiva->nombre }}
+            @if($cursoActivo) — {{ $cursoActivo->nombre_completo }} @endif
+        </span>
+        @endif
     </div>
     <div class="col-auto">
         <a href="{{ route('librotemas.index') }}" class="btn btn-outline-secondary">
@@ -12,14 +18,6 @@
         </a>
     </div>
 </div>
-
-@if($materiaActiva)
-<div class="alert alert-success mb-4">
-    <i class="bi bi-lightning-fill me-2"></i>
-    Clase activa detectada: <strong>{{ $materiaActiva->nombre }}</strong>
-    @if($cursoActivo) — {{ $cursoActivo->nombre_completo }} @endif
-</div>
-@endif
 
 <div class="card border-0 shadow-sm">
     <div class="card-body">
@@ -41,7 +39,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Materia <span class="text-danger">*</span></label>
                     <select name="materia_id" id="materia_id" class="form-select" required>
-                        <option value="">Selecciona...</option>
+                        <option value="">Seleccioná...</option>
                         @foreach($materias as $m)
                             <option value="{{ $m->id }}"
                                 {{ ($materiaId == $m->id) ? 'selected' : '' }}>
@@ -55,7 +53,7 @@
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Curso <span class="text-danger">*</span></label>
                     <select name="curso_id" id="curso_id" class="form-select" required>
-                        <option value="">Selecciona...</option>
+                        <option value="">Seleccioná...</option>
                         @foreach($cursos as $c)
                             <option value="{{ $c->id }}"
                                 {{ ($cursoId == $c->id) ? 'selected' : '' }}>
@@ -63,6 +61,17 @@
                             </option>
                         @endforeach
                     </select>
+                </div>
+
+                {{-- Fecha (editable, por defecto hoy) --}}
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        Fecha <span class="text-danger">*</span>
+                        <small class="text-muted fw-normal ms-1">(podés cambiarla)</small>
+                    </label>
+                    <input type="date" name="fecha" class="form-control"
+                           value="{{ old('fecha', now('America/Argentina/Buenos_Aires')->format('Y-m-d')) }}"
+                           required>
                 </div>
 
                 {{-- Número de clase --}}

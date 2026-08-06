@@ -100,6 +100,7 @@ class LibroTemaController extends Controller
         $request->validate([
             'materia_id'   => 'required|exists:materias,id',
             'curso_id'     => 'required|exists:cursos,id',
+            'fecha'        => 'required|date',
             'tipoclase_id' => 'nullable|exists:tiposclase,id',
             'contenido_id' => 'nullable|exists:contenidos,id',
             'actividad_id' => 'nullable|exists:actividades,id',
@@ -116,7 +117,7 @@ class LibroTemaController extends Controller
             'tipoclase_id' => $request->tipoclase_id,
             'contenido_id' => $request->contenido_id,
             'actividad_id' => $request->actividad_id,
-            'fecha'        => now()->toDateString(),
+            'fecha'        => $request->fecha,
             'numeroclase'  => $request->numeroclase,
             'numerounidad' => $request->numerounidad,
             'observacion'  => $request->observacion,
