@@ -37,28 +37,33 @@
 {{-- Filtros --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <form method="GET" action="{{ route('librotemas.index') }}" class="row g-3">
+        <form method="GET" action="{{ route('librotemas.index') }}" class="row g-3" id="form-filtros">
             <div class="col-md-4">
-                <select name="materia_id" class="form-select">
+                <label class="form-label fw-semibold">Materia</label>
+                <select name="materia_id" id="filtro-materia" class="form-select">
                     <option value="">Todas las materias</option>
                     @foreach($materias as $m)
-                        <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
+                        <option value="{{ $m->id }}"
+                            {{ $materiaIdFiltro == $m->id ? 'selected' : '' }}>
                             {{ $m->nombre }}
                         </option>
                     @endforeach
                 </select>
             </div>
             <div class="col-md-4">
-                <select name="curso_id" class="form-select">
+                <label class="form-label fw-semibold">Curso</label>
+                <select name="curso_id" id="filtro-curso" class="form-select">
                     <option value="">Todos los cursos</option>
-                    @foreach($cursos as $c)
-                        <option value="{{ $c->id }}" {{ request('curso_id') == $c->id ? 'selected' : '' }}>
+                    @foreach($cursosParaMateria as $c)
+                        <option value="{{ $c->id }}"
+                            {{ $cursoIdFiltro == $c->id ? 'selected' : '' }}>
                             {{ $c->nombre_completo }}
+                            @if($materiaActiva && $cursoActivo?->id == $c->id) ⚡ @endif
                         </option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-4 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
                     <i class="bi bi-search me-1"></i>Filtrar
                 </button>
@@ -66,6 +71,37 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+// Al cambiar materia en el filtro, actualizar cursos dinámicamente
+document.getElementById('filtro-materia').addEventListener('change', function() {
+    const materiaId = this.value;
+    const cursosEl  = document.getElementById('filtro-curso');
+    cursosEl.innerHTML = '<option value="">Cargando...</option>';
+
+    if (!materiaId) {
+        cursosEl.innerHTML = '<option value="">Todos los cursos</option>';
+        return;
+    }
+
+    fetch(`/api/materias/${materiaId}/cursos`)
+        .then(r => r.json())
+        .then(cursos => {
+            cursosEl.innerHTML = '<option value="">Todos los cursos</option>';
+            cursos.forEach(c => {
+                const activo = c.activo ? ' ⚡' : '';
+                cursosEl.innerHTML += `<option value="${c.id}"${c.activo?' selected':''}>${c.nombre}${activo}</option>`;
+            });
+            // Si hay exactamente 1 curso, seleccionarlo
+            if (cursos.length === 1) cursosEl.value = cursos[0].id;
+        })
+        .catch(() => {
+            cursosEl.innerHTML = '<option value="">Error al cargar cursos</option>';
+        });
+});
+</script>
+@endpush
 
 @if($registros->isEmpty())
     <div class="alert alert-info">

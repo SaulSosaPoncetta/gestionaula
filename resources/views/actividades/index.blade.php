@@ -19,15 +19,32 @@
         <form method="GET" action="{{ route('actividades.index') }}" class="row g-3">
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Filtrar por materia</label>
+                @php $haySeparador = false; @endphp
                 <select name="materia_id" id="materia_id" class="form-select">
                     <option value="">— Todas las materias —</option>
-                    @foreach($materias as $materia)
-                        <option value="{{ $materia->id }}"
-                            {{ $materiaActiva == $materia->id ? 'selected' : '' }}>
-                            {{ $materia->nombre }}
-                        </option>
+                    @foreach($materias as $m)
+                        @if($m->id === $materiaActivaId)
+                            <option value="{{ $m->id }}" {{ $materiaActiva == $m->id ? 'selected' : '' }}>
+                                ⚡ {{ $m->nombre }} (activa ahora)
+                            </option>
+                        @elseif($materiasEnHorario->contains($m->id))
+                            <option value="{{ $m->id }}" {{ $materiaActiva == $m->id ? 'selected' : '' }}>
+                                📅 {{ $m->nombre }}
+                            </option>
+                        @else
+                            @if(!$haySeparador) @php $haySeparador = true @endphp <option disabled>──────────────</option> @endif
+                            <option value="{{ $m->id }}" {{ $materiaActiva == $m->id ? 'selected' : '' }}>
+                                {{ $m->nombre }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
+                @if($materiaActivaId)
+                <div class="form-text">
+                    <i class="bi bi-lightning-charge-fill text-success me-1"></i>Activa ahora &nbsp;
+                    <span>📅 En tu horario</span>
+                </div>
+                @endif
             </div>
             <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">

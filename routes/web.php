@@ -514,3 +514,32 @@ Route::middleware(['web','auth'])->group(function () {
     Route::post('/api/sync',        [SyncController::class, 'sync'])->name('sync.push');
     Route::get('/api/sync/estado',  [SyncController::class, 'estado'])->name('sync.estado');
 });
+
+    // Cursos por materia (para librotemas y otros módulos)
+    Route::get('/api/materias/{materiaId}/cursos', function(int $materiaId) {
+        $horario = \App\Http\Controllers\Concerns\DetectaHorarioActivo::detectarParaUsuario(auth()->id());
+        $cursos  = \App\Models\Horario::with('curso')
+            ->where('user_id', auth()->id())
+            ->where('materia_id', $materiaId)
+            ->get()
+            ->pluck('curso')->filter()->unique('id')
+            ->sortBy(function($c) use ($horario) {
+                return $horario?->curso_id === $c->id ? '0' : '1_'.$c->nombre_completo;
+            })->values()
+            ->map(fn($c) => ['id'=>$c->id,'nombre'=>$c->nombre_completo,'activo'=>$horario?->curso_id===$c->id]);
+        return response()->json($cursos);
+    })->middleware('auth')->name('api.materias.cursos');
+
+    // Materias por curso (para asignar actividades)
+    Route::get('/api/cursos/{cursoId}/materias', function(int $cursoId) {
+        $horario = \App\Http\Controllers\Concerns\DetectaHorarioActivo::detectarParaUsuario(auth()->id());
+        $materias = \App\Models\Horario::with('materia')
+            ->where('user_id', auth()->id())
+            ->where('curso_id', $cursoId)
+            ->get()
+            ->pluck('materia')->filter()->unique('id')
+            ->sortBy(fn($m) => $horario?->materia_id === $m->id ? '0' : '1_'.$m->nombre)
+            ->values()
+            ->map(fn($m) => ['id'=>$m->id,'nombre'=>$m->nombre,'activa'=>$horario?->materia_id===$m->id]);
+        return response()->json($materias);
+    })->middleware('auth')->name('api.cursos.materias');

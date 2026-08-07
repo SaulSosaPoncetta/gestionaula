@@ -5,21 +5,36 @@ use App\Models\Actividad;
 use App\Models\ActividadAsignacion;
 use App\Models\Materia;
 use App\Models\Curso;
+use App\Models\Horario;
 use App\Models\MaterialTeoricoArchivo;
+use App\Http\Controllers\Concerns\DetectaHorarioActivo;
 use Illuminate\Http\Request;
 
 class AsignarActividadController extends Controller
 {
+    use DetectaHorarioActivo;
+
     public function seleccionar()
     {
-        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-        $cursos   = collect();
+        $horario       = $this->detectarHorarioActivo();
+        $materiaActiva = $horario?->materia_id;
+        $cursoActivo   = $horario?->curso_id;
 
-        if (request()->filled('materia_id')) {
-            $cursos = Curso::where('user_id', auth()->id())
-                ->whereHas('materias', fn($q) =>
-                    $q->where('materias.id', request('materia_id'))
-                )->orderBy('anio')->orderBy('division')->get();
+        // Si no hay filtro, preseleccionar la materia activa
+        $materiaId = request('materia_id') ?: $materiaActiva;
+
+        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+
+        // Cursos filtrados por materia vía horarios, activo primero
+        $cursos = collect();
+        if ($materiaId) {
+            $cursos = Horario::with('curso')
+                ->where('user_id', auth()->id())
+                ->where('materia_id', $materiaId)
+                ->get()
+                ->pluck('curso')->filter()->unique('id')
+                ->sortBy(fn($c) => $cursoActivo === $c->id ? '0' : '1_'.$c->nombre_completo)
+                ->values();
 
             if ($cursos->isEmpty()) {
                 $cursos = Curso::where('user_id', auth()->id())
@@ -27,7 +42,9 @@ class AsignarActividadController extends Controller
             }
         }
 
-        return view('asignaractividad.seleccionar', compact('materias', 'cursos'));
+        return view('asignaractividad.seleccionar', compact(
+            'materias', 'cursos', 'materiaActiva', 'cursoActivo', 'materiaId'
+        ));
     }
 
     public function ver(Request $request)

@@ -18,14 +18,35 @@
         <form method="GET" action="{{ route('contenidos.index') }}" class="row g-3">
             <div class="col-md-6">
                 <label class="form-label fw-semibold">Filtrar por materia</label>
+                @php
+                    $enHorario    = \App\Models\Horario::where('user_id', auth()->id())->pluck('materia_id')->unique();
+                    $haySeparador = false;
+                @endphp
                 <select name="materia_id" id="materia_id" class="form-select" onchange="this.form.submit()">
                     <option value="">— Seleccioná una materia —</option>
-                    @foreach($materias as $materia)
-                        <option value="{{ $materia->id }}" {{ request('materia_id') == $materia->id ? 'selected' : '' }}>
-                            {{ $materia->nombre }}
-                        </option>
+                    @foreach($materias as $m)
+                        @if($m->id === $materiaActiva)
+                            <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
+                                ⚡ {{ $m->nombre }} (activa ahora)
+                            </option>
+                        @elseif($enHorario->contains($m->id))
+                            <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
+                                📅 {{ $m->nombre }}
+                            </option>
+                        @else
+                            @if(!$haySeparador) @php $haySeparador = true @endphp <option disabled>──────────────</option> @endif
+                            <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
+                                {{ $m->nombre }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
+                @if($materiaActiva)
+                <div class="form-text">
+                    <i class="bi bi-lightning-charge-fill text-success me-1"></i>Activa ahora &nbsp;
+                    <span>📅 En tu horario</span>
+                </div>
+                @endif
             </div>
             @if(request('materia_id'))
             <div class="col-md-3 d-flex align-items-end">

@@ -54,10 +54,11 @@
                     <label class="form-label fw-semibold">Curso <span class="text-danger">*</span></label>
                     <select name="curso_id" id="curso_id" class="form-select" required>
                         <option value="">Seleccioná...</option>
-                        @foreach($cursos as $c)
+                        @foreach($cursosParaMateria as $c)
                             <option value="{{ $c->id }}"
                                 {{ ($cursoId == $c->id) ? 'selected' : '' }}>
                                 {{ $c->nombre_completo }}
+                                @if($materiaActiva && $cursoActivo?->id == $c->id) ⚡ @endif
                             </option>
                         @endforeach
                     </select>
@@ -153,8 +154,32 @@
 @push('scripts')
 <script>
 document.getElementById('materia_id').addEventListener('change', function () {
-    const cursoId = document.getElementById('curso_id').value;
-    window.location.href = `/librotemas/crear?materia_id=${this.value}&curso_id=${cursoId}`;
+    const materiaId = this.value;
+    const cursoEl   = document.getElementById('curso_id');
+    cursoEl.innerHTML = '<option value="">Cargando cursos...</option>';
+
+    if (!materiaId) {
+        cursoEl.innerHTML = '<option value="">Seleccioná...</option>';
+        return;
+    }
+
+    fetch(`/api/materias/${materiaId}/cursos`)
+        .then(r => r.json())
+        .then(cursos => {
+            cursoEl.innerHTML = '<option value="">Seleccioná...</option>';
+            cursos.forEach(c => {
+                const sel    = c.activo ? ' selected' : '';
+                const activo = c.activo ? ' ⚡' : '';
+                cursoEl.innerHTML += `<option value="${c.id}"${sel}>${c.nombre}${activo}</option>`;
+            });
+            if (cursos.length === 1) cursoEl.value = cursos[0].id;
+            // Recargar contenidos y actividades según nueva materia/curso
+            const cursoId = cursoEl.value;
+            if (cursoId) window.location.href = `/librotemas/crear?materia_id=${materiaId}&curso_id=${cursoId}`;
+        })
+        .catch(() => {
+            cursoEl.innerHTML = '<option value="">Error al cargar</option>';
+        });
 });
 
 document.getElementById('curso_id').addEventListener('change', function () {

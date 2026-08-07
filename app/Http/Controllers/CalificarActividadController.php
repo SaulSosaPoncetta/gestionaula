@@ -10,44 +10,45 @@ use App\Models\ActividadGrupo;
 use App\Models\Curso;
 use App\Models\Materia;
 use App\Models\Alumno;
+use App\Models\Horario;
+use App\Http\Controllers\Concerns\DetectaHorarioActivo;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 
 class CalificarActividadController extends Controller
 {
-    /**
-     * Paso 1: Seleccionar materia y curso
-     */
+    use DetectaHorarioActivo;
+
     public function index()
     {
-        try {
-            $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $cursos   = collect();
+        $horario       = $this->detectarHorarioActivo();
+        $materiaActiva = $horario?->materia_id;
+        $cursoActivo   = $horario?->curso_id;
 
-            if (request()->filled('materia_id')) {
+        // Preseleccionar materia activa si no hay filtro
+        $materiaId = request('materia_id') ?: $materiaActiva;
+
+        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+
+        // Cursos filtrados por materia vía horarios, activo primero
+        $cursos = collect();
+        if ($materiaId) {
+            $cursos = Horario::with('curso')
+                ->where('user_id', auth()->id())
+                ->where('materia_id', $materiaId)
+                ->get()
+                ->pluck('curso')->filter()->unique('id')
+                ->sortBy(fn($c) => $cursoActivo === $c->id ? '0' : '1_'.$c->nombre_completo)
+                ->values();
+
+            if ($cursos->isEmpty()) {
                 $cursos = Curso::where('user_id', auth()->id())
-                    ->whereHas('materias', fn($q) =>
-                        $q->where('materias.id', request('materia_id'))
-                    )->orderBy('anio')->orderBy('division')->get();
-
-                if ($cursos->isEmpty()) {
-                    $cursos = Curso::where('user_id', auth()->id())
-                        ->orderBy('anio')->orderBy('division')->get();
-                }
+                    ->orderBy('anio')->orderBy('division')->get();
             }
-
-            return view('calificaractividad.index', compact('materias', 'cursos'));
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@index: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
         }
+
+        return view('calificaractividad.index', compact(
+            'materias', 'cursos', 'materiaActiva', 'cursoActivo', 'materiaId'
+        ));
     }
 
     /**
@@ -55,51 +56,41 @@ class CalificarActividadController extends Controller
      */
     public function ver(Request $request)
     {
-        try {
-            $request->validate([
-                'materia_id' => 'required|exists:materias,id',
-                'curso_id'   => 'required|exists:cursos,id',
-            ]);
+        $request->validate([
+            'materia_id' => 'required|exists:materias,id',
+            'curso_id'   => 'required|exists:cursos,id',
+        ]);
 
-            $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
-            $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
+        $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
+        $curso   = Curso::where('user_id', auth()->id())->with('alumnos')->findOrFail($request->curso_id);
 
-            // Asignaciones activas para esta materia y curso
-            $asignaciones = ActividadAsignacion::with([
-                    'actividad.items',
-                    'actividad.tipoactividad',
-                    'actividad.grupos.alumnos',
-                ])
-                ->where('user_id', auth()->id())
-                ->where('materia_id', $request->materia_id)
-                ->where('curso_id', $request->curso_id)
-                ->where('estado', 'activa')
-                ->get();
+        // Asignaciones activas para esta materia y curso
+        $asignaciones = ActividadAsignacion::with([
+                'actividad.items',
+                'actividad.tipoactividad',
+                'actividad.grupos.alumnos',
+            ])
+            ->where('user_id', auth()->id())
+            ->where('materia_id', $request->materia_id)
+            ->where('curso_id', $request->curso_id)
+            ->where('estado', 'activa')
+            ->get();
 
-            $alumnos = $curso->alumnos->sortBy('apellido');
+        $alumnos = $curso->alumnos->sortBy('apellido');
 
-            // Notas ya registradas
-            $notasRegistradas = ActividadNota::where('user_id', auth()->id())
-                ->whereIn('asignacion_id', $asignaciones->pluck('id'))
-                ->whereIn('alumno_id', $alumnos->pluck('id'))
-                ->get()
-                ->keyBy(fn($n) => $n->alumno_id . '_' . $n->asignacion_id);
+        // Notas ya registradas
+        $notasRegistradas = ActividadNota::where('user_id', auth()->id())
+            ->whereIn('asignacion_id', $asignaciones->pluck('id'))
+            ->whereIn('alumno_id', $alumnos->pluck('id'))
+            ->get()
+            ->keyBy(fn($n) => $n->alumno_id . '_' . $n->asignacion_id);
 
-            $hoy = now()->toDateString();
+        $hoy = now()->toDateString();
 
-            return view('calificaractividad.ver', compact(
-                'materia', 'curso', 'asignaciones', 'alumnos',
-                'notasRegistradas', 'hoy'
-            ));
-
-        } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@ver: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
+        return view('calificaractividad.ver', compact(
+            'materia', 'curso', 'asignaciones', 'alumnos',
+            'notasRegistradas', 'hoy'
+        ));
     }
 
     /**
@@ -107,51 +98,38 @@ class CalificarActividadController extends Controller
      */
     public function calificar(Request $request)
     {
-        try {
-            DB::beginTransaction();
-            $request->validate([
-                'asignacion_id'  => 'required|exists:actividadasignaciones,id',
-                'alumno_id'      => 'required|exists:alumnos,id',
-                'actividad_id'   => 'required|exists:actividades,id',
-                'notaindividual' => 'nullable|numeric|min:1|max:10',
-                'notagrupal'     => 'nullable|numeric|min:1|max:10',
-                'estado'         => 'required|in:pendiente,enproceso,entregado,vencido',
-                'observacion'    => 'nullable|string',
-            ]);
+        $request->validate([
+            'asignacion_id'  => 'required|exists:actividadasignaciones,id',
+            'alumno_id'      => 'required|exists:alumnos,id',
+            'actividad_id'   => 'required|exists:actividades,id',
+            'notaindividual' => 'nullable|numeric|min:1|max:10',
+            'notagrupal'     => 'nullable|numeric|min:1|max:10',
+            'estado'         => 'required|in:pendiente,enproceso,entregado,vencido',
+            'observacion'    => 'nullable|string',
+        ]);
 
-            $fechaestado = null;
-            if (in_array($request->estado, ['entregado', 'vencido'])) {
-                $fechaestado = now()->toDateString();
-            }
-
-            ActividadNota::updateOrCreate(
-                [
-                    'asignacion_id' => $request->asignacion_id,
-                    'alumno_id'     => $request->alumno_id,
-                    'actividad_id'  => $request->actividad_id,
-                ],
-                [
-                    'user_id'        => auth()->id(),
-                    'notaindividual' => $request->notaindividual,
-                    'notagrupal'     => $request->notagrupal,
-                    'estado'         => $request->estado,
-                    'fechaestado'    => $fechaestado,
-                    'observacion'    => $request->observacion,
-                ]
-            );
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Calificación guardada correctamente.');
-
-        } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('CalificarActividadController@calificar: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
+        $fechaestado = null;
+        if (in_array($request->estado, ['entregado', 'vencido'])) {
+            $fechaestado = now()->toDateString();
         }
+
+        ActividadNota::updateOrCreate(
+            [
+                'asignacion_id' => $request->asignacion_id,
+                'alumno_id'     => $request->alumno_id,
+                'actividad_id'  => $request->actividad_id,
+            ],
+            [
+                'user_id'        => auth()->id(),
+                'notaindividual' => $request->notaindividual,
+                'notagrupal'     => $request->notagrupal,
+                'estado'         => $request->estado,
+                'fechaestado'    => $fechaestado,
+                'observacion'    => $request->observacion,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Calificación guardada correctamente.');
     }
 
     /**
@@ -159,38 +137,30 @@ class CalificarActividadController extends Controller
      */
     public function historial(Request $request)
     {
-        try {
-            $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
 
-            $registros = collect();
-            $materia   = null;
-            $curso     = null;
+        $registros = collect();
+        $materia   = null;
+        $curso     = null;
 
-            if ($request->filled('materia_id') && $request->filled('curso_id')) {
-                $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
-                $curso   = Curso::where('user_id', auth()->id())->findOrFail($request->curso_id);
+        if ($request->filled('materia_id') && $request->filled('curso_id')) {
+            $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
+            $curso   = Curso::where('user_id', auth()->id())->findOrFail($request->curso_id);
 
-                $registros = ActividadNota::with(['alumno', 'actividad', 'asignacion'])
-                    ->where('user_id', auth()->id())
-                    ->whereHas('asignacion', fn($q) =>
-                        $q->where('materia_id', $request->materia_id)
-                          ->where('curso_id', $request->curso_id)
-                    )
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(30);
-            }
-
-            return view('calificaractividad.historial', compact(
-                'materias', 'cursos', 'registros', 'materia', 'curso'
-            ));
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@historial: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
+            $registros = ActividadNota::with(['alumno', 'actividad', 'asignacion'])
+                ->where('user_id', auth()->id())
+                ->whereHas('asignacion', fn($q) =>
+                    $q->where('materia_id', $request->materia_id)
+                      ->where('curso_id', $request->curso_id)
+                )
+                ->orderBy('created_at', 'desc')
+                ->paginate(30);
         }
+
+        return view('calificaractividad.historial', compact(
+            'materias', 'cursos', 'registros', 'materia', 'curso'
+        ));
     }
 
     /**
@@ -198,164 +168,103 @@ class CalificarActividadController extends Controller
      */
     public function incompletas(Request $request)
     {
-        try {
-            $request->validate([
-                'materia_id' => 'required|exists:materias,id',
-                'curso_id'   => 'required|exists:cursos,id',
-            ]);
+        $request->validate([
+            'materia_id' => 'required|exists:materias,id',
+            'curso_id'   => 'required|exists:cursos,id',
+        ]);
 
-            $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
-            $curso   = Curso::where('user_id', auth()->id())->findOrFail($request->curso_id);
+        $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
+        $curso   = Curso::where('user_id', auth()->id())->findOrFail($request->curso_id);
 
-            $registros = ActividadAlumnoEstado::with(['alumno', 'actividad'])
-                ->where('user_id', auth()->id())
-                ->where('estado', 'incompleta')
-                ->whereHas('actividad', fn($q) =>
-                    $q->where('materia_id', $request->materia_id)
-                      ->where('curso_id', $request->curso_id)
-                )
-                ->get();
+        $registros = ActividadAlumnoEstado::with(['alumno', 'actividad'])
+            ->where('user_id', auth()->id())
+            ->where('estado', 'incompleta')
+            ->whereHas('actividad', fn($q) =>
+                $q->where('materia_id', $request->materia_id)
+                  ->where('curso_id', $request->curso_id)
+            )
+            ->get();
 
-            return view('calificaractividad.incompletas', compact('materia', 'curso', 'registros'));
-
-        } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@incompletas: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
+        return view('calificaractividad.incompletas', compact('materia', 'curso', 'registros'));
     }
 
     public function pasarAVencida(Request $request, ActividadAlumnoEstado $estado)
     {
-        try {
-            DB::beginTransaction();
-            abort_if($estado->user_id !== auth()->id(), 403);
-            abort_if($estado->estado !== 'incompleta', 403);
+        abort_if($estado->user_id !== auth()->id(), 403);
+        abort_if($estado->estado !== 'incompleta', 403);
 
-            $estado->update([
-                'estado'      => 'vencida',
-                'fechaestado' => now()->toDateString(),
-            ]);
+        $estado->update([
+            'estado'      => 'vencida',
+            'fechaestado' => now()->toDateString(),
+        ]);
 
-            DB::commit();
-            return redirect()->back()->with('success', 'Estado actualizado a entrega vencida.');
-
-        } catch (QueryException $e) {
-            DB::rollBack();            Log::error('CalificarActividadController@pasarAVencida BD: ' . $e->getMessage());
-            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            DB::rollBack();            Log::error('CalificarActividadController@pasarAVencida: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
+        return redirect()->back()->with('success', 'Estado actualizado a entrega vencida.');
     }
 
     public function calificadas(Request $request)
     {
-        try {
-            $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $cursos   = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
 
-            $registros = collect();
-            $materia   = null;
-            $curso     = null;
+        $registros = collect();
+        $materia   = null;
+        $curso     = null;
 
-            if ($request->filled('materia_id') && $request->filled('curso_id')) {
-                $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
-                $curso   = Curso::where('user_id', auth()->id())->findOrFail($request->curso_id);
+        if ($request->filled('materia_id') && $request->filled('curso_id')) {
+            $materia = Materia::where('user_id', auth()->id())->findOrFail($request->materia_id);
+            $curso   = Curso::where('user_id', auth()->id())->findOrFail($request->curso_id);
 
-                $registros = ActividadNota::with(['alumno', 'actividad'])
-                    ->where('user_id', auth()->id())
-                    ->whereHas('asignacion', fn($q) =>
-                        $q->where('materia_id', $request->materia_id)
-                          ->where('curso_id', $request->curso_id)
-                    )
-                    ->whereNotNull('notaindividual')
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(30);
-            }
-
-            return view('calificaractividad.calificadas', compact(
-                'materias', 'cursos', 'registros', 'materia', 'curso'
-            ));
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@calificadas: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
+            $registros = ActividadNota::with(['alumno', 'actividad'])
+                ->where('user_id', auth()->id())
+                ->whereHas('asignacion', fn($q) =>
+                    $q->where('materia_id', $request->materia_id)
+                      ->where('curso_id', $request->curso_id)
+                )
+                ->whereNotNull('notaindividual')
+                ->orderBy('created_at', 'desc')
+                ->paginate(30);
         }
+
+        return view('calificaractividad.calificadas', compact(
+            'materias', 'cursos', 'registros', 'materia', 'curso'
+        ));
     }
 
     public function showCalificada(ActividadAlumnoEstado $estado)
     {
-        try {
-            abort_if($estado->user_id !== auth()->id(), 403);
-            $estado->load(['alumno', 'actividad.materia', 'actividad.curso']);
-            return view('calificaractividad.show', compact('estado'));
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@showCalificada: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
+        abort_if($estado->user_id !== auth()->id(), 403);
+        $estado->load(['alumno', 'actividad.materia', 'actividad.curso']);
+        return view('calificaractividad.show', compact('estado'));
     }
 
     public function editCalificada(ActividadAlumnoEstado $estado)
     {
-        try {
-            abort_if($estado->user_id !== auth()->id(), 403);
-            $estado->load(['alumno', 'actividad.materia', 'actividad.curso']);
-            return view('calificaractividad.edit', compact('estado'));
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('CalificarActividadController@editCalificada: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
+        abort_if($estado->user_id !== auth()->id(), 403);
+        $estado->load(['alumno', 'actividad.materia', 'actividad.curso']);
+        return view('calificaractividad.edit', compact('estado'));
     }
 
     public function updateCalificada(Request $request, ActividadAlumnoEstado $estado)
     {
-        try {
-            DB::beginTransaction();
-            abort_if($estado->user_id !== auth()->id(), 403);
+        abort_if($estado->user_id !== auth()->id(), 403);
 
-            $request->validate([
-                'estado'      => 'required|in:finalizado,vencida,incompleta',
-                'fechaestado' => 'nullable|date',
-                'nota'        => 'nullable|numeric|min:0|max:10',
-                'observacion' => 'nullable|string',
-            ]);
+        $request->validate([
+            'estado'      => 'required|in:finalizado,vencida,incompleta',
+            'fechaestado' => 'nullable|date',
+            'nota'        => 'nullable|numeric|min:0|max:10',
+            'observacion' => 'nullable|string',
+        ]);
 
-            $estado->update([
-                'estado'      => $request->estado,
-                'fechaestado' => $request->fechaestado,
-                'nota'        => $request->nota,
-                'observacion' => $request->observacion,
-            ]);
+        $estado->update([
+            'estado'      => $request->estado,
+            'fechaestado' => $request->fechaestado,
+            'nota'        => $request->nota,
+            'observacion' => $request->observacion,
+        ]);
 
-            return redirect()->route('calificaractividad.calificadas', [
-                'materia_id' => $estado->actividad->materia_id,
-                'curso_id'   => $estado->actividad->curso_id,
-            ])->with('success', 'Calificación actualizada correctamente.');
-
-        } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
-        } catch (QueryException $e) {
-            DB::rollBack();            Log::error('CalificarActividadController@updateCalificada BD: ' . $e->getMessage());
-            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            DB::rollBack();            Log::error('CalificarActividadController@updateCalificada: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
+        return redirect()->route('calificaractividad.calificadas', [
+            'materia_id' => $estado->actividad->materia_id,
+            'curso_id'   => $estado->actividad->curso_id,
+        ])->with('success', 'Calificación actualizada correctamente.');
     }
 }

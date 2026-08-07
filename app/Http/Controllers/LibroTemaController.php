@@ -23,25 +23,64 @@ class LibroTemaController extends Controller
         $materiaActiva = $horarioActivo?->materia;
         $cursoActivo   = $horarioActivo?->curso;
 
+        // Preseleccionar según horario activo si no hay filtro explícito
+        $materiaIdFiltro = $request->filled('materia_id')
+            ? $request->materia_id
+            : $horarioActivo?->materia_id;
+
+        $cursoIdFiltro = $request->filled('curso_id')
+            ? $request->curso_id
+            : $horarioActivo?->curso_id;
+
         $query = LibroTema::with(['materia', 'curso', 'tipoclase', 'contenido', 'actividad'])
             ->where('user_id', auth()->id())
             ->orderBy('fecha', 'desc')
             ->orderBy('numeroclase', 'desc');
 
-        if ($request->filled('materia_id')) {
-            $query->where('materia_id', $request->materia_id);
-        }
-        if ($request->filled('curso_id')) {
-            $query->where('curso_id', $request->curso_id);
-        }
+        if ($materiaIdFiltro) $query->where('materia_id', $materiaIdFiltro);
+        if ($cursoIdFiltro)   $query->where('curso_id',   $cursoIdFiltro);
 
         $registros = $query->paginate(20);
         $materias  = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
-        $cursos    = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+
+        // Cursos filtrados por la materia seleccionada (via horarios)
+        $cursosParaMateria = $this->cursosDeMateria($materiaIdFiltro);
+
+        // Todos los cursos (para JS cuando cambia materia)
+        $cursos = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
 
         return view('librotemas.index', compact(
-            'registros', 'materiaActiva', 'cursoActivo', 'materias', 'cursos'
+            'registros', 'materiaActiva', 'cursoActivo', 'materias', 'cursos',
+            'cursosParaMateria', 'materiaIdFiltro', 'cursoIdFiltro'
         ));
+    }
+
+    /**
+     * Retorna los cursos donde el docente dicta una materia específica,
+     * con el curso activo primero.
+     */
+    private function cursosDeMateria(?int $materiaId): \Illuminate\Support\Collection
+    {
+        if (!$materiaId) {
+            return Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
+        }
+
+        $horarioActivo = $this->detectarHorarioActivo();
+
+        return Horario::with('curso')
+            ->where('user_id', auth()->id())
+            ->where('materia_id', $materiaId)
+            ->get()
+            ->pluck('curso')
+            ->filter()
+            ->unique('id')
+            ->sortBy(function ($curso) use ($horarioActivo) {
+                // El curso activo va primero (orden 0), el resto alfabético
+                return $horarioActivo?->curso_id === $curso->id
+                    ? '0'
+                    : '1_' . $curso->nombre_completo;
+            })
+            ->values();
     }
 
     public function create(Request $request)
@@ -64,6 +103,10 @@ class LibroTemaController extends Controller
 
         $materiaActiva = $materiaId ? Materia::find($materiaId) : null;
         $cursoActivo   = $cursoId   ? Curso::find($cursoId)     : null;
+
+        // Cursos filtrados por materia (activo primero)
+        $cursosParaMateria = $this->cursosDeMateria($materiaId);
+        $cursos = Curso::where('user_id', auth()->id())->orderBy('anio')->orderBy('division')->get();
 
         $contenidos = $materiaId
             ? Contenido::where('user_id', auth()->id())
@@ -89,7 +132,7 @@ class LibroTemaController extends Controller
         }
 
         return view('librotemas.create', compact(
-            'materias', 'cursos', 'tiposclase', 'contenidos', 'actividades',
+            'materias', 'cursos', 'cursosParaMateria', 'tiposclase', 'contenidos', 'actividades',
             'siguienteClase', 'materiaActiva', 'cursoActivo',
             'materiaId', 'cursoId'
         ));
