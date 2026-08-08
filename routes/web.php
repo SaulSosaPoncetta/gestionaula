@@ -473,6 +473,47 @@ Route::get('/api/dashboard/stats/{cursoId}/{materiaId}', function(int $cursoId, 
             'asistencias'  => $tendenciaAsistencias,
             'cierres'      => $tendenciaCierres,
         ],
+        'temas' => (function() use ($materia, $curso) {
+            $hoy = \Carbon\Carbon::now('America/Argentina/Buenos_Aires')->toDateString();
+
+            // Clase anterior: último tema antes de hoy
+            $anterior = \App\Models\LibroTema::where('user_id', auth()->id())
+                ->where('materia_id', $materia->id)
+                ->where('curso_id',   $curso->id)
+                ->where('fecha', '<', $hoy)
+                ->orderBy('fecha', 'desc')
+                ->orderBy('numeroclase', 'desc')
+                ->first();
+
+            // Clase actual: tema de hoy
+            $actual = \App\Models\LibroTema::where('user_id', auth()->id())
+                ->where('materia_id', $materia->id)
+                ->where('curso_id',   $curso->id)
+                ->where('fecha', $hoy)
+                ->orderBy('numeroclase', 'desc')
+                ->first();
+
+            // Próxima clase: primer tema futuro
+            $proxima = \App\Models\LibroTema::where('user_id', auth()->id())
+                ->where('materia_id', $materia->id)
+                ->where('curso_id',   $curso->id)
+                ->where('fecha', '>', $hoy)
+                ->orderBy('fecha')
+                ->orderBy('numeroclase')
+                ->first();
+
+            $fmt = fn($t) => $t ? [
+                'fecha'       => \Carbon\Carbon::parse($t->fecha)->format('d/m/Y'),
+                'tema'        => $t->observacion ?? 'Sin descripción',
+                'numeroclase' => $t->numeroclase,
+            ] : null;
+
+            return [
+                'anterior' => $fmt($anterior),
+                'actual'   => $fmt($actual),
+                'proxima'  => $fmt($proxima),
+            ];
+        })(),
     ]);
 })->middleware(['web', 'auth'])->name('api.dashboard.stats');
 

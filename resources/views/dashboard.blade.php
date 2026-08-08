@@ -770,6 +770,68 @@
 
                 html += `</div></div>`;
 
+                // ── Temas de planificación ────────────────────────────────
+                if (data.temas) {
+                    const t = data.temas;
+                    html += `
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white fw-semibold small">
+            <i class="bi bi-journal-bookmark me-1 text-primary"></i>Planificación — Libro de Temas
+        </div>
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <!-- Clase anterior -->
+                <div class="col-md-4 border-end p-3" style="background:#f8f9fa">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-arrow-left-circle text-secondary fs-5"></i>
+                        <span class="fw-semibold text-secondary small">Clase anterior</span>
+                    </div>
+                    ${t.anterior ? `
+                        <div class="text-muted small mb-1">
+                            <i class="bi bi-calendar3 me-1"></i>${t.anterior.fecha}
+                            <span class="badge bg-secondary ms-1">Clase ${t.anterior.numeroclase}</span>
+                        </div>
+                        <div class="small fw-semibold">${t.anterior.tema}</div>
+                    ` : `<div class="text-muted small fst-italic">Sin registros anteriores</div>`}
+                </div>
+                <!-- Clase actual -->
+                <div class="col-md-4 border-end p-3" style="background:#e8f5e9">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-play-circle-fill text-success fs-5"></i>
+                        <span class="fw-semibold text-success small">Hoy</span>
+                    </div>
+                    ${t.actual ? `
+                        <div class="text-muted small mb-1">
+                            <i class="bi bi-calendar3 me-1"></i>${t.actual.fecha}
+                            <span class="badge bg-success ms-1">Clase ${t.actual.numeroclase}</span>
+                        </div>
+                        <div class="small fw-semibold">${t.actual.tema}</div>
+                    ` : `
+                        <div class="text-muted small fst-italic">Sin registro para hoy</div>
+                        <a href="/librotemas/crear" class="btn btn-sm btn-success mt-2">
+                            <i class="bi bi-plus-circle me-1"></i>Registrar clase
+                        </a>
+                    `}
+                </div>
+                <!-- Próxima clase -->
+                <div class="col-md-4 p-3" style="background:#e3f2fd">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-arrow-right-circle text-primary fs-5"></i>
+                        <span class="fw-semibold text-primary small">Próxima clase</span>
+                    </div>
+                    ${t.proxima ? `
+                        <div class="text-muted small mb-1">
+                            <i class="bi bi-calendar3 me-1"></i>${t.proxima.fecha}
+                            <span class="badge bg-primary ms-1">Clase ${t.proxima.numeroclase}</span>
+                        </div>
+                        <div class="small fw-semibold">${t.proxima.tema}</div>
+                    ` : `<div class="text-muted small fst-italic">Sin próxima clase planificada</div>`}
+                </div>
+            </div>
+        </div>
+    </div>`;
+                }
+
                 // Gráficos
                 html += `
     <div class="row g-3 mt-2">

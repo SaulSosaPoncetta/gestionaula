@@ -20,27 +20,43 @@
 {{-- Filtros --}}
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
-        <form method="GET" action="{{ route('proyectos.index') }}" class="row g-3">
+        <form method="GET" action="{{ route('proyectos.index') }}" class="row g-3" id="form-filtros">
+            {{-- Materia: activa primero, luego del horario, luego el resto --}}
             <div class="col-md-3">
-                <select name="materia_id" class="form-select">
+                @php $haySep = false; @endphp
+                <select name="materia_id" id="filtro-materia" class="form-select">
                     <option value="">— Todas las materias —</option>
                     @foreach($materias as $m)
-                        <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
-                            {{ $m->nombre }}
-                        </option>
+                        @if($m->id === $materiaActivaId)
+                            <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
+                                ⚡ {{ $m->nombre }} (activa ahora)
+                            </option>
+                        @elseif($materiasEnHorario->contains($m->id))
+                            <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
+                                📅 {{ $m->nombre }}
+                            </option>
+                        @else
+                            @if(!$haySep) @php $haySep = true @endphp <option disabled>──────────────</option> @endif
+                            <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
+                                {{ $m->nombre }}
+                            </option>
+                        @endif
                     @endforeach
                 </select>
             </div>
+
+            {{-- Curso: solo los asociados a la materia seleccionada --}}
             <div class="col-md-3">
-                <select name="curso_id" class="form-select">
+                <select name="curso_id" id="filtro-curso" class="form-select">
                     <option value="">— Todos los cursos —</option>
                     @foreach($cursos as $c)
                         <option value="{{ $c->id }}" {{ request('curso_id') == $c->id ? 'selected' : '' }}>
-                            {{ $c->nombre_completo }}
+                            {{ $c->nombre_completo }}{{ $c->id === ($horario?->curso_id ?? null) ? ' ⚡' : '' }}
                         </option>
                     @endforeach
                 </select>
             </div>
+
             <div class="col-md-2">
                 <select name="estado" class="form-select">
                     <option value="">— Todos —</option>
@@ -127,3 +143,32 @@
 <div class="mt-3">{{ $proyectos->links() }}</div>
 @endif
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('filtro-materia')?.addEventListener('change', function () {
+    const materiaId = this.value;
+    const cursoEl   = document.getElementById('filtro-curso');
+
+    if (!materiaId) {
+        cursoEl.innerHTML = '<option value="">— Todos los cursos —</option>';
+        return;
+    }
+
+    cursoEl.innerHTML = '<option value="">Cargando...</option>';
+
+    fetch(`/api/materias/${materiaId}/cursos`)
+        .then(r => r.json())
+        .then(cursos => {
+            cursoEl.innerHTML = '<option value="">— Todos los cursos —</option>';
+            cursos.forEach(c => {
+                const activo = c.activo ? ' ⚡' : '';
+                cursoEl.innerHTML += `<option value="${c.id}"${c.activo ? ' selected' : ''}>${c.nombre}${activo}</option>`;
+            });
+        })
+        .catch(() => {
+            cursoEl.innerHTML = '<option value="">— Todos los cursos —</option>';
+        });
+});
+</script>
+@endpush
