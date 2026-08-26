@@ -3,13 +3,13 @@ namespace App\Http\Controllers;
 
 use App\Models\PagoOnline;
 use App\Models\Suscripcion;
-use App\Services\MercadoPagoService;
 use App\Services\PayPalService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -38,141 +38,28 @@ class PagoOnlineController extends Controller
         }
     }
 
-    // ─── MercadoPago ──────────────────────────────────────────
+        // ─── MercadoPago (vía hub central MiGestión Panel) ─────────
 
     public function iniciarMP(Request $request)
     {
         try {
-            DB::beginTransaction();
-            $suscripcion = Suscripcion::where('user_id', auth()->id())
-                ->where('estado', 'activa')
-                ->latest()->firstOrFail();
+            $response = Http::withHeaders(['X-Api-Key' => config('migestion_hub.api_key')])
+                ->timeout(8)
+                ->post(rtrim(config('migestion_hub.url'), '/').'/api/generar-cobro', [
+                    'referencia_externa' => (string) auth()->id(),
+                ]);
 
-            $periododesde = $suscripcion->proximopago ?? now();
-            $periodohasta = Carbon::parse($periododesde)->addMonth();
+            if ($response->failed()) {
+                Log::error('PagoOnlineController@iniciarMP hub: '.$response->body());
 
-            // Crear registro pendiente
-            $pagoOnline = PagoOnline::create([
-                'user_id'        => auth()->id(),
-                'suscripcion_id' => $suscripcion->id,
-                'plataforma'     => 'mercadopago',
-                'monto'          => $suscripcion->montomensual,
-                'moneda'         => 'ARS',
-                'estado'         => 'pendiente',
-                'periododesde'   => $periododesde,
-                'periodohasta'   => $periodohasta,
-            ]);
-
-            $service = new MercadoPagoService();
-            $result  = $service->crearPreferencia([
-                'suscripcion_id' => $suscripcion->id,
-                'pago_online_id' => $pagoOnline->id,
-                'monto'          => $suscripcion->montomensual,
-                'descripcion'    => $periododesde->format('m/Y'),
-                'nombre'         => auth()->user()->name,
-                'email'          => auth()->user()->email,
-            ]);
-
-            if (isset($result['error'])) {
                 return redirect()->route('pagos.index')
-                    ->with('error', $result['error']);
+                    ->with('error', 'No se pudo generar el link de pago. Contactá al administrador.');
             }
 
-            $pagoOnline->update(['preference_id' => $result['preference_id']]);
+            return redirect($response->json('link_pago'));
 
-            // En sandbox usar sandbox_init_point, en producción usar init_point
-            $url = env('MP_MODE', 'sandbox') === 'production'
-                ? $result['init_point']
-                : $result['sandbox_init_point'];
-
-            return redirect($url);
-
-        } catch (QueryException $e) {
-            DB::rollBack();
-            Log::error('PagoOnlineController@iniciarMP BD: ' . $e->getMessage());
-            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
         } catch (\Throwable $e) {
-            DB::rollBack();
             Log::error('PagoOnlineController@iniciarMP: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
-    }
-
-    public function mpSuccess(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-            $pagoOnline = PagoOnline::where('preference_id', $request->preference_id)
-                ->where('user_id', auth()->id())
-                ->first();
-
-            if ($pagoOnline && $request->status === 'approved') {
-                $pagoOnline->update([
-                    'external_id'      => $request->payment_id,
-                    'estado'           => 'aprobado',
-                    'fecha_aprobacion' => now(),
-                ]);
-
-                $service = new MercadoPagoService();
-                $service->procesarWebhook([
-                    'type' => 'payment',
-                    'data' => ['id' => $request->payment_id],
-                ]);
-            }
-
-            return redirect()->route('pagos.index')
-                ->with('success', '¡Pago aprobado correctamente! Tu suscripción fue renovada.');
-
-        } catch (QueryException $e) {
-            DB::rollBack();
-            Log::error('PagoOnlineController@mpSuccess BD: ' . $e->getMessage());
-            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('PagoOnlineController@mpSuccess: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
-    }
-
-    public function mpFailure(Request $request)
-    {
-        try {
-            DB::beginTransaction();
-            PagoOnline::where('preference_id', $request->preference_id)
-                ->where('user_id', auth()->id())
-                ->update(['estado' => 'rechazado']);
-
-            return redirect()->route('pagos.index')
-                ->with('error', 'El pago fue rechazado. Intentá nuevamente.');
-
-        } catch (QueryException $e) {
-            DB::rollBack();
-            Log::error('PagoOnlineController@mpFailure BD: ' . $e->getMessage());
-            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('PagoOnlineController@mpFailure: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
-    }
-
-    public function mpPending(Request $request)
-    {
-        try {
-            return redirect()->route('pagos.index')
-                ->with('info', 'Tu pago está pendiente de acreditación. Te notificaremos cuando se confirme.');
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('PagoOnlineController@mpPending: ' . $e->getMessage());
             return back()->with('error', 'Ocurrió un error inesperado.');
         }
     }
@@ -302,37 +189,7 @@ class PagoOnlineController extends Controller
 
     // ─── Webhooks ─────────────────────────────────────────────
 
-    public function webhookMP(Request $request)
-    {
-        try {
-            // Verificar firma (cuando tengas el webhook secret)
-            $secret = env('MP_WEBHOOK_SECRET');
-            if ($secret) {
-                $xSignature = $request->header('x-signature');
-                $xRequestId = $request->header('x-request-id');
-                $dataId     = $request->input('data.id');
-                $manifest   = "id:{$dataId};request-id:{$xRequestId};ts:" . explode(',', $xSignature)[0] ?? '';
-                $hash       = hash_hmac('sha256', $manifest, $secret);
-
-                if (!str_contains($xSignature, $hash)) {
-                    return response()->json(['error' => 'Firma inválida'], 401);
-                }
-            }
-
-            $service = new MercadoPagoService();
-            $service->procesarWebhook($request->all());
-
-            return response()->json(['status' => 'ok']);
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('PagoOnlineController@webhookMP: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
-    }
-
+    
     public function webhookPaypal(Request $request)
     {
         try {

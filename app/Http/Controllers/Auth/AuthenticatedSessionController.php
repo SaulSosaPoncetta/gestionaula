@@ -31,9 +31,18 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login', compact('intentos', 'captchaActivo', 'siteKey', 'umbral'));
     }
 
-    public function store(LoginRequest $request): RedirectResponse
+        public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        $user = auth()->user();
+
+        if (! $user->hasRole('admin')) {
+            // Sincroniza el flag "activo" contra el hub; si quedó en false,
+            // el middleware CuentaActiva corta el acceso en la próxima request.
+            app(\App\Services\HubEstadoClienteService::class)->sincronizar($user);
+        }
+
         $request->session()->regenerate();
 
         if (auth()->user()->hasRole('admin')) {
