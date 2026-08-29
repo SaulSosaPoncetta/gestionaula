@@ -14,7 +14,6 @@
         "laravel/framework": "^13.0",
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
-        "mercadopago/dx-php": "^3.11",
         "paypal/paypal-checkout-sdk": "^1.0",
         "spatie/laravel-permission": "^7.4"
     },
