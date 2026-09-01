@@ -70,9 +70,42 @@
                                     @else
                                         <span class="badge bg-light text-dark">Individual</span>
                                     @endif
+
+                                    {{-- Estado de la asignación --}}
                                     <span class="badge bg-{{ $asig->estado === 'activa' ? 'success' : 'secondary' }}">
                                         {{ ucfirst($asig->estado) }}
                                     </span>
+
+                                    {{-- Conteos por estado de alumnos --}}
+                                    @if(($asig->conteo_enproceso ?? 0) > 0)
+                                    <span class="badge bg-primary" title="Alumnos en proceso">
+                                        <i class="bi bi-hourglass-split me-1"></i>En proceso: {{ $asig->conteo_enproceso ?? 0 }}
+                                    </span>
+                                    @endif
+
+                                    @if(($asig->conteo_atiempo ?? 0) > 0)
+                                    <span class="badge bg-success" title="Entregado a tiempo">
+                                        <i class="bi bi-check-circle me-1"></i>A tiempo: {{ $asig->conteo_atiempo ?? 0 }}
+                                    </span>
+                                    @endif
+
+                                    @if(($asig->conteo_vencido_entregado ?? 0) > 0)
+                                    <span class="badge bg-warning text-dark" title="Entregado fuera de fecha">
+                                        <i class="bi bi-clock-history me-1"></i>Entregado vencido: {{ $asig->conteo_vencido_entregado ?? 0 }}
+                                    </span>
+                                    @endif
+
+                                    @if(($asig->conteo_vencida ?? 0) > 0)
+                                    <span class="badge bg-danger" title="Sin entregar y vencida">
+                                        <i class="bi bi-x-circle me-1"></i>Vencidos: {{ $asig->conteo_vencida ?? 0 }}
+                                    </span>
+                                    @endif
+
+                                    @if(($asig->conteo_incompleta ?? 0) > 0)
+                                    <span class="badge bg-secondary" title="Entrega incompleta">
+                                        <i class="bi bi-dash-circle me-1"></i>Incompletos: {{ $asig->conteo_incompleta ?? 0 }}
+                                    </span>
+                                    @endif
                                 </div>
 
                                 {{-- Subtema --}}
