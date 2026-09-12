@@ -17,6 +17,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use App\Services\HubEstadoClienteService;
 
 class LandingController extends Controller
 {
@@ -180,6 +181,13 @@ class LandingController extends Controller
             if ($suscripcion) {
                 $suscripcion->update(['estado' => 'activa']);
             }
+
+            // Registrar al docente en el hub central (MiGestión Panel)
+            app(HubEstadoClienteService::class)->registrar(
+                $user,
+                $suscripcion?->plan?->nombre,
+                $suscripcion?->montomensual
+            );
 
             // Enviar mail de confirmación
             Mail::to($user->email)->send(new ActivacionCuentaMail($user));

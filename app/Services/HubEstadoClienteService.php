@@ -65,6 +65,7 @@ class HubEstadoClienteService
             $suscripcion = Suscripcion::create([
                 'user_id' => $user->id,
                 'estado' => $estado === 'vencida' ? 'suspendida' : $estado,
+                'fechainicio' => now(),
             ]);
         }
 
@@ -78,5 +79,34 @@ class HubEstadoClienteService
         // Sin suscripción registrada todavía: no lo bloqueamos, es lo mismo
         // que "sin_verificar" del lado de GestiónComercial.
         return ! $suscripcion || $suscripcion->estado === 'activa';
+    }
+    /**
+     * Da de alta al docente en el hub apenas activa su cuenta, para que
+     * quede bajo control del hub sin necesidad de carga manual.
+     */
+    public function registrar(User $user, ?string $plan = null, ?float $monto = null): void
+    {
+        if (! config('migestion_hub.url') || ! config('migestion_hub.api_key')) {
+            return;
+        }
+
+        try {
+            Http::withHeaders(['X-Api-Key' => config('migestion_hub.api_key')])
+                ->timeout(8)
+                ->post(rtrim(config('migestion_hub.url'), '/').'/api/registrar-cliente', [
+                    'referencia_externa' => (string) $user->id,
+                    'nombre' => $user->name,
+                    'email' => $user->email,
+                    'plan' => $plan,
+                    'monto' => $monto,
+                    'tipo' => 'recurrente',
+                ])
+                ->throw();
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo registrar el docente en el hub', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 }
