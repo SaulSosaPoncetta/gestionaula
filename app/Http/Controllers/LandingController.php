@@ -134,6 +134,8 @@ class LandingController extends Controller
                 'observaciones'=> 'Registro desde landing — plan: ' . $plan->nombre,
             ]);
 
+            DB::commit();
+
             $activationUrl = route('landing.activar', ['token' => $token]);
 
             // Enviar mail de bienvenida con link de activación
@@ -148,13 +150,22 @@ class LandingController extends Controller
             ]);
 
         } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first() ?? 'Los datos ingresados no son válidos.',
+            ], 422);
         } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
+            return response()->json([
+                'success' => false,
+                'message' => 'El plan seleccionado no existe.',
+            ], 404);
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('LandingController@registrarDocente: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error inesperado. Intentá de nuevo.',
+            ], 500);
         }
     }
 
@@ -189,7 +200,9 @@ class LandingController extends Controller
                 $suscripcion?->montomensual
             );
 
-            // Enviar mail de confirmación
+            DB::commit();    
+
+	    // Enviar mail de confirmación
             Mail::to($user->email)->send(new ActivacionCuentaMail($user));
 
             return redirect()->route('login')
