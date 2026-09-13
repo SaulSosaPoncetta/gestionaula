@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\CicloLectivo;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -41,6 +42,9 @@ class AuthenticatedSessionController extends Controller
             // Sincroniza el flag "activo" contra el hub; si quedó en false,
             // el middleware CuentaActiva corta el acceso en la próxima request.
             app(\App\Services\HubEstadoClienteService::class)->sincronizar($user);
+        }
+	if (! $user->hasRole('admin')) {
+            CicloLectivo::crearParaUsuario($user->id);
         }
 
         $request->session()->regenerate();
