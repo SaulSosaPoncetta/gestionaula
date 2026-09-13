@@ -12,7 +12,11 @@ use App\Models\Materia;
 use App\Models\Alumno;
 use App\Models\Horario;
 use App\Http\Controllers\Concerns\DetectaHorarioActivo;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class CalificarActividadController extends Controller
 {
@@ -20,35 +24,45 @@ class CalificarActividadController extends Controller
 
     public function index()
     {
-        $horario       = $this->detectarHorarioActivo();
-        $materiaActiva = $horario?->materia_id;
-        $cursoActivo   = $horario?->curso_id;
+        try {
+            $horario       = $this->detectarHorarioActivo();
+            $materiaActiva = $horario?->materia_id;
+            $cursoActivo   = $horario?->curso_id;
 
-        // Preseleccionar materia activa si no hay filtro
-        $materiaId = request('materia_id') ?: $materiaActiva;
+            $materiaId = request('materia_id') ?: $materiaActiva;
 
-        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+            $materiasEnHorario = Horario::where('user_id', auth()->id())
+                ->pluck('materia_id')->unique();
 
-        // Cursos filtrados por materia vía horarios, activo primero
-        $cursos = collect();
-        if ($materiaId) {
-            $cursos = Horario::with('curso')
-                ->where('user_id', auth()->id())
-                ->where('materia_id', $materiaId)
-                ->get()
-                ->pluck('curso')->filter()->unique('id')
-                ->sortBy(fn($c) => $cursoActivo === $c->id ? '0' : '1_'.$c->nombre_completo)
-                ->values();
+            $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get()
+                ->sortBy(function ($m) use ($materiaActiva, $materiasEnHorario) {
+                    if ($m->id === $materiaActiva)              return '0_'.$m->nombre;
+                    if ($materiasEnHorario->contains($m->id))   return '1_'.$m->nombre;
+                    return '2_'.$m->nombre;
+                })->values();
 
-            if ($cursos->isEmpty()) {
-                $cursos = Curso::where('user_id', auth()->id())
-                    ->orderBy('anio')->orderBy('division')->get();
+            $cursos = collect();
+            if ($materiaId) {
+                $cursos = Horario::with('curso')
+                    ->where('user_id', auth()->id())
+                    ->where('materia_id', $materiaId)
+                    ->get()->pluck('curso')->filter()->unique('id')
+                    ->sortBy(fn($c) => $cursoActivo === $c->id ? '0' : '1_'.$c->nombre_completo)
+                    ->values();
+                if ($cursos->isEmpty()) {
+                    $cursos = Curso::where('user_id', auth()->id())
+                        ->orderBy('anio')->orderBy('division')->get();
+                }
             }
-        }
 
-        return view('calificaractividad.index', compact(
-            'materias', 'cursos', 'materiaActiva', 'cursoActivo', 'materiaId'
-        ));
+            return view('calificaractividad.index', compact(
+                'materias', 'cursos', 'materiaActiva', 'cursoActivo',
+                'materiaId', 'materiasEnHorario'
+            ));
+        } catch (\Throwable $e) {
+            Log::error('CalificarActividadController@index: ' . $e->getMessage());
+            return back()->with('error', 'Error al cargar el módulo.');
+        }
     }
 
     /**
@@ -76,12 +90,22 @@ class CalificarActividadController extends Controller
             ->where('estado', 'activa')
             ->get();
 
-        $alumnos = $curso->alumnos->sortBy('apellido');
+        // Todos los alumnos del curso ordenados por apellido
+        $todosAlumnos = $curso->alumnos->sortBy('apellido');
+
+        // Filtrar por búsqueda de apellido si se especifica
+        $buscar = $request->buscar;
+        $alumnos = $buscar
+            ? $todosAlumnos->filter(fn($a) =>
+                str_contains(strtolower($a->apellido), strtolower($buscar)) ||
+                str_contains(strtolower($a->nombre),   strtolower($buscar))
+              )->values()
+            : $todosAlumnos->values();
 
         // Notas ya registradas
         $notasRegistradas = ActividadNota::where('user_id', auth()->id())
             ->whereIn('asignacion_id', $asignaciones->pluck('id'))
-            ->whereIn('alumno_id', $alumnos->pluck('id'))
+            ->whereIn('alumno_id', $todosAlumnos->pluck('id'))
             ->get()
             ->keyBy(fn($n) => $n->alumno_id . '_' . $n->asignacion_id);
 
@@ -89,8 +113,16 @@ class CalificarActividadController extends Controller
 
         return view('calificaractividad.ver', compact(
             'materia', 'curso', 'asignaciones', 'alumnos',
-            'notasRegistradas', 'hoy'
+            'todosAlumnos', 'notasRegistradas', 'hoy', 'buscar'
         ));
+    }
+
+    /**
+     * Alias para compatibilidad con la ruta calificaractividad.guardar
+     */
+    public function guardar(Request $request)
+    {
+        return $this->calificar($request);
     }
 
     /**
