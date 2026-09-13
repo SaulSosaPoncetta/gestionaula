@@ -26,6 +26,9 @@ return Application::configure(basePath: dirname(__DIR__))
         'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         'seguridad'          => \App\Http\Middleware\SeguridadWeb::class,
     ]);
+    $middleware->validateCsrfTokens(except: [
+    	'webhooks/estado-cliente',
+    ]);
 })
     ->withExceptions(function (Exceptions $exceptions) {
         //

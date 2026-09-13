@@ -360,8 +360,7 @@ Route::middleware(['auth', 'role:docente'])->group(function () {
 // Webhook del hub central (MiGestión Panel) avisando cambios de estado de pago.
 // El webhook de Mercado Pago en sí ahora lo recibe el hub, no GestiónAula.
 Route::post('/webhooks/estado-cliente', \App\Http\Controllers\WebhookEstadoClienteController::class)
-    ->name('webhooks.estado-cliente')
-    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
+    ->name('webhooks.estado-cliente');
 Route::post('/webhooks/paypal', [PagoOnlineController::class, 'webhookPaypal'])
     ->name('webhooks.paypal')
     ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
