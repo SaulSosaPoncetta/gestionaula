@@ -58,7 +58,7 @@ Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'inde
 // ==========================================
 // GRUPO DE DOCENTES
 // ==========================================
-Route::middleware(['auth', 'role:docente'])->group(function () {
+Route::middleware(['auth', 'role:docente', 'onboarding'])->group(function () {
     
     Route::get('/asistencia', [AsistenciaController::class, 'index'])->name('asistencia.index');
     Route::get('/asistencia/accion', [AsistenciaController::class, 'accion'])->name('asistencia.accion');
@@ -352,15 +352,18 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->as('admin.')->group(
 Route::middleware(['auth', 'role:docente'])->group(function () {
     Route::get('/mis-pagos', [PagoOnlineController::class, 'index'])->name('pagos.index');
     Route::post('/pagos/mp/iniciar', [PagoOnlineController::class, 'iniciarMP'])->name('pagos.mp.iniciar');
+    Route::get('/pagos/mp/success', [PagoOnlineController::class, 'mpSuccess'])->name('pagos.mp.success');
+    Route::get('/pagos/mp/failure', [PagoOnlineController::class, 'mpFailure'])->name('pagos.mp.failure');
+    Route::get('/pagos/mp/pending', [PagoOnlineController::class, 'mpPending'])->name('pagos.mp.pending');
     Route::post('/pagos/paypal/iniciar', [PagoOnlineController::class, 'iniciarPaypal'])->name('pagos.paypal.iniciar');
     Route::get('/pagos/paypal/success', [PagoOnlineController::class, 'paypalSuccess'])->name('pagos.paypal.success');
     Route::get('/pagos/paypal/cancel', [PagoOnlineController::class, 'paypalCancel'])->name('pagos.paypal.cancel');
 });
 
-// Webhook del hub central (MiGestión Panel) avisando cambios de estado de pago.
-// El webhook de Mercado Pago en sí ahora lo recibe el hub, no GestiónAula.
-Route::post('/webhooks/estado-cliente', \App\Http\Controllers\WebhookEstadoClienteController::class)
-    ->name('webhooks.estado-cliente');
+// Webhooks — sin auth (las plataformas los llaman directamente)
+Route::post('/webhooks/mercadopago', [PagoOnlineController::class, 'webhookMP'])
+    ->name('webhooks.mercadopago')
+    ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
 Route::post('/webhooks/paypal', [PagoOnlineController::class, 'webhookPaypal'])
     ->name('webhooks.paypal')
     ->withoutMiddleware([\App\Http\Middleware\VerifyCsrfToken::class]);
@@ -470,47 +473,6 @@ Route::get('/api/dashboard/stats/{cursoId}/{materiaId}', function(int $cursoId, 
             'asistencias'  => $tendenciaAsistencias,
             'cierres'      => $tendenciaCierres,
         ],
-        'temas' => (function() use ($materia, $curso) {
-            $hoy = \Carbon\Carbon::now('America/Argentina/Buenos_Aires')->toDateString();
-
-            // Clase anterior: último tema antes de hoy
-            $anterior = \App\Models\LibroTema::where('user_id', auth()->id())
-                ->where('materia_id', $materia->id)
-                ->where('curso_id',   $curso->id)
-                ->where('fecha', '<', $hoy)
-                ->orderBy('fecha', 'desc')
-                ->orderBy('numeroclase', 'desc')
-                ->first();
-
-            // Clase actual: tema de hoy
-            $actual = \App\Models\LibroTema::where('user_id', auth()->id())
-                ->where('materia_id', $materia->id)
-                ->where('curso_id',   $curso->id)
-                ->where('fecha', $hoy)
-                ->orderBy('numeroclase', 'desc')
-                ->first();
-
-            // Próxima clase: primer tema futuro
-            $proxima = \App\Models\LibroTema::where('user_id', auth()->id())
-                ->where('materia_id', $materia->id)
-                ->where('curso_id',   $curso->id)
-                ->where('fecha', '>', $hoy)
-                ->orderBy('fecha')
-                ->orderBy('numeroclase')
-                ->first();
-
-            $fmt = fn($t) => $t ? [
-                'fecha'       => \Carbon\Carbon::parse($t->fecha)->format('d/m/Y'),
-                'tema'        => $t->observacion ?? 'Sin descripción',
-                'numeroclase' => $t->numeroclase,
-            ] : null;
-
-            return [
-                'anterior' => $fmt($anterior),
-                'actual'   => $fmt($actual),
-                'proxima'  => $fmt($proxima),
-            ];
-        })(),
     ]);
 })->middleware(['web', 'auth'])->name('api.dashboard.stats');
 
@@ -521,63 +483,3 @@ Route::get('/landing/registro', [LandingController::class, 'registroPlan'])->nam
 Route::post('/landing/contacto', [LandingController::class, 'contacto'])->name('landing.contacto');
 Route::post('/landing/registrar', [LandingController::class, 'registrarDocente'])->name('landing.registrar');
 Route::get('/activar/{token}', [LandingController::class, 'activar'])->name('landing.activar');
-// ── Excel ─────────────────────────────────────────────────────────────
-use App\Http\Controllers\ExcelController;
-Route::middleware(['web','auth'])->group(function () {
-    Route::get('/excel',                [ExcelController::class, 'index'])->name('excel.index');
-    Route::get('/excel/opciones',       [ExcelController::class, 'opciones'])->name('excel.opciones');
-    Route::get('/excel/descargar',      [ExcelController::class, 'descargar'])->name('excel.descargar');
-    Route::get('/excel/alumnos',        [ExcelController::class, 'alumnos'])->name('excel.alumnos');
-    Route::get('/excel/asistencia',     [ExcelController::class, 'asistencia'])->name('excel.asistencia');
-    Route::get('/excel/calificaciones', [ExcelController::class, 'calificaciones'])->name('excel.calificaciones');
-    Route::get('/excel/cierre',         [ExcelController::class, 'cierre'])->name('excel.cierre');
-    Route::get('/excel/declaracion',    [ExcelController::class, 'declaracion'])->name('excel.declaracion');
-    Route::get('/excel/contenidos',     [ExcelController::class, 'contenidos'])->name('excel.contenidos');
-    Route::get('/excel/librotemas',     [ExcelController::class, 'librotemas'])->name('excel.librotemas');
-    Route::get('/excel/docente',        [ExcelController::class, 'docente'])->name('excel.docente');
-});
-
-// ── PWA ───────────────────────────────────────────────────────────────
-Route::get('/offline', fn() => view('pwa.offline'))->name('pwa.offline');
-Route::get('/ping',    fn() => response()->json(['ok' => true]));
-Route::get('/descarga/GestionAula-Setup.exe', function () {
-    $path = public_path('descarga/GestionAula-Setup.exe');
-    if (!file_exists($path)) abort(404, 'Instalador no disponible aún.');
-    return response()->download($path, 'GestionAula-Setup.exe');
-})->name('descarga.desktop');
-
-// ── Sync Offline ──────────────────────────────────────────────────────
-use App\Http\Controllers\SyncController;
-Route::middleware(['web','auth'])->group(function () {
-    Route::post('/api/sync',        [SyncController::class, 'sync'])->name('sync.push');
-    Route::get('/api/sync/estado',  [SyncController::class, 'estado'])->name('sync.estado');
-});
-
-    // Cursos por materia (para librotemas y otros módulos)
-    Route::get('/api/materias/{materiaId}/cursos', function(int $materiaId) {
-        $horario = \App\Http\Controllers\Concerns\DetectaHorarioActivo::detectarParaUsuario(auth()->id());
-        $cursos  = \App\Models\Horario::with('curso')
-            ->where('user_id', auth()->id())
-            ->where('materia_id', $materiaId)
-            ->get()
-            ->pluck('curso')->filter()->unique('id')
-            ->sortBy(function($c) use ($horario) {
-                return $horario?->curso_id === $c->id ? '0' : '1_'.$c->nombre_completo;
-            })->values()
-            ->map(fn($c) => ['id'=>$c->id,'nombre'=>$c->nombre_completo,'activo'=>$horario?->curso_id===$c->id]);
-        return response()->json($cursos);
-    })->middleware('auth')->name('api.materias.cursos');
-
-    // Materias por curso (para asignar actividades)
-    Route::get('/api/cursos/{cursoId}/materias', function(int $cursoId) {
-        $horario = \App\Http\Controllers\Concerns\DetectaHorarioActivo::detectarParaUsuario(auth()->id());
-        $materias = \App\Models\Horario::with('materia')
-            ->where('user_id', auth()->id())
-            ->where('curso_id', $cursoId)
-            ->get()
-            ->pluck('materia')->filter()->unique('id')
-            ->sortBy(fn($m) => $horario?->materia_id === $m->id ? '0' : '1_'.$m->nombre)
-            ->values()
-            ->map(fn($m) => ['id'=>$m->id,'nombre'=>$m->nombre,'activa'=>$horario?->materia_id===$m->id]);
-        return response()->json($materias);
-    })->middleware('auth')->name('api.cursos.materias');

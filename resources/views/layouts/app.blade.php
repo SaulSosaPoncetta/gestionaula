@@ -7,18 +7,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Gestión Aula') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    {{-- PWA --}}
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0d6efd">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="GestiónAula">
-    <link rel="apple-touch-icon" href="/icons/icon-192.png">
-    <link rel="icon" type="image/png" href="/icons/icon-192.png">
-    <style>
-        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.25} }
-        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-    </style>
 </head>
 
 <body class="bg-light">
@@ -35,11 +23,20 @@
             <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     @auth
+                    @php
+                        try {
+                            $onbPaso = auth()->user()->hasRole('admin') ? 99 : auth()->user()->onboardingStep();
+                        } catch (\Throwable $e) {
+                            $onbPaso = 99;
+                        }
+                        $bloq = $onbPaso < 3;
+                    @endphp
                         {{-- Actividad áulica --}}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {{ request()->routeIs('asistencia.*') || request()->routeIs('calificaciones.*') ? 'active' : '' }}"
-                                href="#" data-bs-toggle="dropdown">
-                                <i class="bi bi-calendar2-check me-1"></i>Act. áulica
+                            <a class="nav-link dropdown-toggle {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('asistencia.*') || request()->routeIs('calificaciones.*') ? 'active' : '' }}"
+                                href="#" {{ $bloq ? '' : 'data-bs-toggle=dropdown' }}>
+                                <i class="bi bi-calendar2-check me-1"></i>Actividad áulica
+                                @if($bloq)<i class="bi bi-lock-fill ms-1 small"></i>@endif
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
@@ -101,13 +98,7 @@
                                 <li>
                                     <a class="dropdown-item {{ request()->routeIs('pdf.*') ? 'active' : '' }}"
                                         href="{{ route('pdf.index') }}">
-                                        <i class="bi bi-printer me-2"></i>Impresiones PDF
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {{ request()->routeIs('excel.*') ? 'active' : '' }}"
-                                        href="{{ route('excel.index') }}">
-                                        <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar Excel
+                                        <i class="bi bi-calculator me-2"></i>Informes
                                     </a>
                                 </li>
                             </ul>
@@ -120,7 +111,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ request()->routeIs('tareas.*') || request()->routeIs('materialteoricoarchivos.*') ? 'active' : '' }}"
                                 href="#" data-bs-toggle="dropdown">
-                                <i class="bi bi-folder2-open me-1"></i>Mat. pedagógico
+                                <i class="bi bi-folder2-open me-1"></i>Material pedagógico
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
@@ -188,79 +179,101 @@
                                 <i class="bi bi-gear me-1"></i>Administración
                             </a>
                             <ul class="dropdown-menu">
+                                {{-- Ciclo Lectivo: siempre visible (paso 0) --}}
                                 <li>
                                     <a class="dropdown-item" href="{{ route('ciclos_lectivos.index') }}">
                                         <i class="bi bi-calendar2-range me-1"></i>Ciclos lectivos
+                                        @if($onbPaso == 0)<span class="badge bg-primary ms-1">Comenzar aquí</span>@endif
                                     </a>
                                 </li>
+                                <li><hr class="dropdown-divider"></li>
+
+                                {{-- Items bloqueados en paso 0 --}}
                                 <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {{ request()->routeIs('calendarioescolar.*') ? 'active' : '' }}"
-                                        href="{{ route('calendarioescolar.index') }}">
+                                    <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('calendarioescolar.*') ? 'active' : '' }}"
+                                        href="{{ $bloq ? '#' : route('calendarioescolar.index') }}">
                                         <i class="bi bi-calendar3 me-2"></i>Calendario escolar
+                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
                                     </a>
                                 </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Académico</h6></li>
                                 <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <h6 class="dropdown-header">Académico</h6>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
-                                        href="{{ route('periodos.index') }}">
+                                    <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
+                                        href="{{ $bloq ? '#' : route('periodos.index') }}">
                                         <i class="bi bi-calendar3 me-2"></i>Períodos
+                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('cursos.*') ? 'active' : '' }}"
-                                        href="{{ route('cursos.index') }}">
+                                    <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('cursos.*') ? 'active' : '' }}"
+                                        href="{{ $bloq ? '#' : route('cursos.index') }}">
                                         <i class="bi bi-building me-2"></i>Cursos
+                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('materias.*') ? 'active' : '' }}"
-                                        href="{{ route('materias.index') }}">
+                                    <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('materias.*') ? 'active' : '' }}"
+                                        href="{{ $bloq ? '#' : route('materias.index') }}">
                                         <i class="bi bi-book me-2"></i>Materias
+                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('alumnos.*') ? 'active' : '' }}"
-                                        href="{{ route('alumnos.index') }}">
+                                    <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('alumnos.*') ? 'active' : '' }}"
+                                        href="{{ $bloq ? '#' : route('alumnos.index') }}">
                                         <i class="bi bi-people me-2"></i>Alumnos
+                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('planificaciones.*') ? 'active' : '' }}"
-                                        href="{{ route('planificaciones.index') }}">
+                                    <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('planificaciones.*') ? 'active' : '' }}"
+                                        href="{{ $bloq ? '#' : route('planificaciones.index') }}">
                                         <i class="bi bi-journal-bookmark me-2"></i>Planificación
+                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
                                     </a>
                                 </li>
 
+                                <li><hr class="dropdown-divider"></li>
+                                <li><h6 class="dropdown-header">Horarios</h6></li>
+
+                                {{-- Designaciones: habilitada desde paso 1 --}}
                                 <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li>
-                                    <h6 class="dropdown-header">Horarios</h6>
-                                </li>
-                                <li>
+                                    @if($onbPaso >= 1)
                                     <a class="dropdown-item {{ request()->routeIs('designaciones.*') ? 'active' : '' }}"
                                         href="{{ route('designaciones.index') }}">
                                         <i class="bi bi-file-earmark-person me-2"></i>Designaciones
+                                        @if($onbPaso == 1)<span class="badge bg-primary ms-1">Paso 2</span>@endif
                                     </a>
+                                    @else
+                                    <a class="dropdown-item disabled opacity-50" href="#">
+                                        <i class="bi bi-file-earmark-person me-2"></i>Designaciones
+                                        <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                    </a>
+                                    @endif
                                 </li>
+
+                                {{-- Horarios: habilitada desde paso 2 --}}
                                 <li>
+                                    @if($onbPaso >= 2)
                                     <a class="dropdown-item {{ request()->routeIs('horarios.*') ? 'active' : '' }}"
                                         href="{{ route('horarios.index') }}">
                                         <i class="bi bi-calendar3 me-2"></i>Horarios
+                                        @if($onbPaso == 2)<span class="badge bg-primary ms-1">Paso 3</span>@endif
                                     </a>
+                                    @else
+                                    <a class="dropdown-item disabled opacity-50" href="#">
+                                        <i class="bi bi-calendar3 me-2"></i>Horarios
+                                        <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                    </a>
+                                    @endif
                                 </li>
+
                                 <li>
-                                    <a class="dropdown-item {{ request()->routeIs('declaracion.*') ? 'active' : '' }}"
-                                        href="{{ route('declaracion.index') }}">
+                                    <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('declaracion.*') ? 'active' : '' }}"
+                                        href="{{ $bloq ? '#' : route('declaracion.index') }}">
                                         <i class="bi bi-file-earmark-text me-2"></i>Declaración jurada
+                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
                                     </a>
                                 </li>
                                 <li>
@@ -353,7 +366,7 @@
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('pagos.*') ? 'active' : '' }}"
                                 href="{{ route('pagos.index') }}">
-                                <i class="bi bi-credit-card me-2"></i>Susc.
+                                <i class="bi bi-credit-card me-2"></i>Suscripciones
                             </a>
                         </li>
                     @endauth
@@ -385,30 +398,6 @@
                             </ul>
                         </li>
                     @endauth
-
-                    {{-- ── Badges de estado ──────────────────────── --}}
-                    @auth
-                    <li class="nav-item d-flex align-items-center gap-2 ms-2">
-
-                        {{-- Badge 1: Conexión --}}
-                        <span id="badge-conexion"
-                              title="Estado de conexión a internet"
-                              style="cursor:default;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;transition:all .3s;background:#198754;color:white">
-                            <span id="badge-conexion-dot" style="width:8px;height:8px;border-radius:50%;background:white;display:inline-block"></span>
-                            <span id="badge-conexion-texto">Conecc.</span>
-                        </span>
-
-                        {{-- Badge 2: Sincronización --}}
-                        <span id="badge-sync"
-                              title="Estado de sincronización de datos"
-                              style="cursor:pointer;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;transition:all .3s;background:#198754;color:white"
-                              onclick="if(typeof OfflineManager!=='undefined') OfflineManager.sincronizar()">
-                            <i id="badge-sync-icono" class="bi bi-check-circle-fill" style="font-size:10px"></i>
-                            <span id="badge-sync-texto">Sincro.</span>
-                        </span>
-
-                    </li>
-                    @endauth
                 </ul>
             </div>
         </div>
@@ -428,6 +417,121 @@
             </div>
         @endif
 
+        {{-- Aviso de ruta bloqueada por onboarding --}}
+        @if (session('onboarding_bloqueado'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="bi bi-lock me-2"></i><strong>Sección no disponible:</strong>
+                {{ session('onboarding_bloqueado') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        {{-- Banner de onboarding para docentes nuevos --}}
+        @auth
+        @if(!auth()->user()->hasRole('admin'))
+        @php
+            try {
+                $onbStepBanner = auth()->user()->onboardingStep();
+                $onbCompleto   = $onbStepBanner >= 3;
+            } catch (\Throwable $e) {
+                $onbStepBanner = 3;
+                $onbCompleto   = true;
+            }
+        @endphp
+        @if(!$onbCompleto)
+        @php $paso = $onbStepBanner; @endphp
+        <div class="card border-0 shadow-sm mb-4" style="border-left:4px solid #0d6efd!important">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <i class="bi bi-rocket-takeoff-fill text-primary fs-3"></i>
+                    <div>
+                        <div class="fw-bold">Configuración inicial — Paso {{ $paso + 1 }} de 3</div>
+                        <div class="text-muted small">Completá estos pasos para habilitar todas las funciones</div>
+                    </div>
+                </div>
+
+                {{-- Barra de progreso --}}
+                <div class="progress mb-3" style="height:8px">
+                    <div class="progress-bar bg-primary" style="width:{{ ($paso / 3) * 100 }}%"></div>
+                </div>
+
+                <div class="row g-2">
+                    {{-- Paso 1: Ciclo Lectivo --}}
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center gap-2 p-2 rounded
+                            {{ $paso >= 1 ? 'bg-success bg-opacity-10' : 'bg-primary bg-opacity-10' }}">
+                            <span class="badge {{ $paso >= 1 ? 'bg-success' : 'bg-primary' }} rounded-circle"
+                                  style="width:28px;height:28px;line-height:20px;text-align:center">
+                                {{ $paso >= 1 ? '✓' : '1' }}
+                            </span>
+                            <div>
+                                <div class="small fw-semibold">Ciclo Lectivo</div>
+                                @if($paso == 0)
+                                    <a href="{{ route('ciclos_lectivos.create') }}"
+                                       class="btn btn-primary btn-sm py-0 px-2 mt-1">
+                                        Crear ahora →
+                                    </a>
+                                @else
+                                    <span class="text-success small">Completado</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Paso 2: Designaciones --}}
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center gap-2 p-2 rounded
+                            {{ $paso >= 2 ? 'bg-success bg-opacity-10' : ($paso >= 1 ? 'bg-primary bg-opacity-10' : 'bg-light') }}">
+                            <span class="badge {{ $paso >= 2 ? 'bg-success' : ($paso >= 1 ? 'bg-primary' : 'bg-secondary') }} rounded-circle"
+                                  style="width:28px;height:28px;line-height:20px;text-align:center">
+                                {{ $paso >= 2 ? '✓' : '2' }}
+                            </span>
+                            <div>
+                                <div class="small fw-semibold {{ $paso < 1 ? 'text-muted' : '' }}">Designaciones SAD</div>
+                                @if($paso == 1)
+                                    <a href="{{ route('designaciones.create') }}"
+                                       class="btn btn-primary btn-sm py-0 px-2 mt-1">
+                                        Cargar ahora →
+                                    </a>
+                                @elseif($paso >= 2)
+                                    <span class="text-success small">Completado</span>
+                                @else
+                                    <span class="text-muted small">Bloqueado</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Paso 3: Horarios --}}
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center gap-2 p-2 rounded
+                            {{ $paso >= 3 ? 'bg-success bg-opacity-10' : ($paso >= 2 ? 'bg-primary bg-opacity-10' : 'bg-light') }}">
+                            <span class="badge {{ $paso >= 3 ? 'bg-success' : ($paso >= 2 ? 'bg-primary' : 'bg-secondary') }} rounded-circle"
+                                  style="width:28px;height:28px;line-height:20px;text-align:center">
+                                {{ $paso >= 3 ? '✓' : '3' }}
+                            </span>
+                            <div>
+                                <div class="small fw-semibold {{ $paso < 2 ? 'text-muted' : '' }}">Horarios</div>
+                                @if($paso == 2)
+                                    <a href="{{ route('horarios.create') }}"
+                                       class="btn btn-primary btn-sm py-0 px-2 mt-1">
+                                        Configurar →
+                                    </a>
+                                @elseif($paso >= 3)
+                                    <span class="text-success small">Completado</span>
+                                @else
+                                    <span class="text-muted small">Bloqueado</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+        @endif
+        @endauth
+
         @yield('content')
     </main>
 
@@ -441,152 +545,6 @@
 
     @stack('scripts')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-
-    {{-- ═══════════ PWA ═══════════ --}}
-    <script src="/js/offline-manager.js"></script>
-    <div id="pwa-banner" style="display:none;position:fixed;bottom:20px;right:20px;z-index:9999;max-width:310px">
-        <div class="card border-0 shadow-lg" style="border-left:4px solid #0d6efd!important">
-            <div class="card-body py-3 px-3">
-                <div class="d-flex align-items-start gap-2">
-                    <img src="/icons/icon-192.png" width="42" height="42" class="rounded-2 flex-shrink-0" alt="GA">
-                    <div>
-                        <div class="fw-bold" style="font-size:13px">Instalar GestiónAula</div>
-                        <div class="text-muted" style="font-size:11px;line-height:1.4">Instalala como app para acceso rápido sin abrir el navegador.</div>
-                        <div class="d-flex gap-2 mt-2">
-                            <button id="pwa-install-btn" class="btn btn-primary btn-sm"><i class="bi bi-download me-1"></i>Instalar</button>
-                            <button id="pwa-dismiss-btn" class="btn btn-outline-secondary btn-sm">Ahora no</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js', { scope: '/' })
-                .then(reg => {
-                    reg.addEventListener('updatefound', () => {
-                        const sw = reg.installing;
-                        sw.addEventListener('statechange', () => {
-                            if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-                                pwaToast('🔄 Nueva versión disponible — <button class="btn btn-sm btn-light ms-1" onclick="location.reload()">Actualizar</button>', 'bg-info');
-                            }
-                        });
-                    });
-                });
-            navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
-            navigator.serviceWorker.addEventListener('message', e => {
-                if (e.data?.tipo === 'CONEXION_RECUPERADA') pwaToast('✅ Conexión recuperada', 'bg-success');
-            });
-        });
-    }
-    window.addEventListener('online',  () => pwaToast('✅ Conexión recuperada', 'bg-success'));
-    window.addEventListener('offline', () => pwaToast('⚠️ Sin conexión — modo offline', 'bg-warning text-dark'));
-
-    let _pwaPrompt = null;
-    const _banner  = document.getElementById('pwa-banner');
-    window.addEventListener('beforeinstallprompt', e => {
-        e.preventDefault(); _pwaPrompt = e;
-        if (!sessionStorage.getItem('pwa-dismissed')) setTimeout(() => _banner.style.display = 'block', 4000);
-    });
-    document.getElementById('pwa-install-btn')?.addEventListener('click', async () => {
-        _banner.style.display = 'none';
-        if (_pwaPrompt) { _pwaPrompt.prompt(); const {outcome} = await _pwaPrompt.userChoice; _pwaPrompt = null; if(outcome==='accepted') pwaToast('✅ ¡GestiónAula instalada!','bg-success'); }
-    });
-    document.getElementById('pwa-dismiss-btn')?.addEventListener('click', () => {
-        _banner.style.display = 'none'; sessionStorage.setItem('pwa-dismissed','1');
-    });
-    window.addEventListener('appinstalled', () => { _banner.style.display = 'none'; _pwaPrompt = null; });
-
-    // ── Badges de estado en navbar ──────────────────────────────────
-    function actualizarBadgeConexion(online) {
-        const badge  = document.getElementById('badge-conexion');
-        const texto  = document.getElementById('badge-conexion-texto');
-        const dot    = document.getElementById('badge-conexion-dot');
-        if (!badge) return;
-        if (online) {
-            badge.style.background = '#198754'; // verde
-            texto.textContent      = 'Conectado';
-            dot.style.animation    = 'none';
-        } else {
-            badge.style.background = '#dc3545'; // rojo
-            texto.textContent      = 'Sin conexión';
-            dot.style.animation    = 'pulse-dot 1.2s ease-in-out infinite';
-        }
-    }
-
-    function actualizarBadgeSync(estado, pendientes) {
-        const badge = document.getElementById('badge-sync');
-        const icono = document.getElementById('badge-sync-icono');
-        const texto = document.getElementById('badge-sync-texto');
-        if (!badge) return;
-
-        if (estado === 'ok') {
-            badge.style.background = '#198754'; // verde
-            icono.className        = 'bi bi-check-circle-fill';
-            icono.style.animation  = 'none';
-            texto.textContent      = 'Sincronizado';
-            badge.title            = 'Todos los datos están sincronizados';
-        } else if (estado === 'sincronizando') {
-            badge.style.background = '#ffc107'; // amarillo
-            badge.style.color      = '#212529';
-            icono.className        = 'bi bi-arrow-repeat';
-            icono.style.animation  = 'spin 1s linear infinite';
-            texto.textContent      = 'Sincronizando...';
-            badge.title            = 'Sincronizando datos con el servidor';
-        } else {
-            badge.style.background = '#dc3545'; // rojo
-            badge.style.color      = 'white';
-            icono.className        = 'bi bi-exclamation-circle-fill';
-            icono.style.animation  = 'none';
-            texto.textContent      = `${pendientes} sin sync`;
-            badge.title            = `${pendientes} registro${pendientes > 1 ? 's' : ''} pendiente${pendientes > 1 ? 's' : ''} — Click para sincronizar`;
-        }
-    }
-
-    // Estado inicial
-    actualizarBadgeConexion(navigator.onLine);
-
-    // Cuando cambia la conexión
-    window.addEventListener('online',  () => actualizarBadgeConexion(true));
-    window.addEventListener('offline', () => {
-        actualizarBadgeConexion(false);
-        actualizarBadgeSync('pendiente', '?');
-    });
-
-    // Escuchar eventos del OfflineManager
-    window.addEventListener('gestionaula:sync:inicio', () => {
-        actualizarBadgeSync('sincronizando', 0);
-    });
-    window.addEventListener('gestionaula:sync:fin', (e) => {
-        const p = e.detail?.pendientes ?? 0;
-        actualizarBadgeSync(p > 0 ? 'pendiente' : 'ok', p);
-    });
-    window.addEventListener('gestionaula:sync:nada', () => {
-        actualizarBadgeSync('ok', 0);
-    });
-
-    // Revisar pendientes al cargar (cuando OfflineManager esté listo)
-    window.addEventListener('DOMContentLoaded', () => {
-        setTimeout(async () => {
-            if (typeof OfflineManager !== 'undefined') {
-                const n = await OfflineManager.contarPendientes();
-                actualizarBadgeSync(n > 0 ? 'pendiente' : 'ok', n);
-            }
-        }, 1500);
-    });
-
-    function pwaToast(msg, cls='bg-primary') {
-        let tc = document.getElementById('_pwa_toasts');
-        if (!tc) { tc = document.createElement('div'); tc.id='_pwa_toasts'; tc.style.cssText='position:fixed;bottom:80px;right:20px;z-index:99999;min-width:260px'; document.body.appendChild(tc); }
-        const t = document.createElement('div');
-        t.className = `toast align-items-center text-white border-0 ${cls} show mb-2`;
-        t.innerHTML = `<div class="d-flex"><div class="toast-body fw-semibold">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest('.toast').remove()"></button></div>`;
-        tc.appendChild(t); setTimeout(() => t.remove?.(), 6000);
-    }
-    </script>
 </body>
 
 </html>
