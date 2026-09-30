@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('cue')->nullable()->unique();
-            $table->enum('modalidad', ['comun', 'tecnico']);
-            $table->foreignId('nivel_id')->constrained('niveles')->onDelete('cascade');
+            $table->string('modalidad', 50)->nullable();
+            $table->foreignId('nivel_id')->nullable()->constrained('niveles')->nullOnDelete();
             $table->string('direccion')->nullable();
             $table->string('localidad')->nullable();
             $table->string('provincia')->nullable();
