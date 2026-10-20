@@ -38,7 +38,7 @@ use App\Http\Middleware\SeguridadWeb;
 use App\Http\Controllers\PagoOnlineController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\DesignacionController;
-
+use App\Http\Controllers\ModalidadController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\SuscripcionController;
@@ -81,6 +81,15 @@ Route::middleware(['auth', 'role:docente', 'onboarding'])->group(function () {
     Route::get('/tareas/{tarea}', [TareaController::class, 'show'])->name('tareas.show');
     Route::post('/tareas/{tarea}/entregas', [TareaController::class, 'actualizarentregas'])->name('tareas.entregas');
     Route::post('/tareas/{tarea}/cerrar', [TareaController::class, 'cerrar'])->name('tareas.cerrar');
+
+    Route::post('horarios/quick/establecimiento', [HorarioController::class, 'quickEstablecimiento'])
+    ->name('horarios.quick.establecimiento');
+
+    Route::post('horarios/quick/curso', [HorarioController::class, 'quickCurso'])
+    ->name('horarios.quick.curso');
+
+    Route::post('horarios/quick/materia', [HorarioController::class, 'quickMateria'])
+    ->name('horarios.quick.materia');
 
     Route::get('/horarios', [HorarioController::class, 'index'])->name('horarios.index');
     Route::get('/horarios/crear', [HorarioController::class, 'create'])->name('horarios.create');
@@ -165,6 +174,12 @@ Route::middleware(['auth', 'role:docente', 'onboarding'])->group(function () {
     Route::put('/contenidos/{contenido}', [ContenidoController::class, 'update'])->name('contenidos.update');
     Route::delete('/contenidos/{contenido}', [ContenidoController::class, 'destroy'])->name('contenidos.destroy');
 
+    Route::prefix('curriculum')->name('curriculum.')->group(function () {
+    Route::get('/ejes',    [App\Http\Controllers\CurriculumApiController::class, 'ejes']   )->name('ejes');
+    Route::get('/nucleos', [App\Http\Controllers\CurriculumApiController::class, 'nucleos'])->name('nucleos');
+    Route::get('/temas',   [App\Http\Controllers\CurriculumApiController::class, 'temas']  )->name('temas');
+    });
+
     Route::get('/planificaciones', [PlanificacionController::class, 'index'])->name('planificaciones.index');
     Route::get('/planificaciones/crear', [PlanificacionController::class, 'create'])->name('planificaciones.create');
     Route::post('/planificaciones', [PlanificacionController::class, 'store'])->name('planificaciones.store');
@@ -180,6 +195,8 @@ Route::middleware(['auth', 'role:docente', 'onboarding'])->group(function () {
     Route::post('/materialteoricoarchivos', [MaterialTeoricoController::class, 'store'])->name('materialteoricoarchivos.store');
     Route::delete('/materialteoricoarchivos/{materialteoricoarchivo}', [MaterialTeoricoController::class, 'destroy'])->name('materialteoricoarchivos.destroy');
     Route::put('/materialteoricoarchivos/{materialteoricoarchivo}/asignar', [MaterialTeoricoController::class, 'asignar'])->name('materialteoricoarchivos.asignar');
+
+    Route::resource('modalidades', ModalidadController::class);
 
     Route::get('/periodos', [PeriodoController::class, 'index'])->name('periodos.index');
     Route::get('/periodos/crear', [PeriodoController::class, 'create'])->name('periodos.create');

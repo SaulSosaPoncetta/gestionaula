@@ -17,34 +17,46 @@ class CursoController extends Controller
     public function index()
     {
         try {
-            $cursos = Curso::with(['establecimiento', 'nivel', 'especialidad'])
+            $query = Curso::with(['establecimiento', 'nivel', 'especialidad'])
                 ->where('user_id', auth()->id())
-                ->withCount(['alumnos', 'materias'])
-                ->orderBy('anio')->orderBy('division')
-                ->paginate(15);
+                ->orderBy('anio')->orderBy('division');
+
+            // solo alumnos_count (curso_materia no existe como pivot)
+            $query->withCount('alumnos');
+
+            $cursos = $query->paginate(15);
 
             return view('cursos.index', compact('cursos'));
         } catch (QueryException $e) {
             Log::error('CursoController@index - BD: ' . $e->getMessage());
-            return back()->with('error', 'Error al cargar los cursos.');
+            return back()->with('error', 'Error al cargar los cursos: ' . $e->getMessage());
         } catch (\Throwable $e) {
             Log::error('CursoController@index: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
+            return back()->with('error', 'Error inesperado: ' . $e->getMessage());
         }
     }
 
     public function create()
     {
         try {
-            $establecimientos = Establecimiento::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $niveles          = Nivel::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $especialidades   = Especialidad::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $anios            = self::ANIOS;
+            $establecimientos = Establecimiento::where(function($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
+
+            $niveles        = Nivel::where(function($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
+
+            $especialidades = Especialidad::where(function($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
+
+            $anios = self::ANIOS;
 
             return view('cursos.create', compact('establecimientos', 'niveles', 'especialidades', 'anios'));
         } catch (\Throwable $e) {
             Log::error('CursoController@create: ' . $e->getMessage());
-            return back()->with('error', 'Error al cargar el formulario.');
+            return back()->with('error', 'Error al cargar el formulario: ' . $e->getMessage());
         }
     }
 
@@ -78,10 +90,10 @@ class CursoController extends Controller
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
             Log::error('CursoController@store - BD: ' . $e->getMessage());
-            return back()->with('error', 'Error al guardar el curso. Intentá de nuevo.')->withInput();
+            return back()->with('error', 'Error al guardar el curso: ' . $e->getMessage())->withInput();
         } catch (\Throwable $e) {
             Log::error('CursoController@store: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado al guardar.')->withInput();
+            return back()->with('error', 'Error inesperado: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -90,15 +102,24 @@ class CursoController extends Controller
         try {
             abort_if($curso->user_id !== auth()->id(), 403);
 
-            $establecimientos = Establecimiento::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $niveles          = Nivel::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $especialidades   = Especialidad::where('user_id', auth()->id())->orderBy('nombre')->get();
-            $anios            = self::ANIOS;
+            $establecimientos = Establecimiento::where(function($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
+
+            $niveles = Nivel::where(function($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
+
+            $especialidades = Especialidad::where(function($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
+
+            $anios = self::ANIOS;
 
             return view('cursos.edit', compact('curso', 'establecimientos', 'niveles', 'especialidades', 'anios'));
         } catch (\Throwable $e) {
             Log::error('CursoController@edit: ' . $e->getMessage());
-            return back()->with('error', 'Error al cargar el formulario de edición.');
+            return back()->with('error', 'Error al cargar el formulario: ' . $e->getMessage());
         }
     }
 
@@ -133,10 +154,10 @@ class CursoController extends Controller
             return back()->withErrors($e->errors())->withInput();
         } catch (QueryException $e) {
             Log::error('CursoController@update - BD: ' . $e->getMessage());
-            return back()->with('error', 'Error al actualizar el curso.')->withInput();
+            return back()->with('error', 'Error al actualizar: ' . $e->getMessage())->withInput();
         } catch (\Throwable $e) {
             Log::error('CursoController@update: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado al actualizar.')->withInput();
+            return back()->with('error', 'Error inesperado: ' . $e->getMessage())->withInput();
         }
     }
 
@@ -148,10 +169,10 @@ class CursoController extends Controller
             return redirect()->route('cursos.index')->with('success', 'Curso eliminado correctamente.');
         } catch (QueryException $e) {
             Log::error('CursoController@destroy - BD: ' . $e->getMessage());
-            return back()->with('error', 'No se puede eliminar el curso porque tiene alumnos o materias asociados.');
+            return back()->with('error', 'No se puede eliminar el curso porque tiene datos asociados.');
         } catch (\Throwable $e) {
             Log::error('CursoController@destroy: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado al eliminar.');
+            return back()->with('error', 'Error inesperado: ' . $e->getMessage());
         }
     }
 }

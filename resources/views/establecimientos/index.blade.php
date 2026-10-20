@@ -13,6 +13,20 @@
     </div>
 </div>
 
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
 @if($establecimientos->isEmpty())
     <div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>No hay establecimientos registrados.</div>
 @else
@@ -27,7 +41,6 @@
                     <th>Nivel</th>
                     <th>Localidad</th>
                     <th class="text-center">Cursos</th>
-                    <th class="text-center">Docentes</th>
                     <th></th>
                 </tr>
             </thead>
@@ -37,18 +50,32 @@
                     <td class="ps-4 fw-semibold">{{ $est->nombre }}</td>
                     <td>{{ $est->cue ?? '—' }}</td>
                     <td>
-                        <span class="badge bg-{{ $est->modalidad === 'tecnico' ? 'warning' : 'info' }}">
-                            {{ $est->modalidadlabel }}
-                        </span>
+                        @php
+                            $modalidad = $est->modalidad ?? '';
+                            $badgeClass = match($modalidad) {
+                                'técnica', 'tecnica', 'técnico', 'tecnico' => 'warning text-dark',
+                                'especial' => 'danger',
+                                'adultos'  => 'secondary',
+                                'artística','artistica' => 'purple',
+                                default    => 'info text-dark',
+                            };
+                        @endphp
+                        @if($modalidad)
+                            <span class="badge bg-{{ $badgeClass }}">{{ ucfirst($modalidad) }}</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
                     </td>
-                    <td>{{ $est->nivel->nombre }}</td>
+                    <td>{{ $est->nivel?->nombre ?? '—' }}</td>
                     <td>{{ $est->localidad ?? '—' }}</td>
-                    <td class="text-center"><span class="badge bg-primary">{{ $est->cursos_count }}</span></td>
-                    <td class="text-center"><span class="badge bg-success">{{ $est->docentes_count }}</span></td>
+                    <td class="text-center">
+                        <span class="badge bg-primary">{{ $est->cursos_count ?? 0 }}</span>
+                    </td>
                     <td class="text-end pe-3">
                         <a href="{{ route('establecimientos.show', $est) }}" class="btn btn-sm btn-outline-primary me-1">
                             <i class="bi bi-eye"></i>
                         </a>
+                        @if($est->user_id === auth()->id())
                         <a href="{{ route('establecimientos.edit', $est) }}" class="btn btn-sm btn-outline-secondary me-1">
                             <i class="bi bi-pencil"></i>
                         </a>
@@ -59,6 +86,9 @@
                                 <i class="bi bi-trash"></i>
                             </button>
                         </form>
+                        @else
+                        <span class="badge bg-light text-secondary border">Global</span>
+                        @endif
                     </td>
                 </tr>
                 @endforeach

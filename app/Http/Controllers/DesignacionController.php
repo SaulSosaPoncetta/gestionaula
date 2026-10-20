@@ -4,11 +4,6 @@ namespace App\Http\Controllers;
 use App\Models\Designacion;
 use App\Models\DesignacionHorario;
 use Illuminate\Http\Request;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\ValidationException;
 
 class DesignacionController extends Controller
 {
@@ -23,43 +18,27 @@ class DesignacionController extends Controller
 
     public function index(Request $request)
     {
-        try {
-            $query = Designacion::with('horarios')
-                ->where('user_id', auth()->id())
-                ->orderBy('nombreestablecimiento')
-                ->orderBy('diasemana');
+        $query = Designacion::with('horarios')
+            ->where('user_id', auth()->id())
+            ->orderBy('nombreestablecimiento')
+            ->orderBy('diasemana');
 
-            if ($request->filled('buscar')) {
-                $query->where(function($q) use ($request) {
-                    $q->where('nombreestablecimiento', 'like', '%' . $request->buscar . '%')
-                      ->orWhere('nombremateria', 'like', '%' . $request->buscar . '%')
-                      ->orWhere('numeroescuela', 'like', '%' . $request->buscar . '%')
-                      ->orWhere('ige', 'like', '%' . $request->buscar . '%');
-                });
-            }
-
-            $designaciones = $query->paginate(20);
-            return view('designaciones.index', compact('designaciones'));
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('Controllers.index: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
+        if ($request->filled('buscar')) {
+            $query->where(function($q) use ($request) {
+                $q->where('nombreestablecimiento', 'like', '%' . $request->buscar . '%')
+                  ->orWhere('nombremateria', 'like', '%' . $request->buscar . '%')
+                  ->orWhere('numeroescuela', 'like', '%' . $request->buscar . '%')
+                  ->orWhere('ige', 'like', '%' . $request->buscar . '%');
+            });
         }
+
+        $designaciones = $query->paginate(20);
+        return view('designaciones.index', compact('designaciones'));
     }
 
     public function create()
     {
-        try {
-            return view('designaciones.create');
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('Controllers.create: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
+        return view('designaciones.create');
     }
 
     private function reglasBase(): array
@@ -127,141 +106,140 @@ class DesignacionController extends Controller
 
     public function store(Request $request)
     {
-        try {
-            $request->validate(array_merge($this->reglasBase(), $this->reglasHorario($request)));
+        $request->validate(array_merge($this->reglasBase(), $this->reglasHorario($request)));
 
-            $datos = $request->only(self::CAMPOS_BASE);
-            $datos['user_id']     = auth()->id();
-            $datos['tipohorario'] = $request->tipohorario;
+        $datos = $request->only(self::CAMPOS_BASE);
+        $datos['user_id']     = auth()->id();
+        $datos['tipohorario'] = $request->tipohorario;
 
-            if ($request->tipohorario === 'unificado') {
-                $datos['diasemana']   = $request->diasemana;
-                $datos['horaentrada'] = $request->horaentrada;
-                $datos['horasalida']  = $request->horasalida;
-            } else {
-                $datos['diasemana']   = null;
-                $datos['horaentrada'] = null;
-                $datos['horasalida']  = null;
-            }
-
-            $designacion = Designacion::create($datos);
-
-            if ($request->tipohorario === 'dividido') {
-                $this->guardarHorariosDividido($designacion, $request->input('horarios', []));
-            }
-
-            return redirect()->route('designaciones.index')
-                             ->with('success', 'Designación creada correctamente.');
-
-        } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
-        } catch (ModelNotFoundException $e) {
-            return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
-        } catch (\Throwable $e) {
-            Log::error('Controllers.store: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
+        if ($request->tipohorario === 'unificado') {
+            $datos['diasemana']   = $request->diasemana;
+            $datos['horaentrada'] = $request->horaentrada;
+            $datos['horasalida']  = $request->horasalida;
+        } else {
+            $datos['diasemana']   = null;
+            $datos['horaentrada'] = null;
+            $datos['horasalida']  = null;
         }
+
+        $designacion = Designacion::create($datos);
+
+        if ($request->tipohorario === 'dividido') {
+            $this->guardarHorariosDividido($designacion, $request->input('horarios', []));
+        }
+
+        // Crear automáticamente Materia y Curso si no existen
+        $this->crearMateriaYCursoDesdeDesignacion($designacion);
+
+        return redirect()->route('designaciones.index')
+                         ->with('success', 'Designación creada. Materia y curso generados automáticamente.');
     }
 
     public function edit(Designacion $designacion)
     {
-        try {
-            abort_if($designacion->user_id !== auth()->id(), 403);
-            $designacion->load('horarios');
-            return view('designaciones.edit', compact('designacion'));
-
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('Controllers.edit: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
-        }
+        abort_if($designacion->user_id !== auth()->id(), 403);
+        $designacion->load('horarios');
+        return view('designaciones.edit', compact('designacion'));
     }
 
     public function update(Request $request, Designacion $designacion)
     {
-        try {
-            DB::beginTransaction();
-            abort_if($designacion->user_id !== auth()->id(), 403);
+        abort_if($designacion->user_id !== auth()->id(), 403);
 
-            $request->validate(array_merge($this->reglasBase(), $this->reglasHorario($request)));
+        $request->validate(array_merge($this->reglasBase(), $this->reglasHorario($request)));
 
-            $datos = $request->only(self::CAMPOS_BASE);
-            $datos['tipohorario'] = $request->tipohorario;
+        $datos = $request->only(self::CAMPOS_BASE);
+        $datos['tipohorario'] = $request->tipohorario;
 
-            if ($request->tipohorario === 'unificado') {
-                $datos['diasemana']   = $request->diasemana;
-                $datos['horaentrada'] = $request->horaentrada;
-                $datos['horasalida']  = $request->horasalida;
-            } else {
-                $datos['diasemana']   = null;
-                $datos['horaentrada'] = null;
-                $datos['horasalida']  = null;
-            }
-
-            $designacion->update($datos);
-
-            if ($request->tipohorario === 'dividido') {
-                $this->guardarHorariosDividido($designacion, $request->input('horarios', []));
-            } else {
-                $designacion->horarios()->delete();
-            }
-
-            return redirect()->route('designaciones.index')
-                             ->with('success', 'Designación actualizada correctamente.');
-
-        } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
-        } catch (QueryException $e) {
-            DB::rollBack();
-            Log::error('Controllers.update - BD: ' . $e->getMessage());
-            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
-        } catch (ModelNotFoundException $e) {
-            return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Controllers.update: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
+        if ($request->tipohorario === 'unificado') {
+            $datos['diasemana']   = $request->diasemana;
+            $datos['horaentrada'] = $request->horaentrada;
+            $datos['horasalida']  = $request->horasalida;
+        } else {
+            $datos['diasemana']   = null;
+            $datos['horaentrada'] = null;
+            $datos['horasalida']  = null;
         }
+
+        $designacion->update($datos);
+
+        if ($request->tipohorario === 'dividido') {
+            $this->guardarHorariosDividido($designacion, $request->input('horarios', []));
+        } else {
+            $designacion->horarios()->delete();
+        }
+
+        return redirect()->route('designaciones.index')
+                         ->with('success', 'Designación actualizada correctamente.');
     }
 
     public function destroy(Designacion $designacion)
     {
-        try {
-            DB::beginTransaction();
-            abort_if($designacion->user_id !== auth()->id(), 403);
-            $designacion->delete();
-            return redirect()->route('designaciones.index')
-                             ->with('success', 'Designación eliminada correctamente.');
-
-        } catch (QueryException $e) {
-            DB::rollBack();
-            Log::error('Controllers.destroy - BD: ' . $e->getMessage());
-            return back()->with('error', 'Error en la base de datos. Intentá de nuevo.')->withInput();
-        } catch (ModelNotFoundException $e) {
-            return redirect()->back()->with('error', 'El registro no existe o no te pertenece.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error('Controllers.destroy: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.')->withInput();
-        }
+        abort_if($designacion->user_id !== auth()->id(), 403);
+        $designacion->delete();
+        return redirect()->route('designaciones.index')
+                         ->with('success', 'Designación eliminada correctamente.');
     }
 
     // API para el HorarioController
     public function listar()
     {
-        try {
-            $designaciones = Designacion::with('horarios')
-                ->where('user_id', auth()->id())
-                ->orderBy('nombreestablecimiento')
-                ->get();
-            return response()->json($designaciones);
+        $designaciones = Designacion::with('horarios')
+            ->where('user_id', auth()->id())
+            ->orderBy('nombreestablecimiento')
+            ->get();
+        return response()->json($designaciones);
+    }
 
-        } catch (ModelNotFoundException $e) {
-            return back()->with('error', 'El registro solicitado no existe.');
-        } catch (\Throwable $e) {
-            Log::error('Controllers.listar: ' . $e->getMessage());
-            return back()->with('error', 'Ocurrió un error inesperado.');
+    /**
+     * Crea automáticamente la Materia y el Curso a partir de los datos
+     * de la designación, si no existen ya para este docente.
+     */
+    private function crearMateriaYCursoDesdeDesignacion(Designacion $designacion): void
+    {
+        $userId = $designacion->user_id;
+
+        // ── Crear Materia ──────────────────────────────────────
+        $materia = \App\Models\Materia::firstOrCreate(
+    [
+        'user_id' => $userId,
+        'nombre'  => trim($designacion->nombremateria),
+    ],
+    [
+        'user_id'  => $userId,
+        'nombre'   => trim($designacion->nombremateria),
+        'tipohora' => $designacion->tipohora === 'modulos' ? 'modulo' : 'catedra',
+    ]
+);
+
+        // ── Crear Curso ────────────────────────────────────────
+        if ($designacion->anodesignado || $designacion->divisiondesignada) {
+
+            // Buscar establecimiento global que coincida con el nombre
+            $establecimiento = null;
+            if ($designacion->nombreestablecimiento) {
+                $establecimiento = \App\Models\Establecimiento::where(function($q) use ($userId) {
+                    $q->where('user_id', $userId)->orWhereNull('user_id');
+                })
+                ->where('nombre', 'like', '%' . substr($designacion->nombreestablecimiento, 0, 30) . '%')
+                ->first();
+            }
+
+            $curso = \App\Models\Curso::firstOrCreate(
+                [
+                    'user_id'  => $userId,
+                    'anio'     => $designacion->anodesignado     ?? '',
+                    'division' => $designacion->divisiondesignada ?? '',
+                ],
+                [
+                    'user_id'            => $userId,
+                    'nombre'             => trim(($designacion->anodesignado ?? '') . ' ' . ($designacion->divisiondesignada ?? '')),
+                    'anio'               => $designacion->anodesignado     ?? '',
+                    'division'           => $designacion->divisiondesignada ?? '',
+                    'turno'              => $designacion->turnodesempeno    ?? null,
+                    'establecimiento_id' => $establecimiento?->id,
+                ]
+            );
         }
     }
 }

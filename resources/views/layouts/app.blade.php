@@ -23,20 +23,22 @@
             <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     @auth
-                    @php
-                        try {
-                            $onbPaso = auth()->user()->hasRole('admin') ? 99 : auth()->user()->onboardingStep();
-                        } catch (\Throwable $e) {
-                            $onbPaso = 99;
-                        }
-                        $bloq = $onbPaso < 3;
-                    @endphp
+                        @php
+                            try {
+                                $onbPaso = auth()->user()->hasRole('admin') ? 99 : auth()->user()->onboardingStep();
+                            } catch (\Throwable $e) {
+                                $onbPaso = 99;
+                            }
+                            $bloq = $onbPaso < 3;
+                        @endphp
                         {{-- Actividad áulica --}}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('asistencia.*') || request()->routeIs('calificaciones.*') ? 'active' : '' }}"
                                 href="#" {{ $bloq ? '' : 'data-bs-toggle=dropdown' }}>
                                 <i class="bi bi-calendar2-check me-1"></i>Actividad áulica
-                                @if($bloq)<i class="bi bi-lock-fill ms-1 small"></i>@endif
+                                @if ($bloq)
+                                    <i class="bi bi-lock-fill ms-1 small"></i>
+                                @endif
                             </a>
                             <ul class="dropdown-menu">
                                 <li>
@@ -183,89 +185,117 @@
                                 <li>
                                     <a class="dropdown-item" href="{{ route('ciclos_lectivos.index') }}">
                                         <i class="bi bi-calendar2-range me-1"></i>Ciclos lectivos
-                                        @if($onbPaso == 0)<span class="badge bg-primary ms-1">Comenzar aquí</span>@endif
+                                        @if ($onbPaso == 0)
+                                            <span class="badge bg-primary ms-1">Comenzar aquí</span>
+                                        @endif
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
 
                                 {{-- Items bloqueados en paso 0 --}}
                                 <li>
                                     <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('calendarioescolar.*') ? 'active' : '' }}"
                                         href="{{ $bloq ? '#' : route('calendarioescolar.index') }}">
                                         <i class="bi bi-calendar3 me-2"></i>Calendario escolar
-                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
+                                        @if ($bloq)
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        @endif
                                     </a>
                                 </li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Académico</h6></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <h6 class="dropdown-header">Académico</h6>
+                                </li>
                                 <li>
                                     <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
                                         href="{{ $bloq ? '#' : route('periodos.index') }}">
                                         <i class="bi bi-calendar3 me-2"></i>Períodos
-                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
+                                        @if ($bloq)
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        @endif
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('cursos.*') ? 'active' : '' }}"
                                         href="{{ $bloq ? '#' : route('cursos.index') }}">
                                         <i class="bi bi-building me-2"></i>Cursos
-                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
+                                        @if ($bloq)
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        @endif
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('materias.*') ? 'active' : '' }}"
                                         href="{{ $bloq ? '#' : route('materias.index') }}">
                                         <i class="bi bi-book me-2"></i>Materias
-                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
+                                        @if ($bloq)
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        @endif
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('alumnos.*') ? 'active' : '' }}"
                                         href="{{ $bloq ? '#' : route('alumnos.index') }}">
                                         <i class="bi bi-people me-2"></i>Alumnos
-                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
+                                        @if ($bloq)
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        @endif
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('planificaciones.*') ? 'active' : '' }}"
                                         href="{{ $bloq ? '#' : route('planificaciones.index') }}">
                                         <i class="bi bi-journal-bookmark me-2"></i>Planificación
-                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
+                                        @if ($bloq)
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        @endif
                                     </a>
                                 </li>
 
-                                <li><hr class="dropdown-divider"></li>
-                                <li><h6 class="dropdown-header">Horarios</h6></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <h6 class="dropdown-header">Horarios</h6>
+                                </li>
 
                                 {{-- Designaciones: habilitada desde paso 1 --}}
                                 <li>
-                                    @if($onbPaso >= 1)
-                                    <a class="dropdown-item {{ request()->routeIs('designaciones.*') ? 'active' : '' }}"
-                                        href="{{ route('designaciones.index') }}">
-                                        <i class="bi bi-file-earmark-person me-2"></i>Designaciones
-                                        @if($onbPaso == 1)<span class="badge bg-primary ms-1">Paso 2</span>@endif
-                                    </a>
+                                    @if ($onbPaso >= 1)
+                                        <a class="dropdown-item {{ request()->routeIs('designaciones.*') ? 'active' : '' }}"
+                                            href="{{ route('designaciones.index') }}">
+                                            <i class="bi bi-file-earmark-person me-2"></i>Designaciones
+                                            @if ($onbPaso == 1)
+                                                <span class="badge bg-primary ms-1">Paso 2</span>
+                                            @endif
+                                        </a>
                                     @else
-                                    <a class="dropdown-item disabled opacity-50" href="#">
-                                        <i class="bi bi-file-earmark-person me-2"></i>Designaciones
-                                        <i class="bi bi-lock-fill ms-1 small text-muted"></i>
-                                    </a>
+                                        <a class="dropdown-item disabled opacity-50" href="#">
+                                            <i class="bi bi-file-earmark-person me-2"></i>Designaciones
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        </a>
                                     @endif
                                 </li>
 
                                 {{-- Horarios: habilitada desde paso 2 --}}
                                 <li>
-                                    @if($onbPaso >= 2)
-                                    <a class="dropdown-item {{ request()->routeIs('horarios.*') ? 'active' : '' }}"
-                                        href="{{ route('horarios.index') }}">
-                                        <i class="bi bi-calendar3 me-2"></i>Horarios
-                                        @if($onbPaso == 2)<span class="badge bg-primary ms-1">Paso 3</span>@endif
-                                    </a>
+                                    @if ($onbPaso >= 2)
+                                        <a class="dropdown-item {{ request()->routeIs('horarios.*') ? 'active' : '' }}"
+                                            href="{{ route('horarios.index') }}">
+                                            <i class="bi bi-calendar3 me-2"></i>Horarios
+                                            @if ($onbPaso == 2)
+                                                <span class="badge bg-primary ms-1">Paso 3</span>
+                                            @endif
+                                        </a>
                                     @else
-                                    <a class="dropdown-item disabled opacity-50" href="#">
-                                        <i class="bi bi-calendar3 me-2"></i>Horarios
-                                        <i class="bi bi-lock-fill ms-1 small text-muted"></i>
-                                    </a>
+                                        <a class="dropdown-item disabled opacity-50" href="#">
+                                            <i class="bi bi-calendar3 me-2"></i>Horarios
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        </a>
                                     @endif
                                 </li>
 
@@ -273,7 +303,9 @@
                                     <a class="dropdown-item {{ $bloq ? 'disabled opacity-50' : '' }} {{ request()->routeIs('declaracion.*') ? 'active' : '' }}"
                                         href="{{ $bloq ? '#' : route('declaracion.index') }}">
                                         <i class="bi bi-file-earmark-text me-2"></i>Declaración jurada
-                                        @if($bloq)<i class="bi bi-lock-fill ms-1 small text-muted"></i>@endif
+                                        @if ($bloq)
+                                            <i class="bi bi-lock-fill ms-1 small text-muted"></i>
+                                        @endif
                                     </a>
                                 </li>
                                 <li>
@@ -304,6 +336,12 @@
                                     <a class="dropdown-item {{ request()->routeIs('periodos.*') ? 'active' : '' }}"
                                         href="{{ route('periodos.index') }}">
                                         <i class="bi bi-calendar3 me-2"></i>Períodos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item {{ request()->routeIs('modalidades.*') ? 'active' : '' }}"
+                                        href="{{ route('modalidades.index') }}">
+                                        <i class="bi bi-journals me-1"></i>Modalidades
                                     </a>
                                 </li>
                                 <li>
@@ -428,108 +466,116 @@
 
         {{-- Banner de onboarding para docentes nuevos --}}
         @auth
-        @if(!auth()->user()->hasRole('admin'))
-        @php
-            try {
-                $onbStepBanner = auth()->user()->onboardingStep();
-                $onbCompleto   = $onbStepBanner >= 3;
-            } catch (\Throwable $e) {
-                $onbStepBanner = 3;
-                $onbCompleto   = true;
-            }
-        @endphp
-        @if(!$onbCompleto)
-        @php $paso = $onbStepBanner; @endphp
-        <div class="card border-0 shadow-sm mb-4" style="border-left:4px solid #0d6efd!important">
-            <div class="card-body py-3">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <i class="bi bi-rocket-takeoff-fill text-primary fs-3"></i>
-                    <div>
-                        <div class="fw-bold">Configuración inicial — Paso {{ $paso + 1 }} de 3</div>
-                        <div class="text-muted small">Completá estos pasos para habilitar todas las funciones</div>
-                    </div>
-                </div>
+            @if (!auth()->user()->hasRole('admin'))
+                @php
+                    try {
+                        $onbStepBanner = auth()->user()->onboardingStep();
+                        $onbCompleto = $onbStepBanner >= 3;
+                    } catch (\Throwable $e) {
+                        $onbStepBanner = 3;
+                        $onbCompleto = true;
+                    }
+                @endphp
+                @if (!$onbCompleto)
+                    @php $paso = $onbStepBanner; @endphp
+                    <div class="card border-0 shadow-sm mb-4" style="border-left:4px solid #0d6efd!important">
+                        <div class="card-body py-3">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <i class="bi bi-rocket-takeoff-fill text-primary fs-3"></i>
+                                <div>
+                                    <div class="fw-bold">Configuración inicial — Paso {{ $paso + 1 }} de 3</div>
+                                    <div class="text-muted small">Completá estos pasos para habilitar todas las funciones
+                                    </div>
+                                </div>
+                            </div>
 
-                {{-- Barra de progreso --}}
-                <div class="progress mb-3" style="height:8px">
-                    <div class="progress-bar bg-primary" style="width:{{ ($paso / 3) * 100 }}%"></div>
-                </div>
+                            {{-- Barra de progreso --}}
+                            <div class="progress mb-3" style="height:8px">
+                                <div class="progress-bar bg-primary" style="width:{{ ($paso / 3) * 100 }}%"></div>
+                            </div>
 
-                <div class="row g-2">
-                    {{-- Paso 1: Ciclo Lectivo --}}
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center gap-2 p-2 rounded
+                            <div class="row g-2">
+                                {{-- Paso 1: Ciclo Lectivo --}}
+                                <div class="col-md-4">
+                                    <div
+                                        class="d-flex align-items-center gap-2 p-2 rounded
                             {{ $paso >= 1 ? 'bg-success bg-opacity-10' : 'bg-primary bg-opacity-10' }}">
-                            <span class="badge {{ $paso >= 1 ? 'bg-success' : 'bg-primary' }} rounded-circle"
-                                  style="width:28px;height:28px;line-height:20px;text-align:center">
-                                {{ $paso >= 1 ? '✓' : '1' }}
-                            </span>
-                            <div>
-                                <div class="small fw-semibold">Ciclo Lectivo</div>
-                                @if($paso == 0)
-                                    <a href="{{ route('ciclos_lectivos.create') }}"
-                                       class="btn btn-primary btn-sm py-0 px-2 mt-1">
-                                        Crear ahora →
-                                    </a>
-                                @else
-                                    <span class="text-success small">Completado</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+                                        <span class="badge {{ $paso >= 1 ? 'bg-success' : 'bg-primary' }} rounded-circle"
+                                            style="width:28px;height:28px;line-height:20px;text-align:center">
+                                            {{ $paso >= 1 ? '✓' : '1' }}
+                                        </span>
+                                        <div>
+                                            <div class="small fw-semibold">Ciclo Lectivo</div>
+                                            @if ($paso == 0)
+                                                <a href="{{ route('ciclos_lectivos.create') }}"
+                                                    class="btn btn-primary btn-sm py-0 px-2 mt-1">
+                                                    Crear ahora →
+                                                </a>
+                                            @else
+                                                <span class="text-success small">Completado</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
 
-                    {{-- Paso 2: Designaciones --}}
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center gap-2 p-2 rounded
+                                {{-- Paso 2: Designaciones --}}
+                                <div class="col-md-4">
+                                    <div
+                                        class="d-flex align-items-center gap-2 p-2 rounded
                             {{ $paso >= 2 ? 'bg-success bg-opacity-10' : ($paso >= 1 ? 'bg-primary bg-opacity-10' : 'bg-light') }}">
-                            <span class="badge {{ $paso >= 2 ? 'bg-success' : ($paso >= 1 ? 'bg-primary' : 'bg-secondary') }} rounded-circle"
-                                  style="width:28px;height:28px;line-height:20px;text-align:center">
-                                {{ $paso >= 2 ? '✓' : '2' }}
-                            </span>
-                            <div>
-                                <div class="small fw-semibold {{ $paso < 1 ? 'text-muted' : '' }}">Designaciones SAD</div>
-                                @if($paso == 1)
-                                    <a href="{{ route('designaciones.create') }}"
-                                       class="btn btn-primary btn-sm py-0 px-2 mt-1">
-                                        Cargar ahora →
-                                    </a>
-                                @elseif($paso >= 2)
-                                    <span class="text-success small">Completado</span>
-                                @else
-                                    <span class="text-muted small">Bloqueado</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
+                                        <span
+                                            class="badge {{ $paso >= 2 ? 'bg-success' : ($paso >= 1 ? 'bg-primary' : 'bg-secondary') }} rounded-circle"
+                                            style="width:28px;height:28px;line-height:20px;text-align:center">
+                                            {{ $paso >= 2 ? '✓' : '2' }}
+                                        </span>
+                                        <div>
+                                            <div class="small fw-semibold {{ $paso < 1 ? 'text-muted' : '' }}">
+                                                Designaciones SAD</div>
+                                            @if ($paso == 1)
+                                                <a href="{{ route('designaciones.create') }}"
+                                                    class="btn btn-primary btn-sm py-0 px-2 mt-1">
+                                                    Cargar ahora →
+                                                </a>
+                                            @elseif($paso >= 2)
+                                                <span class="text-success small">Completado</span>
+                                            @else
+                                                <span class="text-muted small">Bloqueado</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
 
-                    {{-- Paso 3: Horarios --}}
-                    <div class="col-md-4">
-                        <div class="d-flex align-items-center gap-2 p-2 rounded
+                                {{-- Paso 3: Horarios --}}
+                                <div class="col-md-4">
+                                    <div
+                                        class="d-flex align-items-center gap-2 p-2 rounded
                             {{ $paso >= 3 ? 'bg-success bg-opacity-10' : ($paso >= 2 ? 'bg-primary bg-opacity-10' : 'bg-light') }}">
-                            <span class="badge {{ $paso >= 3 ? 'bg-success' : ($paso >= 2 ? 'bg-primary' : 'bg-secondary') }} rounded-circle"
-                                  style="width:28px;height:28px;line-height:20px;text-align:center">
-                                {{ $paso >= 3 ? '✓' : '3' }}
-                            </span>
-                            <div>
-                                <div class="small fw-semibold {{ $paso < 2 ? 'text-muted' : '' }}">Horarios</div>
-                                @if($paso == 2)
-                                    <a href="{{ route('horarios.create') }}"
-                                       class="btn btn-primary btn-sm py-0 px-2 mt-1">
-                                        Configurar →
-                                    </a>
-                                @elseif($paso >= 3)
-                                    <span class="text-success small">Completado</span>
-                                @else
-                                    <span class="text-muted small">Bloqueado</span>
-                                @endif
+                                        <span
+                                            class="badge {{ $paso >= 3 ? 'bg-success' : ($paso >= 2 ? 'bg-primary' : 'bg-secondary') }} rounded-circle"
+                                            style="width:28px;height:28px;line-height:20px;text-align:center">
+                                            {{ $paso >= 3 ? '✓' : '3' }}
+                                        </span>
+                                        <div>
+                                            <div class="small fw-semibold {{ $paso < 2 ? 'text-muted' : '' }}">Horarios
+                                            </div>
+                                            @if ($paso == 2)
+                                                <a href="{{ route('horarios.create') }}"
+                                                    class="btn btn-primary btn-sm py-0 px-2 mt-1">
+                                                    Configurar →
+                                                </a>
+                                            @elseif($paso >= 3)
+                                                <span class="text-success small">Completado</span>
+                                            @else
+                                                <span class="text-muted small">Bloqueado</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-        @endif
-        @endif
+                @endif
+            @endif
         @endauth
 
         @yield('content')

@@ -36,10 +36,12 @@ class HorarioController extends Controller
     $establecimientos = \App\Models\Establecimiento::where(function($q) {
             $q->where('user_id', auth()->id())->orWhereNull('user_id');
         })->orderBy('nombre')->get();
-    $cursos   = \App\Models\Curso::where('user_id', auth()->id())
-        ->orderBy('anio')->orderBy('division')->get();
-    $materias = \App\Models\Materia::where('user_id', auth()->id())
-        ->orderBy('nombre')->get();
+    $cursos   = \App\Models\Curso::where(function($q) {
+            $q->where('user_id', auth()->id())->orWhereNull('user_id');
+        })->orderBy('anio')->orderBy('division')->get();
+    $materias = \App\Models\Materia::where(function($q) {
+            $q->where('user_id', auth()->id())->orWhereNull('user_id');
+        })->orderBy('nombre')->get();
     $dias     = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'];
 
     $designacionesRaw = \App\Models\Designacion::with('horarios')
@@ -93,7 +95,9 @@ class HorarioController extends Controller
 
         if ($request->filled('materia_id')) {
             Materia::where('id', $request->materia_id)
-                ->where('user_id', auth()->id())
+                ->where(function($q) {
+                    $q->where('user_id', auth()->id())->orWhereNull('user_id');
+                })
                 ->firstOrFail();
         }
 
@@ -117,5 +121,75 @@ class HorarioController extends Controller
         $horario->delete();
         return redirect()->route('horarios.index')
                          ->with('success', 'Horario eliminado correctamente.');
+    }
+
+    // ── Altas rápidas desde el formulario (AJAX) ──────────────────────────────
+
+    public function quickEstablecimiento(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $request->validate(['nombre' => 'required|string|max:255']);
+
+            $est = \App\Models\Establecimiento::firstOrCreate(
+                ['user_id' => auth()->id(), 'nombre' => trim($request->nombre)]
+            );
+
+            return response()->json(['id' => $est->id, 'label' => $est->nombre]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function quickCurso(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $request->validate([
+                'anio'     => 'required|string|max:10',
+                'division' => 'required|string|max:10',
+            ]);
+
+            $anio     = trim($request->anio);
+            $division = strtoupper(trim($request->division));
+            $turno    = $request->turno ?: null;
+            $nombre   = $anio . '° ' . $division . ($turno ? ' — ' . ucfirst($turno) : '');
+
+            $curso = Curso::firstOrCreate(
+                [
+                    'user_id'  => auth()->id(),
+                    'anio'     => $anio,
+                    'division' => $division,
+                ],
+                [
+                    'nombre' => $nombre,
+                    'turno'  => $turno,
+                ]
+            );
+
+            $label = $curso->anio . '° ' . $curso->division
+                   . ($curso->turno ? ' — ' . ucfirst($curso->turno) : '');
+
+            return response()->json(['id' => $curso->id, 'label' => $label]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function quickMateria(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        try {
+            $request->validate(['nombre' => 'required|string|max:255']);
+
+            $materia = Materia::firstOrCreate(
+                ['user_id' => auth()->id(), 'nombre' => trim($request->nombre)],
+                [
+                    'tipomateria' => $request->tipo     ?? 'aula',
+                    'tipohora'    => $request->tipoHora ?? 'catedra',
+                ]
+            );
+
+            return response()->json(['id' => $materia->id, 'label' => $materia->nombre]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 }

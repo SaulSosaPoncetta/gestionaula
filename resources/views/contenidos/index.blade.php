@@ -27,16 +27,16 @@
                     @foreach($materias as $m)
                         @if($m->id === $materiaActiva)
                             <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
-                                ⚡ {{ $m->nombre }} (activa ahora)
+                                ⚡ {{ $m->nombre }}{{ $m->anio ? ' '.$m->anio : '' }} (activa ahora)
                             </option>
                         @elseif($enHorario->contains($m->id))
                             <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
-                                📅 {{ $m->nombre }}
+                                📅 {{ $m->nombre }}{{ $m->anio ? ' '.$m->anio : '' }}
                             </option>
                         @else
                             @if(!$haySeparador) @php $haySeparador = true @endphp <option disabled>──────────────</option> @endif
                             <option value="{{ $m->id }}" {{ request('materia_id') == $m->id ? 'selected' : '' }}>
-                                {{ $m->nombre }}
+                                {{ $m->nombre }}{{ $m->anio ? ' '.$m->anio : '' }}
                             </option>
                         @endif
                     @endforeach

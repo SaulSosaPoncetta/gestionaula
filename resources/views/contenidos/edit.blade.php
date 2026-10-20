@@ -89,12 +89,13 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-5">
                     <label class="form-label fw-semibold">Materia <span class="text-danger">*</span></label>
-                    <select name="materia_id" class="form-select @error('materia_id') is-invalid @enderror" required>
+                    <select name="materia_id" id="selectMateriaEdit"
+                            class="form-select @error('materia_id') is-invalid @enderror" required>
                         <option value="">— Seleccioná una materia —</option>
                         @foreach($materias as $materia)
                             <option value="{{ $materia->id }}"
                                 {{ old('materia_id', $contenido->materia_id) == $materia->id ? 'selected' : '' }}>
-                                {{ $materia->nombre }}
+                                {{ $materia->nombre }}{{ $materia->anio ? ' '.$materia->anio : '' }}
                             </option>
                         @endforeach
                     </select>
@@ -114,10 +115,54 @@
                 </div>
             </div>
 
-            {{-- Tema --}}
+            {{-- Tema + botón currículum --}}
             <div class="mb-3">
-                <label class="form-label fw-semibold">Tema <span class="text-danger">*</span></label>
-                <input type="text" name="tema" class="form-control @error('tema') is-invalid @enderror"
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label class="form-label fw-semibold mb-0">Tema <span class="text-danger">*</span></label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnAbrirCurriculumEdit">
+                        <i class="bi bi-mortarboard me-1"></i>Sugerir del currículum
+                    </button>
+                </div>
+
+                {{-- Panel curricular inline --}}
+                <div id="panelCurriculumEdit" class="card border border-primary rounded mb-2" style="display:none">
+                    <div class="card-body py-2 px-3">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold mb-1">Eje</label>
+                                <select id="editSelectEje" class="form-select form-select-sm" disabled>
+                                    <option value="">Cargando...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold mb-1">Núcleo</label>
+                                <select id="editSelectNucleo" class="form-select form-select-sm" disabled>
+                                    <option value="">— Seleccioná un eje —</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-semibold mb-1">Tema</label>
+                                <select id="editSelectTema" class="form-select form-select-sm" disabled>
+                                    <option value="">— Seleccioná un núcleo —</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-2 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-primary" id="btnAplicarCurriculumEdit" disabled>
+                                <i class="bi bi-check2 me-1"></i>Aplicar al tema
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCerrarCurriculumEdit">
+                                Cancelar
+                            </button>
+                        </div>
+                        <div id="editSinDatos" class="text-muted small mt-1" style="display:none">
+                            <i class="bi bi-info-circle me-1"></i>Sin diseño curricular para esta materia.
+                        </div>
+                    </div>
+                </div>
+
+                <input type="text" name="tema" id="inputTema"
+                       class="form-control @error('tema') is-invalid @enderror"
                        value="{{ old('tema', $contenido->tema) }}"
                        placeholder="Descripción del tema" required>
                 @error('tema')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -164,6 +209,7 @@
 
 @push('scripts')
 <script>
+// ── Subtemas ──────────────────────────────────────────────────
 let indiceSubtema = {{ count($contenido->subtemas) ?: 1 }};
 
 function actualizarNumeros() {
@@ -199,5 +245,161 @@ document.getElementById('contenedorSubtemas').addEventListener('click', function
         }
     }
 });
+
+// ── Panel curricular (edit) ───────────────────────────────────
+const rutas = {
+    ejes:    '{{ route("curriculum.ejes") }}',
+    nucleos: '{{ route("curriculum.nucleos") }}',
+    temas:   '{{ route("curriculum.temas") }}',
+};
+
+let temasEdit = [];
+
+document.getElementById('btnAbrirCurriculumEdit').addEventListener('click', async function() {
+    document.getElementById('panelCurriculumEdit').style.display = '';
+    this.style.display = 'none';
+    const materiaId = document.getElementById('selectMateriaEdit').value;
+    if (materiaId) await cargarEjesEdit(materiaId);
+});
+
+document.getElementById('btnCerrarCurriculumEdit').addEventListener('click', function() {
+    document.getElementById('panelCurriculumEdit').style.display = 'none';
+    document.getElementById('btnAbrirCurriculumEdit').style.display = '';
+});
+
+document.getElementById('editSelectEje').addEventListener('change', async function() {
+    resetearDesdoNucleoEdit();
+    if (this.value) await cargarNucleosEdit(this.value);
+});
+
+document.getElementById('editSelectNucleo').addEventListener('change', async function() {
+    resetearDesdeTemasEdit();
+    if (this.value) await cargarTemasEdit(this.value);
+});
+
+document.getElementById('editSelectTema').addEventListener('change', function() {
+    document.getElementById('btnAplicarCurriculumEdit').disabled = !this.value;
+});
+
+document.getElementById('btnAplicarCurriculumEdit').addEventListener('click', function() {
+    const tema = temasEdit.find(t => t.id == document.getElementById('editSelectTema').value);
+    if (!tema) return;
+
+    // Rellenar campo tema
+    document.getElementById('inputTema').value = tema.nombre;
+
+    // Reemplazar subtemas
+    const cont = document.getElementById('contenedorSubtemas');
+    cont.innerHTML = '';
+    const lista = tema.subtemas && tema.subtemas.length ? tema.subtemas : [''];
+    lista.forEach((s, i) => {
+        const div = document.createElement('div');
+        div.className = 'input-group input-group-sm mb-2 fila-subtema';
+        div.innerHTML = `
+            <span class="input-group-text bg-light text-muted">${i + 1}</span>
+            <input type="text" name="subtemas[${i}]" class="form-control"
+                   placeholder="Subtema..." value="${escHtml(s)}">
+            <button type="button" class="btn btn-outline-danger btn-quitar-subtema">
+                <i class="bi bi-x"></i>
+            </button>`;
+        cont.appendChild(div);
+    });
+    indiceSubtema = lista.length;
+
+    // Cerrar panel
+    document.getElementById('panelCurriculumEdit').style.display = 'none';
+    document.getElementById('btnAbrirCurriculumEdit').style.display = '';
+});
+
+function escHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+}
+
+function resetearDesdoNucleoEdit() {
+    resetearDesdeTemasEdit();
+    const sel = document.getElementById('editSelectNucleo');
+    sel.innerHTML = '<option value="">— Seleccioná un eje —</option>';
+    sel.disabled = true;
+}
+
+function resetearDesdeTemasEdit() {
+    temasEdit = [];
+    document.getElementById('btnAplicarCurriculumEdit').disabled = true;
+    const sel = document.getElementById('editSelectTema');
+    sel.innerHTML = '<option value="">— Seleccioná un núcleo —</option>';
+    sel.disabled = true;
+}
+
+const fetchJson = (url) => fetch(url, {
+    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+});
+
+async function cargarEjesEdit(materiaId) {
+    const sel = document.getElementById('editSelectEje');
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    sel.disabled = true;
+    document.getElementById('editSinDatos').style.display = 'none';
+    try {
+        const res  = await fetchJson(`${rutas.ejes}?materia_id=${materiaId}`);
+        const data = await res.json();
+        if (!Array.isArray(data) || !data.length) {
+            sel.innerHTML = '<option value="">Sin datos</option>';
+            document.getElementById('editSinDatos').style.display = '';
+            return;
+        }
+        sel.innerHTML = '<option value="">— Seleccioná un eje —</option>';
+        data.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.id; opt.textContent = e.nombre;
+            sel.appendChild(opt);
+        });
+        sel.disabled = false;
+    } catch (err) {
+        sel.innerHTML = '<option value="">Error</option>';
+        console.error('ejesEdit:', err);
+    }
+}
+
+async function cargarNucleosEdit(ejeId) {
+    const sel = document.getElementById('editSelectNucleo');
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    sel.disabled = true;
+    try {
+        const res  = await fetchJson(`${rutas.nucleos}?eje_id=${ejeId}`);
+        const data = await res.json();
+        sel.innerHTML = '<option value="">— Seleccioná un núcleo —</option>';
+        data.forEach(n => {
+            const opt = document.createElement('option');
+            opt.value = n.id; opt.textContent = n.nombre;
+            sel.appendChild(opt);
+        });
+        sel.disabled = false;
+    } catch (err) {
+        sel.innerHTML = '<option value="">Error</option>';
+        console.error('nucleosEdit:', err);
+    }
+}
+
+async function cargarTemasEdit(nucleoId) {
+    const sel = document.getElementById('editSelectTema');
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    sel.disabled = true;
+    try {
+        const res  = await fetchJson(`${rutas.temas}?nucleo_id=${nucleoId}`);
+        temasEdit = await res.json();
+        sel.innerHTML = '<option value="">— Seleccioná un tema —</option>';
+        temasEdit.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id; opt.textContent = t.nombre;
+            sel.appendChild(opt);
+        });
+        sel.disabled = false;
+    } catch (err) {
+        sel.innerHTML = '<option value="">Error</option>';
+        console.error('temasEdit:', err);
+    }
+}
 </script>
 @endpush

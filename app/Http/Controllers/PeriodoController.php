@@ -1,19 +1,31 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Periodo;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class PeriodoController extends Controller
 {
     public function index()
     {
-        $periodos = Periodo::withCount('calificaciones')
-            ->orderBy('orden')
-            ->get();
+        try {
+            try {
+                $periodos = Periodo::withCount('calificaciones')
+                    ->orderBy('orden')
+                    ->paginate(15);
+            } catch (QueryException $e) {
+                Log::warning('PeriodoController@index - withCount falló: ' . $e->getMessage());
+                $periodos = Periodo::orderBy('orden')->paginate(15);
+            }
 
-        return view('periodos.index', compact('periodos'));
+            return view('periodos.index', compact('periodos'));
+        } catch (\Throwable $e) {
+            Log::error('PeriodoController@index: ' . $e->getMessage());
+            return back()->with('error', 'Error al cargar períodos: ' . $e->getMessage());
+        }
     }
 
     public function create()
@@ -23,15 +35,30 @@ class PeriodoController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'denominacion' => 'required|string|max:200',
-            'orden'        => 'required|integer|min:1',
-        ]);
+        try {
+            $request->validate([
+                'denominacion' => 'required|string|max:100',
+            ]);
 
-        Periodo::create($request->only('denominacion', 'orden'));
+            // Calcular orden automáticamente si no se envía
+            $orden = $request->orden ?? (Periodo::max('orden') + 1);
 
-        return redirect()->route('periodos.index')
-                         ->with('success', 'Período creado correctamente.');
+            Periodo::create([
+                'denominacion' => trim($request->denominacion),
+                'orden'        => $orden,
+            ]);
+
+            return redirect()->route('periodos.index')
+                             ->with('success', 'Período creado correctamente.');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        } catch (QueryException $e) {
+            Log::error('PeriodoController@store - BD: ' . $e->getMessage());
+            return back()->with('error', 'Error al guardar: ' . $e->getMessage())->withInput();
+        } catch (\Throwable $e) {
+            Log::error('PeriodoController@store: ' . $e->getMessage());
+            return back()->with('error', 'Error inesperado: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function edit(Periodo $periodo)
@@ -41,21 +68,40 @@ class PeriodoController extends Controller
 
     public function update(Request $request, Periodo $periodo)
     {
-        $request->validate([
-            'denominacion' => 'required|string|max:200',
-            'orden'        => 'required|integer|min:1',
-        ]);
+        try {
+            $request->validate([
+                'denominacion' => 'required|string|max:100',
+            ]);
 
-        $periodo->update($request->only('denominacion', 'orden'));
+            $periodo->update([
+                'denominacion' => trim($request->denominacion),
+            ]);
 
-        return redirect()->route('periodos.index')
-                         ->with('success', 'Período actualizado correctamente.');
+            return redirect()->route('periodos.index')
+                             ->with('success', 'Período actualizado correctamente.');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        } catch (QueryException $e) {
+            Log::error('PeriodoController@update - BD: ' . $e->getMessage());
+            return back()->with('error', 'Error al actualizar: ' . $e->getMessage())->withInput();
+        } catch (\Throwable $e) {
+            Log::error('PeriodoController@update: ' . $e->getMessage());
+            return back()->with('error', 'Error inesperado: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function destroy(Periodo $periodo)
     {
-        $periodo->delete();
-        return redirect()->route('periodos.index')
-                         ->with('success', 'Período eliminado correctamente.');
+        try {
+            $periodo->delete();
+            return redirect()->route('periodos.index')
+                             ->with('success', 'Período eliminado correctamente.');
+        } catch (QueryException $e) {
+            Log::error('PeriodoController@destroy - BD: ' . $e->getMessage());
+            return back()->with('error', 'No se puede eliminar porque tiene datos asociados.');
+        } catch (\Throwable $e) {
+            Log::error('PeriodoController@destroy: ' . $e->getMessage());
+            return back()->with('error', 'Error inesperado: ' . $e->getMessage());
+        }
     }
 }

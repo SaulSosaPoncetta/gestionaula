@@ -27,24 +27,17 @@
                 </div>
             @endif
 
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Denominación <span class="text-danger">*</span></label>
-                    <input type="text" name="denominacion"
-                           class="form-control @error('denominacion') is-invalid @enderror"
-                           value="{{ old('denominacion', $periodo->denominacion) }}" required>
-                    @error('denominacion')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Orden <span class="text-danger">*</span></label>
-                    <input type="number" name="orden"
-                           class="form-control @error('orden') is-invalid @enderror"
-                           value="{{ old('orden', $periodo->orden) }}" min="1" required>
-                    @error('orden')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Denominación <span class="text-danger">*</span></label>
+                <input type="text" name="denominacion"
+                       class="form-control @error('denominacion') is-invalid @enderror"
+                       value="{{ old('denominacion', $periodo->denominacion) }}"
+                       placeholder="Ej: 1er Trimestre, 1er Cuatrimestre..."
+                       required autofocus>
+                @error('denominacion')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
-            <div class="mt-4 d-flex gap-2">
+            <div class="d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-check-circle me-1"></i>Actualizar
                 </button>

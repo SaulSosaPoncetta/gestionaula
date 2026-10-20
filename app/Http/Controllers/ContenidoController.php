@@ -28,11 +28,14 @@ class ContenidoController extends Controller
             ->pluck('materia')->filter()->unique('id')
             ->keyBy('id');
 
-        // Todas las materias: activa primero, luego las del horario, luego las demás
-        $todasMaterias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+        // Todas las materias: propias + globales (user_id null)
+        $todasMaterias = Materia::where(function ($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
+
         $materias = $todasMaterias->sortBy(function ($m) use ($materiaActiva, $materiasEnHorario) {
-            if ($m->id === $materiaActiva)              return '0_' . $m->nombre;
-            if ($materiasEnHorario->has($m->id))        return '1_' . $m->nombre;
+            if ($m->id === $materiaActiva)       return '0_' . $m->nombre;
+            if ($materiasEnHorario->has($m->id)) return '1_' . $m->nombre;
             return '2_' . $m->nombre;
         })->values();
 
@@ -55,7 +58,9 @@ class ContenidoController extends Controller
 
     public function create(Request $request)
     {
-        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+        $materias = Materia::where(function ($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
 
         // Cargar temas ya existentes de la unidad (para mostrarlos en modo lectura)
         $temasExistentes = collect();
@@ -74,12 +79,12 @@ class ContenidoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'materia_id'      => 'required|exists:materias,id',
-            'numerounidad'    => 'nullable|integer|min:1',
-            'observacion'     => 'nullable|string',
-            'temas'           => 'required|array|min:1',
-            'temas.*.tema'    => 'required|string|max:500',
-            'temas.*.subtemas'=> 'nullable|array',
+            'materia_id'         => 'required|exists:materias,id',
+            'numerounidad'       => 'nullable|integer|min:1',
+            'observacion'        => 'nullable|string',
+            'temas'              => 'required|array|min:1',
+            'temas.*.tema'       => 'required|string|max:500',
+            'temas.*.subtemas'   => 'nullable|array',
             'temas.*.subtemas.*' => 'nullable|string|max:500',
         ]);
 
@@ -114,7 +119,10 @@ class ContenidoController extends Controller
     {
         abort_if($contenido->user_id !== auth()->id(), 403);
         $contenido->load('subtemas', 'materia');
-        $materias = Materia::where('user_id', auth()->id())->orderBy('nombre')->get();
+
+        $materias = Materia::where(function ($q) {
+                $q->where('user_id', auth()->id())->orWhereNull('user_id');
+            })->orderBy('nombre')->get();
 
         // Todos los temas de la misma unidad para editarlos juntos
         $temasUnidad = Contenido::with('subtemas')
@@ -126,14 +134,14 @@ class ContenidoController extends Controller
 
         return view('contenidos.edit', compact('contenido', 'materias', 'temasUnidad'));
     }
-    
+
     public function show(Contenido $contenido)
     {
         abort_if($contenido->user_id !== auth()->id(), 403);
         $contenido->load('subtemas', 'materia');
         return view('contenidos.show', compact('contenido'));
     }
-    
+
     public function update(Request $request, Contenido $contenido)
     {
         abort_if($contenido->user_id !== auth()->id(), 403);
@@ -175,7 +183,8 @@ class ContenidoController extends Controller
         abort_if($contenido->user_id !== auth()->id(), 403);
         $contenido->subtemas()->delete();
         $contenido->delete();
-return redirect()->route('contenidos.index', ['materia_id' => $contenido->materia_id])
-                 ->with('success', 'Contenido eliminado correctamente.');
+
+        return redirect()->route('contenidos.index', ['materia_id' => $contenido->materia_id])
+                         ->with('success', 'Contenido eliminado correctamente.');
     }
 }
