@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TemaCurricular extends Model
 {
+    protected $table = 'temas_curriculares';
     protected $fillable = ['nucleo_curricular_id', 'nombre', 'orden'];
 
     public function nucleo(): BelongsTo

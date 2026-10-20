@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SubtemaCurricular extends Model
 {
+    protected $table = 'subtemas_curriculares';
     protected $fillable = ['tema_curricular_id', 'nombre', 'orden'];
 
     public function tema(): BelongsTo
