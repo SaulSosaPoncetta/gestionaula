@@ -8,23 +8,32 @@
         </div>
     @endif
 
-    @php $cicloActivoDash = \App\Models\CicloLectivo::where('user_id', auth()->id())->where('activo', true)->first(); @endphp
+    @php 
+        $cicloActivoDash = \App\Models\CicloLectivo::where('user_id', auth()->id())->where('activo', true)->first(); 
+    @endphp
 
-    @if(!$cicloActivoDash)
-    <div class="alert alert-danger d-flex justify-content-between align-items-center mb-3">
-        <span><i class="bi bi-calendar-x me-2"></i><strong>No tenés un ciclo lectivo activo.</strong> Creá uno para comenzar a registrar datos.</span>
-        <a href="{{ route('ciclos_lectivos.create') }}" class="btn btn-sm btn-danger"><i class="bi bi-plus-circle me-1"></i>Crear ciclo lectivo</a>
-    </div>
+    @if (!$cicloActivoDash)
+        <div class="alert alert-danger d-flex justify-content-between align-items-center mb-3">
+            <span><i class="bi bi-calendar-x me-2"></i><strong>No tenés un ciclo lectivo activo.</strong> Creá uno para
+                comenzar a registrar datos.</span>
+            <a href="{{ route('ciclos_lectivos.create') }}" class="btn btn-sm btn-danger"><i
+                    class="bi bi-plus-circle me-1"></i>Crear ciclo lectivo</a>
+        </div>
     @elseif($cicloActivoDash->yaTermino())
-    <div class="alert alert-danger d-flex justify-content-between align-items-center mb-3">
-        <span><i class="bi bi-calendar-x me-2"></i>El ciclo lectivo <strong>{{ $cicloActivoDash->anio }}</strong> ya finalizó. ¿Querés crear el del próximo año?</span>
-        <a href="{{ route('ciclos_lectivos.siguiente', $cicloActivoDash) }}" class="btn btn-sm btn-danger"><i class="bi bi-arrow-right-circle me-1"></i>Crear ciclo {{ (int)$cicloActivoDash->anio + 1 }}</a>
-    </div>
+        <div class="alert alert-danger d-flex justify-content-between align-items-center mb-3">
+            <span><i class="bi bi-calendar-x me-2"></i>El ciclo lectivo <strong>{{ $cicloActivoDash->anio }}</strong> ya
+                finalizó. ¿Querés crear el del próximo año?</span>
+            <a href="{{ route('ciclos_lectivos.siguiente', $cicloActivoDash) }}" class="btn btn-sm btn-danger"><i
+                    class="bi bi-arrow-right-circle me-1"></i>Crear ciclo {{ (int) $cicloActivoDash->anio + 1 }}</a>
+        </div>
     @elseif($cicloActivoDash->terminoPronto())
-    <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3">
-        <span><i class="bi bi-exclamation-triangle me-2"></i>El ciclo lectivo <strong>{{ $cicloActivoDash->anio }}</strong> vence el {{ $cicloActivoDash->fechafin->format('d/m/Y') }}.</span>
-        <a href="{{ route('ciclos_lectivos.siguiente', $cicloActivoDash) }}" class="btn btn-sm btn-warning"><i class="bi bi-calendar2-plus me-1"></i>Generar ciclo {{ (int)$cicloActivoDash->anio + 1 }}</a>
-    </div>
+        <div class="alert alert-warning d-flex justify-content-between align-items-center mb-3">
+            <span><i class="bi bi-exclamation-triangle me-2"></i>El ciclo lectivo
+                <strong>{{ $cicloActivoDash->anio }}</strong> vence el
+                {{ $cicloActivoDash->fechafin->format('d/m/Y') }}.</span>
+            <a href="{{ route('ciclos_lectivos.siguiente', $cicloActivoDash) }}" class="btn btn-sm btn-warning"><i
+                    class="bi bi-calendar2-plus me-1"></i>Generar ciclo {{ (int) $cicloActivoDash->anio + 1 }}</a>
+        </div>
     @endif
 
     {{-- Saludo --}}
@@ -199,9 +208,7 @@
                                         $diaEvento = $dias[$evento->fecha->format('l')] ?? '';
                                         $esHoy = $evento->fecha->isToday();
                                         $esManana = $evento->fecha->isTomorrow();
-                                        $diasFaltan = now()
-                                            ->startOfDay()
-                                            ->diffInDays($evento->fecha->startOfDay());
+                                        $diasFaltan = now()->startOfDay()->diffInDays($evento->fecha->startOfDay());
                                     @endphp
                                     <li
                                         class="list-group-item d-flex justify-content-between align-items-center
@@ -237,7 +244,8 @@
                                 @endforeach
                             </ul>
                             <div class="p-2 text-end">
-                                <a href="{{ route('calendarioescolar.index') }}" class="btn btn-sm btn-outline-secondary">
+                                <a href="{{ route('calendarioescolar.index') }}"
+                                    class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-calendar3 me-1"></i>Ver todo
                                 </a>
                             </div>
@@ -616,9 +624,9 @@
                 claseActivaActual = clases.length > 0 ? clases[0] : null;
 
                 // Solo actualizar leyenda y stats si cambió la clase activa
-                const claveActual = claseActivaActual
-                    ? `${claseActivaActual.curso_id}_${claseActivaActual.materia_id}`
-                    : 'ninguna';
+                const claveActual = claseActivaActual ?
+                    `${claseActivaActual.curso_id}_${claseActivaActual.materia_id}` :
+                    'ninguna';
 
                 actualizarLeyenda(clases);
 
@@ -655,12 +663,12 @@
 
                     // Mostrar loading
                     container.innerHTML = `
-            <div class="card border-0 shadow-sm mb-3 border-start border-success border-4">
-                <div class="card-body text-center py-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <div class="mt-2 text-muted">Cargando estadísticas...</div>
-                </div>
-            </div>`;
+                        <div class="card border-0 shadow-sm mb-3 border-start border-success border-4">
+                            <div class="card-body text-center py-4">
+                                <div class="spinner-border text-primary" role="status"></div>
+                                <div class="mt-2 text-muted">Cargando estadísticas...</div>
+                            </div>
+                        </div>`;
 
                     fetch(`/api/dashboard/stats/${clase.curso_id}/${clase.materia_id}`, {
                             headers: {
@@ -787,12 +795,12 @@
                         <span class="fw-semibold text-secondary small">Clase anterior</span>
                     </div>
                     ${t.anterior ? `
-                        <div class="text-muted small mb-1">
-                            <i class="bi bi-calendar3 me-1"></i>${t.anterior.fecha}
-                            <span class="badge bg-secondary ms-1">Clase ${t.anterior.numeroclase}</span>
-                        </div>
-                        <div class="small fw-semibold">${t.anterior.tema}</div>
-                    ` : `<div class="text-muted small fst-italic">Sin registros anteriores</div>`}
+                                <div class="text-muted small mb-1">
+                                    <i class="bi bi-calendar3 me-1"></i>${t.anterior.fecha}
+                                    <span class="badge bg-secondary ms-1">Clase ${t.anterior.numeroclase}</span>
+                                </div>
+                                <div class="small fw-semibold">${t.anterior.tema}</div>
+                            ` : `<div class="text-muted small fst-italic">Sin registros anteriores</div>`}
                 </div>
                 <!-- Clase actual -->
                 <div class="col-md-4 border-end p-3" style="background:#e8f5e9">
@@ -801,17 +809,17 @@
                         <span class="fw-semibold text-success small">Hoy</span>
                     </div>
                     ${t.actual ? `
-                        <div class="text-muted small mb-1">
-                            <i class="bi bi-calendar3 me-1"></i>${t.actual.fecha}
-                            <span class="badge bg-success ms-1">Clase ${t.actual.numeroclase}</span>
-                        </div>
-                        <div class="small fw-semibold">${t.actual.tema}</div>
-                    ` : `
-                        <div class="text-muted small fst-italic">Sin registro para hoy</div>
-                        <a href="/librotemas/crear" class="btn btn-sm btn-success mt-2">
-                            <i class="bi bi-plus-circle me-1"></i>Registrar clase
-                        </a>
-                    `}
+                                <div class="text-muted small mb-1">
+                                    <i class="bi bi-calendar3 me-1"></i>${t.actual.fecha}
+                                    <span class="badge bg-success ms-1">Clase ${t.actual.numeroclase}</span>
+                                </div>
+                                <div class="small fw-semibold">${t.actual.tema}</div>
+                            ` : `
+                                <div class="text-muted small fst-italic">Sin registro para hoy</div>
+                                <a href="/librotemas/crear" class="btn btn-sm btn-success mt-2">
+                                    <i class="bi bi-plus-circle me-1"></i>Registrar clase
+                                </a>
+                            `}
                 </div>
                 <!-- Próxima clase -->
                 <div class="col-md-4 p-3" style="background:#e3f2fd">
@@ -820,12 +828,12 @@
                         <span class="fw-semibold text-primary small">Próxima clase</span>
                     </div>
                     ${t.proxima ? `
-                        <div class="text-muted small mb-1">
-                            <i class="bi bi-calendar3 me-1"></i>${t.proxima.fecha}
-                            <span class="badge bg-primary ms-1">Clase ${t.proxima.numeroclase}</span>
-                        </div>
-                        <div class="small fw-semibold">${t.proxima.tema}</div>
-                    ` : `<div class="text-muted small fst-italic">Sin próxima clase planificada</div>`}
+                                <div class="text-muted small mb-1">
+                                    <i class="bi bi-calendar3 me-1"></i>${t.proxima.fecha}
+                                    <span class="badge bg-primary ms-1">Clase ${t.proxima.numeroclase}</span>
+                                </div>
+                                <div class="small fw-semibold">${t.proxima.tema}</div>
+                            ` : `<div class="text-muted small fst-italic">Sin próxima clase planificada</div>`}
                 </div>
             </div>
         </div>
@@ -1025,6 +1033,5 @@
                 const modalEl = document.getElementById('modalSinClase');
                 new bootstrap.Modal(modalEl).show();
             }
-
         </script>
     @endpush
