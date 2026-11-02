@@ -47,9 +47,9 @@ use App\Http\Controllers\Admin\PagoController;
 
 require __DIR__.'/auth.php';
 
-Route::get('/', function () {
-    return redirect()->route('landing.index');
-});
+// La landing vive en la raíz; si ya hay sesión, LandingController@index redirige al dashboard
+Route::get('/', [LandingController::class, 'index'])->name('landing.index');
+Route::get('/landing', fn () => redirect()->route('landing.index'));
 
 Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -494,7 +494,6 @@ Route::get('/api/dashboard/stats/{cursoId}/{materiaId}', function(int $cursoId, 
 })->middleware(['web', 'auth'])->name('api.dashboard.stats');
 
 // Landing publica
-Route::get('/landing', [LandingController::class, 'index'])->name('landing.index');
 Route::get('/landing/planes', [LandingController::class, 'planes'])->name('landing.planes');
 Route::get('/landing/registro', [LandingController::class, 'registroPlan'])->name('landing.registro');
 Route::post('/landing/contacto', [LandingController::class, 'contacto'])->name('landing.contacto');

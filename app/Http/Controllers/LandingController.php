@@ -21,8 +21,13 @@ use App\Services\HubEstadoClienteService;
 
 class LandingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Si ya está logueado, va directo al sistema
+        if ($request->user()) {
+            return redirect()->route('dashboard');
+        }
+
         try {
             $planes = Plan::where('activo', true)->orderBy('precio')->get();
             return view('landing.index', compact('planes'));
